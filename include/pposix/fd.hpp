@@ -4,7 +4,7 @@
 #include <utility>
 #include <type_traits>
 
-#include "default_close.hpp"
+#include "close.hpp"
 #include "nullfd.hpp"
 #include "rawfd.hpp"
 #include "errno_code.hpp"
@@ -12,14 +12,21 @@
 
 namespace pposix {
 
-    template<class Close = default_close>
+    template<class Close = close>
     class [[nodiscard]] fd {
     public:
-        constexpr fd() noexcept : raw_fd_{nullfd} {}
+        constexpr fd() noexcept : fd::fd{nullfd} {}
 
-        constexpr /*implicit*/ fd(nullfd_t) noexcept : raw_fd_{} {}
+        constexpr /*implicit*/ fd(nullfd_t) noexcept : raw_fd_{nullfd}, close_{} {}
 
-        constexpr explicit fd(const rawfd file_descriptor) : raw_fd_{file_descriptor} {}
+        constexpr explicit fd(const rawfd file_descriptor)
+                : raw_fd_{file_descriptor}, close_{} {}
+
+        constexpr explicit fd(const rawfd file_descriptor, const Close &close)
+            : raw_fd_{file_descriptor}, close_{close} {}
+
+        constexpr explicit fd(const rawfd file_descriptor, Close &&close)
+            : raw_fd_{file_descriptor}, close_{std::move(close)} {}
 
         ~fd() {
             if (const auto error = close()) {
@@ -53,18 +60,23 @@ namespace pposix {
         [[nodiscard]]
         std::error_code close() noexcept {
             if (not empty()) {
-                if (const auto error = Close{}(raw())) {
-                    return errno_code();
+                while (const auto ec = close_(raw())) {
+                    if (ec == std::errc::interrupted) {
+                        continue;
+                    } else {
+                        return ec;
+                    }
                 }
-            }
 
-            raw_fd_ = nullfd;
+                raw_fd_ = nullfd;
+            }
 
             return {};
         }
 
     private:
-        rawfd raw_fd_{};
+        rawfd raw_fd_;
+        Close close_;
     };
 }
 

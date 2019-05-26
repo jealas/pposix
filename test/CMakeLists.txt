@@ -2,6 +2,7 @@ add_executable(
         test_pposix
 
         test_main.cpp
+        test_fd.cpp
 )
 
 target_link_libraries(
