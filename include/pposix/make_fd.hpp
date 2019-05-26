@@ -3,18 +3,18 @@
 
 #include "fd.hpp"
 #include "is_fd.hpp"
+#include "result.hpp"
 
 namespace pposix {
 
-    template <class Fd, class ... FuncArgs, class ... Args>
-    boost::outcome_v2::std_result<Fd> make_fd(rawfd_t(*fd_factory)(FuncArgs...), Args && ... args) {
+    template<class Fd, class ... FuncArgs, class ... Args>
+    result<Fd> make_fd(rawfd_t(*fd_factory)(FuncArgs...), Args &&... args) {
         static_assert(is_fd_v<Fd>);
 
         const auto fd = fd_factory(std::forward<Args>(args)...);
         if (fd == nullfd) {
             return std::error_code{errno, std::system_category()};
-        }
-        else {
+        } else {
             return Fd{fd};
         }
     }
