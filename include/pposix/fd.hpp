@@ -4,7 +4,7 @@
 #include <utility>
 #include <type_traits>
 
-#include "default_close.hpp"
+#include "default_close_policy.hpp"
 #include "nullfd.hpp"
 #include "rawfd.hpp"
 #include "errno_code.hpp"
@@ -12,14 +12,21 @@
 
 namespace pposix {
 
-    template<class Close = default_close>
+    template<class ClosePolicy = default_close_policy>
     class [[nodiscard]] fd {
     public:
-        constexpr fd() noexcept : raw_fd_{nullfd} {}
+        constexpr fd() noexcept : fd::fd{nullfd} {}
 
-        constexpr /*implicit*/ fd(nullfd_t) noexcept : raw_fd_{} {}
+        constexpr /*implicit*/ fd(nullfd_t) noexcept : raw_fd_{nullfd}, close_{} {}
 
-        constexpr explicit fd(const rawfd file_descriptor) : raw_fd_{file_descriptor} {}
+        constexpr explicit fd(const rawfd file_descriptor)
+                : raw_fd_{file_descriptor}, close_{} {}
+
+        constexpr explicit fd(const rawfd file_descriptor, const ClosePolicy &close)
+            : raw_fd_{file_descriptor}, close_{close} {}
+
+        constexpr explicit fd(const rawfd file_descriptor, ClosePolicy &&close)
+            : raw_fd_{file_descriptor}, close_{std::move(close)} {}
 
         ~fd() {
             if (const auto error = close()) {
@@ -43,6 +50,10 @@ namespace pposix {
 
         rawfd raw() const noexcept { return raw_fd_; }
 
+        ClosePolicy & get_close_policy() noexcept { return close_; }
+
+        const ClosePolicy & get_close_policy() const noexcept { return close_; }
+
         [[nodiscard]]
         rawfd release() noexcept {
             const auto tmp_fd = raw_fd_;
@@ -53,18 +64,23 @@ namespace pposix {
         [[nodiscard]]
         std::error_code close() noexcept {
             if (not empty()) {
-                if (const auto error = Close{}(raw())) {
-                    return errno_code();
+                while (const auto ec = close_(raw())) {
+                    if (ec == std::errc::interrupted) {
+                        continue;
+                    } else {
+                        return ec;
+                    }
                 }
-            }
 
-            raw_fd_ = nullfd;
+                raw_fd_ = nullfd;
+            }
 
             return {};
         }
 
     private:
-        rawfd raw_fd_{};
+        rawfd raw_fd_;
+        ClosePolicy close_;
     };
 }
 

@@ -15,3 +15,6 @@ target_include_directories(
         INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+# Testing
+add_subdirectory(test)
