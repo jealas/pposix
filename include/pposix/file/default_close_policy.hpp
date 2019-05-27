@@ -5,12 +5,12 @@
 
 #include <unistd.h>
 
-#include "rawfd.hpp"
-#include "errno_code.hpp"
-#include "util/underlying_value.hpp"
+#include "pposix/errno_code.hpp"
+#include "pposix/file/rawfd.hpp"
+#include "pposix/util/underlying_value.hpp"
 
 
-namespace pposix {
+namespace pposix::file {
 
     struct default_close_policy {
         std::error_code operator()(rawfd fd) const noexcept {

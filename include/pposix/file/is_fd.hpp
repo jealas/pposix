@@ -1,12 +1,12 @@
-#ifndef PPOSIX_IS_FD_HPP
-#define PPOSIX_IS_FD_HPP
+#ifndef PPOSIX_FILE_IS_FD_HPP
+#define PPOSIX_FILE_IS_FD_HPP
 
 #include <type_traits>
 
-#include "fd.hpp"
+#include "pposix/file/fd.hpp"
 
 
-namespace pposix {
+namespace pposix::file {
 
     namespace detail {
 
@@ -25,4 +25,4 @@ namespace pposix {
 
 }
 
-#endif //PPOSIX_IS_FD_HPP
+#endif //PPOSIX_FILE_IS_FD_HPP
