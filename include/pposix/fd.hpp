@@ -4,7 +4,7 @@
 #include <utility>
 #include <type_traits>
 
-#include "close.hpp"
+#include "default_close_policy.hpp"
 #include "nullfd.hpp"
 #include "rawfd.hpp"
 #include "errno_code.hpp"
@@ -12,7 +12,7 @@
 
 namespace pposix {
 
-    template<class Close = close>
+    template<class ClosePolicy = default_close_policy>
     class [[nodiscard]] fd {
     public:
         constexpr fd() noexcept : fd::fd{nullfd} {}
@@ -22,10 +22,10 @@ namespace pposix {
         constexpr explicit fd(const rawfd file_descriptor)
                 : raw_fd_{file_descriptor}, close_{} {}
 
-        constexpr explicit fd(const rawfd file_descriptor, const Close &close)
+        constexpr explicit fd(const rawfd file_descriptor, const ClosePolicy &close)
             : raw_fd_{file_descriptor}, close_{close} {}
 
-        constexpr explicit fd(const rawfd file_descriptor, Close &&close)
+        constexpr explicit fd(const rawfd file_descriptor, ClosePolicy &&close)
             : raw_fd_{file_descriptor}, close_{std::move(close)} {}
 
         ~fd() {
@@ -49,6 +49,10 @@ namespace pposix {
         explicit operator bool() const noexcept { return not empty(); }
 
         rawfd raw() const noexcept { return raw_fd_; }
+
+        ClosePolicy & get_close_policy() noexcept { return close_; }
+
+        const ClosePolicy & get_close_policy() const noexcept { return close_; }
 
         [[nodiscard]]
         rawfd release() noexcept {
@@ -76,7 +80,7 @@ namespace pposix {
 
     private:
         rawfd raw_fd_;
-        Close close_;
+        ClosePolicy close_;
     };
 }
 

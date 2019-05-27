@@ -1,5 +1,5 @@
-#ifndef PPOSIX_CLOSE_HPP
-#define PPOSIX_CLOSE_HPP
+#ifndef PPOSIX_DEFAULT_CLOSE_POLICY_HPP
+#define PPOSIX_DEFAULT_CLOSE_POLICY_HPP
 
 #include <system_error>
 
@@ -12,7 +12,7 @@
 
 namespace pposix {
 
-    struct close {
+    struct default_close_policy {
         std::error_code operator()(rawfd fd) const noexcept {
             if (const auto error = ::close(util::underlying_value(fd)); error == -1) {
                 return errno_code();
@@ -24,4 +24,4 @@ namespace pposix {
 
 }
 
-#endif //PPOSIX_CLOSE_HPP
+#endif //PPOSIX_DEFAULT_CLOSE_POLICY_HPP

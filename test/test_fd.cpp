@@ -111,11 +111,11 @@ private:
 
 SCENARIO("File descriptors can be closed", "[pposix][fd]") {
     GIVEN("a null file descriptor") {
-        close_counter_policy close_policy{};
-
-        auto fd = std::make_unique<pposix::fd<close_counter_policy>>(pposix::rawfd::null, close_policy);
+        auto fd = std::make_unique<pposix::fd<close_counter_policy>>(pposix::rawfd::null);
 
         require_is_empty(*fd);
+
+        auto close_policy = fd->get_close_policy();
 
         WHEN("destroyed") {
             REQUIRE(close_policy.close_count() == 0u);
@@ -147,11 +147,11 @@ SCENARIO("File descriptors can be closed", "[pposix][fd]") {
     }
 
     GIVEN("a non-null file descriptor") {
-        close_counter_policy close_policy{};
-
-        auto fd = std::make_unique<pposix::fd<close_counter_policy>>(pposix::rawfd{1}, close_policy);
+        auto fd = std::make_unique<pposix::fd<close_counter_policy>>(pposix::rawfd{1});
 
         require_is_not_empty(*fd);
+
+        auto close_policy = fd->get_close_policy();
 
         WHEN("destroyed") {
             REQUIRE(close_policy.close_count() == 0u);
@@ -186,6 +186,7 @@ SCENARIO("File descriptors can be closed", "[pposix][fd]") {
     }
 }
 
-SCENARIO("", "[pposix][fd]") {
-
+SCENARIO("File descriptors can be moved", "[pposix][fd]") {
+    GIVEN("") {
+    }
 }
