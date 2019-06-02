@@ -3,6 +3,7 @@ add_executable(
 
         test_main.cpp
         test_fd.cpp
+        test_permission.cpp
 )
 
 target_link_libraries(

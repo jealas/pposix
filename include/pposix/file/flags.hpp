@@ -3,6 +3,8 @@
 
 #include <fcntl.h>
 
+#include "pposix/util/underlying_value.hpp"
+
 
 namespace pposix::file {
 
@@ -18,6 +20,9 @@ namespace pposix::file {
         truncate = O_TRUNC,
     };
 
+    flags operator | (flags lhs, flags rhs) noexcept {
+        return flags{util::underlying_value(lhs) | util::underlying_value(rhs)};
+    }
 }
 
 #endif //PPOSIX_FILE_OPEN_FLAG_HPP

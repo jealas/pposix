@@ -139,7 +139,7 @@ SCENARIO("File descriptors can be closed", "[pposix][fd]") {
             AND_WHEN("destroyed") {
                 fd.reset();
 
-                THEN("the destructor does not invoke the close policy") {
+                THEN("the destructor does not invoke the close policy again") {
                     REQUIRE(close_policy.close_count() == 0u);
                 }
             }
