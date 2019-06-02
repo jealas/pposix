@@ -1,3 +1,4 @@
+#include <tclDecls.h>
 #include <catch2/catch.hpp>
 
 #include "pposix/file/permission.hpp"
@@ -50,6 +51,18 @@ SCENARIO("Permission literals return the same result as or-ing the permission fl
   REQUIRE(""_group == permission::none);
   REQUIRE(""_other == permission::none);
 
+  REQUIRE((("r"_user != "w"_user) && ("w"_user != "x"_user) && ("x"_user != "r"_user)));
+  REQUIRE((("r"_group != "w"_group) && ("w"_group != "x"_group) && ("x"_group != "r"_group)));
+  REQUIRE((("r"_other != "w"_other) && ("w"_other != "x"_other) && ("x"_other != "r"_other)));
+
+  REQUIRE((("r"_user != "r"_group) && ("r"_group != "r"_other) && ("r"_other != "r"_user)));
+  REQUIRE((("w"_user != "w"_group) && ("w"_group != "w"_other) && ("w"_other != "w"_user)));
+  REQUIRE((("x"_user != "x"_group) && ("x"_group != "x"_other) && ("x"_other != "x"_user)));
+
   REQUIRE((("rwx"_user != "rwx"_group) && ("rwx"_group != "rwx"_other) &&
-          ("rwx"_other != "rwx"_user)));
+           ("rwx"_other != "rwx"_user)));
+
+  REQUIRE("RWX"_user == permission::none);
+  REQUIRE("RWX"_group == permission::none);
+  REQUIRE("RWX"_other == permission::none);
 }
