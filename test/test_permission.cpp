@@ -4,10 +4,8 @@
 
 using permission = pposix::file::permission;
 
-
 SCENARIO("Permission literals return the same result as or-ing the permission flags manually",
          "[pposix][permission]") {
-
   REQUIRE(permission::user_all ==
           (permission::user_read | permission::user_write | permission::user_execute));
 
@@ -47,4 +45,11 @@ SCENARIO("Permission literals return the same result as or-ing the permission fl
 
   REQUIRE(("r"_other | "w"_other | "x"_other) ==
           (permission::other_read | permission::other_write | permission::other_execute));
+
+  REQUIRE(""_user == permission::none);
+  REQUIRE(""_group == permission::none);
+  REQUIRE(""_other == permission::none);
+
+  REQUIRE((("rwx"_user != "rwx"_group) && ("rwx"_group != "rwx"_other) &&
+          ("rwx"_other != "rwx"_user)));
 }
