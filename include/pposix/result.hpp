@@ -2,6 +2,7 @@
 #define PPOSIX_RESULT_HPP
 
 #include <system_error>
+#include <type_traits>
 #include <variant>
 
 
@@ -9,6 +10,8 @@ namespace pposix {
 
     template<class T>
     class result {
+
+        static_assert(std::is_trivial_v<T>);
 
         struct error_visitor {
             std::error_code operator()(const std::error_code &ec) const noexcept {
@@ -21,11 +24,9 @@ namespace pposix {
         };
 
     public:
-        /*implicit*/ result(const std::error_code ec) : result_{ec} {}
+        /*implicit*/ result(std::error_code ec) : result_{ec} {}
 
         constexpr /*implicit*/ result(const T &value) : result_{value} {}
-
-        constexpr /*implicit*/ result(T &&value) : result_{std::move(value)} {}
 
         std::error_code error() const noexcept {
             return std::visit(error_visitor{}, *this);

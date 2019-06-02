@@ -1,16 +1,16 @@
-#ifndef PPOSIX_FD_HPP
-#define PPOSIX_FD_HPP
+#ifndef PPOSIX_FILE_FD_HPP
+#define PPOSIX_FILE_FD_HPP
 
 #include <utility>
 #include <type_traits>
 
-#include "default_close_policy.hpp"
-#include "nullfd.hpp"
-#include "rawfd.hpp"
-#include "errno_code.hpp"
+#include "pposix/file/default_close_policy.hpp"
+#include "pposix/file/nullfd.hpp"
+#include "pposix/file/rawfd.hpp"
+#include "pposix/errno_code.hpp"
 
 
-namespace pposix {
+namespace pposix::file {
 
     template<class ClosePolicy = default_close_policy>
     class [[nodiscard]] fd {
@@ -84,4 +84,4 @@ namespace pposix {
     };
 }
 
-#endif //PPOSIX_FD_HPP
+#endif //PPOSIX_FILE_FD_HPP
