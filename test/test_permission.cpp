@@ -1,4 +1,3 @@
-#include <tclDecls.h>
 #include <catch2/catch.hpp>
 
 #include "pposix/file/permission.hpp"

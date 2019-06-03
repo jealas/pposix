@@ -4,6 +4,7 @@ add_executable(
         test_main.cpp
         test_fd.cpp
         test_permission.cpp
+        test_buffer_span.cpp
 )
 
 target_link_libraries(
