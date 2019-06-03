@@ -20,11 +20,13 @@ result<buffer_span> write(const fd<ClosePolicy> &fd, const buffer_span buffer) {
   const auto bytes_written =
       ::write(util::underlying_value(fd.raw()), buffer.data(), buffer.length());
 
-  if (bytes_written < 0) {
+  if (bytes_written == -1) {
     return errno_code();
+  } else if (bytes_written < 0) {
+    throw std::logic_error{"Write returned non-error negative bytes: " +
+                           std::to_string(bytes_written)};
   } else if (bytes_written > buffer.length()) {
-    throw std::logic_error{"Wrote more bytes than available in the buffer for fd: " +
-                           std::to_string(util::underlying_value(fd.raw()))};
+    throw std::logic_error{"Wrote more bytes than available in the buffer"};
   } else {
     return buffer.subspan(0u, static_cast<std::size_t>(bytes_written));
   }

@@ -19,11 +19,13 @@ template <class ClosePolicy>
 result<buffer_span> read(const fd<ClosePolicy> &fd, buffer_span buffer) {
   const auto bytes_read = ::read(util::underlying_value(fd.raw()),
                                  static_cast<void *>(buffer.data()), buffer.length());
-  if (bytes_read < 0) {
+  if (bytes_read == -1) {
     return errno_code();
+  } else if (bytes_read < 0) {
+    throw std::logic_error{"Read returned non-error negative bytes: " +
+                           std::to_string(bytes_read)};
   } else if (bytes_read > buffer.length()) {
-    throw std::logic_error{"Read more bytes than available in the buffer for fd: " +
-                           std::to_string(util::underlying_value(fd.raw()))};
+    throw std::logic_error{"Read more bytes than available in the buffer"};
   } else {
     return buffer.subspan(0u, static_cast<std::size_t>(bytes_read));
   }
