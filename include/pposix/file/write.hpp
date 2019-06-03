@@ -2,6 +2,8 @@
 #define PPOSIX_FILE_WRITE_HPP
 
 #include <cstddef>
+#include <cstring>
+#include <stdexcept>
 
 #include <unistd.h>
 
@@ -14,12 +16,15 @@
 namespace pposix::file {
 
 template <class ClosePolicy>
-result<buffer_span> write(const file::fd<ClosePolicy> &fd, const buffer_span buffer) noexcept {
+result<buffer_span> write(const file::fd<ClosePolicy> &fd, const buffer_span buffer) {
   const auto bytes_written =
       ::write(util::underlying_value(fd.raw()), buffer.data(), buffer.length());
 
   if (bytes_written < 0) {
     return errno_code();
+  } else if (bytes_written > buffer.length()) {
+    throw std::logic_error{"Wrote more bytes than available in the buffer for fd: " +
+                           std::to_string(util::underlying_value(fd.raw()))};
   } else {
     return buffer.subspan(0u, static_cast<std::size_t>(bytes_written));
   }

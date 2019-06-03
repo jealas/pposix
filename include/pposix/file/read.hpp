@@ -2,6 +2,8 @@
 #define PPOSIX_FILE_READ_HPP
 
 #include <cstddef>
+#include <stdexcept>
+#include <string>
 
 #include <unistd.h>
 
@@ -14,11 +16,14 @@
 namespace pposix::file {
 
 template <class ClosePolicy>
-result<buffer_span> read(const file::fd<ClosePolicy> &fd, buffer_span buffer) noexcept {
+result<buffer_span> read(const file::fd<ClosePolicy> &fd, buffer_span buffer) {
   const auto bytes_read = ::read(util::underlying_value(fd.raw()),
                                  static_cast<void *>(buffer.data()), buffer.length());
   if (bytes_read < 0) {
     return errno_code();
+  } else if (bytes_read > buffer.length()) {
+    throw std::logic_error{"Read more bytes than available in the buffer for fd: " +
+                           std::to_string(util::underlying_value(fd.raw()))};
   } else {
     return buffer.subspan(0u, static_cast<std::size_t>(bytes_read));
   }
