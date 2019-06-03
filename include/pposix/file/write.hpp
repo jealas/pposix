@@ -16,7 +16,7 @@
 namespace pposix::file {
 
 template <class ClosePolicy>
-result<buffer_span> write(const file::fd<ClosePolicy> &fd, const buffer_span buffer) {
+result<buffer_span> write(const fd<ClosePolicy> &fd, const buffer_span buffer) {
   const auto bytes_written =
       ::write(util::underlying_value(fd.raw()), buffer.data(), buffer.length());
 

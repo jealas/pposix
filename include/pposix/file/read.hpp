@@ -16,7 +16,7 @@
 namespace pposix::file {
 
 template <class ClosePolicy>
-result<buffer_span> read(const file::fd<ClosePolicy> &fd, buffer_span buffer) {
+result<buffer_span> read(const fd<ClosePolicy> &fd, buffer_span buffer) {
   const auto bytes_read = ::read(util::underlying_value(fd.raw()),
                                  static_cast<void *>(buffer.data()), buffer.length());
   if (bytes_read < 0) {
