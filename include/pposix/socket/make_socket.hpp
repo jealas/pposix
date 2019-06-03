@@ -13,12 +13,12 @@
 #include "type.hpp"
 #include "protocol.hpp"
 #include "flag.hpp"
-#include "socket_fd.hpp"
+#include "fd.hpp"
 
 
 namespace pposix::socket {
 
-    posix::result<socket_fd> make_socket(const domain domain, const type typ, const flag &flags = flag::none, const protocol protocol = 0) {
+    posix::result<fd> make_socket(const domain domain, const type typ, const flag &flags = flag::none, const protocol protocol = 0) {
         const posix::rawfd fd{::socket(util::underlying_value(domain), util::underlying_value(typ) | util::underlying_value(flags), protocol)};
 
         if (fd == posix::nullfd) {
