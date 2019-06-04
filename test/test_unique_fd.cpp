@@ -23,7 +23,7 @@ void require_is_not_empty(const pposix::unique_fd<Close> &fd) {
   REQUIRE(fd.raw() != pposix::rawfd::null);
 }
 
-SCENARIO("File descriptors can be constructed", "[pposix][fd]") {
+SCENARIO("File descriptors can be constructed", "[pposix][unique_fd]") {
   GIVEN("a default constructed file descriptor") {
     pposix::unique_fd<nop_close> fd;
 
@@ -43,7 +43,7 @@ SCENARIO("File descriptors can be constructed", "[pposix][fd]") {
   }
 }
 
-SCENARIO("File descriptors can be released") {
+SCENARIO("File descriptors can be released", "[pposix][unique_fd]") {
   GIVEN("an empty file descriptor") {
     pposix::unique_fd<nop_close> fd;
 
@@ -97,7 +97,7 @@ class close_counter_policy {
   std::shared_ptr<unsigned> close_count_{};
 };
 
-SCENARIO("File descriptors can be closed", "[pposix][fd]") {
+SCENARIO("File descriptors can be closed", "[pposix][unique_fd]") {
   GIVEN("a null file descriptor") {
     auto fd = std::make_unique<pposix::unique_fd<close_counter_policy>>(pposix::rawfd::null);
 
