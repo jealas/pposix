@@ -176,3 +176,43 @@ SCENARIO("File descriptors can be closed", "[pposix][unique_fd]") {
     }
   }
 }
+
+SCENARIO("File descriptors can be moved", "[pposix][unique_fd]") {
+  GIVEN("a null file descriptor") {
+    pposix::unique_fd<fd_tag, nop_close> null_fd{pposix::nullfd};
+
+    REQUIRE(null_fd.empty());
+
+    WHEN("moved from") {
+      pposix::unique_fd<fd_tag, nop_close> new_fd{std::move(null_fd)};
+
+      THEN("both file descriptors are empty") {
+        REQUIRE(null_fd.empty());  // NOLINT use after move
+        REQUIRE(new_fd.empty());
+      }
+    }
+  }
+
+  GIVEN("a non-null file descriptor") {
+    constexpr pposix::rawfd VALID_FD{1u};
+
+    pposix::unique_fd<fd_tag, nop_close> old_fd{VALID_FD};
+
+    REQUIRE(not old_fd.empty());
+
+    WHEN("moved from") {
+      pposix::unique_fd<fd_tag, nop_close> new_fd{std::move(old_fd)};
+
+      THEN("the old file descriptor is emptied") {
+        REQUIRE(old_fd.empty());  // NOLINT use after move
+        REQUIRE(old_fd.raw() != VALID_FD);
+        REQUIRE(old_fd.raw() == pposix::nullfd);
+
+        AND_THEN("the new file descriptor contains the old file descriptor") {
+          REQUIRE(not new_fd.empty());
+          REQUIRE(new_fd.raw() == VALID_FD);
+        }
+      }
+    }
+  }
+}
