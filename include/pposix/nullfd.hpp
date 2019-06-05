@@ -1,10 +1,10 @@
-#ifndef PPOSIX_FILE_NULLFD_HPP
-#define PPOSIX_FILE_NULLFD_HPP
+#ifndef PPOSIX_NULLFD_HPP
+#define PPOSIX_NULLFD_HPP
 
-#include "pposix/file/rawfd.hpp"
+#include "pposix/rawfd.hpp"
 
 
-namespace pposix::file {
+namespace pposix {
 
     struct nullfd_t {
         constexpr /*implicit*/ operator rawfd() const noexcept { return rawfd::null; }
@@ -13,4 +13,4 @@ namespace pposix::file {
     static constexpr nullfd_t nullfd{};
 }
 
-#endif //PPOSIX_FILE_NULLFD_HPP
+#endif //PPOSIX_NULLFD_HPP

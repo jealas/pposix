@@ -2,7 +2,7 @@ add_executable(
         test_pposix
 
         test_main.cpp
-        test_fd.cpp
+        test_unique_fd.cpp
         test_permission.cpp
         test_buffer_span.cpp
 )

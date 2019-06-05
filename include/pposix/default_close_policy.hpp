@@ -6,11 +6,11 @@
 #include <unistd.h>
 
 #include "pposix/errno_code.hpp"
-#include "pposix/file/rawfd.hpp"
+#include "pposix/rawfd.hpp"
 #include "pposix/util/underlying_value.hpp"
 
 
-namespace pposix::file {
+namespace pposix {
 
     struct default_close_policy {
         std::error_code operator()(rawfd fd) const noexcept {
