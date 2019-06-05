@@ -16,7 +16,7 @@ class [[nodiscard]] unique_fd {
  public:
   constexpr unique_fd() noexcept : unique_fd::unique_fd{nullfd} {}
 
-  constexpr /*implicit*/ unique_fd(nullfd_t) noexcept : close_{} {}
+  constexpr unique_fd(nullfd_t) noexcept : close_{} {}  // NOLINT implicit constructor
 
   constexpr explicit unique_fd(const rawfd file_descriptor) noexcept(noexcept(ClosePolicy{}))
       : raw_fd_{file_descriptor}, close_{} {}
