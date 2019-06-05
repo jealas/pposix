@@ -4,8 +4,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "pposix/errno_code.hpp"
 #include "pposix/default_close_policy.hpp"
+#include "pposix/errno_code.hpp"
 #include "pposix/nullfd.hpp"
 #include "pposix/rawfd.hpp"
 
@@ -18,12 +18,15 @@ class [[nodiscard]] unique_fd {
 
   constexpr /*implicit*/ unique_fd(nullfd_t) noexcept : raw_fd_{nullfd}, close_{} {}
 
-  constexpr explicit unique_fd(const rawfd file_descriptor) : raw_fd_{file_descriptor}, close_{} {}
+  constexpr explicit unique_fd(const rawfd file_descriptor) noexcept(noexcept(ClosePolicy{}))
+      : raw_fd_{file_descriptor}, close_{} {}
 
-  constexpr explicit unique_fd(const rawfd file_descriptor, const ClosePolicy &close)
+  constexpr explicit unique_fd(const rawfd file_descriptor, const ClosePolicy &close) noexcept(
+      noexcept(ClosePolicy{std::declval<const ClosePolicy &>()}))
       : raw_fd_{file_descriptor}, close_{close} {}
 
-  constexpr explicit unique_fd(const rawfd file_descriptor, ClosePolicy &&close)
+  constexpr explicit unique_fd(const rawfd file_descriptor, ClosePolicy &&close) noexcept(
+      noexcept(ClosePolicy{std::declval<ClosePolicy &&>()}))
       : raw_fd_{file_descriptor}, close_{std::move(close)} {}
 
   ~unique_fd() {
@@ -56,7 +59,8 @@ class [[nodiscard]] unique_fd {
     return tmp_fd;
   }
 
-  [[nodiscard]] std::error_code close() noexcept {
+  [[nodiscard]] std::error_code close() noexcept(
+      noexcept(std::declval<ClosePolicy &>()(std::declval<rawfd>()))) {
     if (not empty()) {
       while (const auto ec = close_(raw())) {
         if (ec == std::errc::interrupted) {
