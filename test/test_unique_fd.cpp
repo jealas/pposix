@@ -9,15 +9,17 @@ struct nop_close {
   std::error_code operator()(pposix::rawfd) const noexcept { return {}; }
 };
 
+struct fd_tag {};
+
 template <class Close>
-void require_is_empty(const pposix::unique_fd<Close> &fd) {
+void require_is_empty(const pposix::unique_fd<fd_tag, Close> &fd) {
   REQUIRE(fd.empty());
   REQUIRE(not fd);
   REQUIRE(fd.raw() == pposix::rawfd::null);
 }
 
 template <class Close>
-void require_is_not_empty(const pposix::unique_fd<Close> &fd) {
+void require_is_not_empty(const pposix::unique_fd<fd_tag, Close> &fd) {
   REQUIRE(not fd.empty());
   REQUIRE(fd);
   REQUIRE(fd.raw() != pposix::rawfd::null);
@@ -25,19 +27,19 @@ void require_is_not_empty(const pposix::unique_fd<Close> &fd) {
 
 SCENARIO("File descriptors can be constructed", "[pposix][unique_fd]") {
   GIVEN("a default constructed file descriptor") {
-    pposix::unique_fd<nop_close> fd;
+    pposix::unique_fd<fd_tag, nop_close> fd;
 
     THEN("the file descriptor should be empty") { require_is_empty(fd); }
   }
 
   GIVEN("a file descriptor constructed with a nullfd") {
-    pposix::unique_fd<nop_close> fd{pposix::nullfd};
+    pposix::unique_fd<fd_tag, nop_close> fd{pposix::nullfd};
 
     THEN("then file descriptor should be empty") { require_is_empty(fd); }
   }
 
   GIVEN("a file descriptor constructed with rawfd null") {
-    pposix::unique_fd<nop_close> fd{pposix::rawfd::null};
+    pposix::unique_fd<fd_tag, nop_close> fd{pposix::rawfd::null};
 
     THEN("the file descriptor should be empty") { require_is_empty(fd); }
   }
@@ -45,7 +47,7 @@ SCENARIO("File descriptors can be constructed", "[pposix][unique_fd]") {
 
 SCENARIO("File descriptors can be released", "[pposix][unique_fd]") {
   GIVEN("an empty file descriptor") {
-    pposix::unique_fd<nop_close> fd;
+    pposix::unique_fd<fd_tag, nop_close> fd;
 
     REQUIRE(fd.empty());
     REQUIRE(not fd);
@@ -64,7 +66,7 @@ SCENARIO("File descriptors can be released", "[pposix][unique_fd]") {
   GIVEN("a non-empty file descriptor") {
     constexpr pposix::rawfd VALID_FD{1};
 
-    pposix::unique_fd<nop_close> fd{VALID_FD};
+    pposix::unique_fd<fd_tag, nop_close> fd{VALID_FD};
 
     require_is_not_empty(fd);
 
@@ -99,7 +101,8 @@ class close_counter_policy {
 
 SCENARIO("File descriptors can be closed", "[pposix][unique_fd]") {
   GIVEN("a null file descriptor") {
-    auto fd = std::make_unique<pposix::unique_fd<close_counter_policy>>(pposix::rawfd::null);
+    auto fd =
+        std::make_unique<pposix::unique_fd<fd_tag, close_counter_policy>>(pposix::rawfd::null);
 
     require_is_empty(*fd);
 
@@ -135,7 +138,7 @@ SCENARIO("File descriptors can be closed", "[pposix][unique_fd]") {
   }
 
   GIVEN("a non-null file descriptor") {
-    auto fd = std::make_unique<pposix::unique_fd<close_counter_policy>>(pposix::rawfd{1});
+    auto fd = std::make_unique<pposix::unique_fd<fd_tag, close_counter_policy>>(pposix::rawfd{1});
 
     require_is_not_empty(*fd);
 

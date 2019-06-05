@@ -11,12 +11,12 @@
 
 namespace pposix {
 
-template <class ClosePolicy = default_close_policy>
+template <class Tag, class ClosePolicy = default_close_policy>
 class [[nodiscard]] unique_fd {
  public:
   constexpr unique_fd() noexcept : unique_fd::unique_fd{nullfd} {}
 
-  constexpr /*implicit*/ unique_fd(nullfd_t) noexcept : raw_fd_{nullfd}, close_{} {}
+  constexpr /*implicit*/ unique_fd(nullfd_t) noexcept : close_{} {}
 
   constexpr explicit unique_fd(const rawfd file_descriptor) noexcept(noexcept(ClosePolicy{}))
       : raw_fd_{file_descriptor}, close_{} {}
@@ -37,7 +37,7 @@ class [[nodiscard]] unique_fd {
 
   unique_fd(const unique_fd &other) = delete;
 
-  unique_fd(unique_fd && other) noexcept : raw_fd_{other.raw_fd_} { other.raw_fd_ = nullfd; }
+  unique_fd(unique_fd && other) noexcept { std::swap(raw_fd_, other.raw_fd_); }
 
   unique_fd &operator=(const unique_fd &) = delete;
 
@@ -77,7 +77,7 @@ class [[nodiscard]] unique_fd {
   }
 
  private:
-  rawfd raw_fd_;
+  rawfd raw_fd_{nullfd};
   ClosePolicy close_;
 };
 

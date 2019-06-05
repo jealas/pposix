@@ -6,7 +6,7 @@
 
 namespace pposix::file {
 
-    using fd = pposix::unique_fd<>;
+    struct fd : pposix::unique_fd<fd> {};
 
 }
 

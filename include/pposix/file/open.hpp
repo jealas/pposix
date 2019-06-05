@@ -17,7 +17,7 @@
 namespace pposix::file {
 
     result<fd<>> open(const std::filesystem::path &path, const mode m, const flags f, const permission p) {
-        auto const * const native_path = path.native().c_str();
+        char const * const native_path = path.native().c_str();
         const rawfd new_fd{::open(native_path, util::underlying_value(m) | util::underlying_value(f), util::underlying_value(p)};
 
         if (new_fd == nullfd) {
