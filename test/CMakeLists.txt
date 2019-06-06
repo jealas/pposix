@@ -19,3 +19,5 @@ target_include_directories(
         PRIVATE
         ${CMAKE_SOURCE_DIR}/lib/catch2/single_include
 )
+
+add_subdirectory(posix)

@@ -8,9 +8,8 @@
 
 namespace pposix::socket {
 
-    template <class Close>
-    struct socket_fd : public posix::fd<Close> {
-        using posix::fd<Close>::fd;
+    struct fd : public posix::fd<> {
+        using posix::fd<>::fd;
     };
 
 }
