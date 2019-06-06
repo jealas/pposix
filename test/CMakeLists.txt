@@ -5,6 +5,7 @@ add_executable(
         test_unique_fd.cpp
         test_permission.cpp
         test_buffer_span.cpp
+        test_socket.cpp
 )
 
 target_link_libraries(
