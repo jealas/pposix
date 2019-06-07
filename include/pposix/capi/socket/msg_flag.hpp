@@ -2,6 +2,6 @@
 
 namespace pposix::capi::socket {
 
-enum class protocol : int {};
+enum class msg_flag : unsigned {};
 
 }
