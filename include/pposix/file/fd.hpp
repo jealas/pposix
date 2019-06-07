@@ -1,13 +1,12 @@
 #ifndef PPOSIX_FILE_FD_HPP
 #define PPOSIX_FILE_FD_HPP
 
-#include "pposix/unique_fd.hpp"
-
+#include "pposix/capi/rawfd.hpp"
 
 namespace pposix::file {
 
-    struct fd : pposix::unique_fd<fd> {};
+struct filefd : capi::rawfd {};
 
-}
+}  // namespace pposix::file
 
-#endif //PPOSIX_FILE_FD_HPP
+#endif  // PPOSIX_FILE_FD_HPP
