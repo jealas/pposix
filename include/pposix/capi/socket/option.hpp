@@ -2,24 +2,27 @@
 
 #include <sys/socket.h>
 
-namespace pposix::socket {
+namespace pposix::capi::socket {
 
-enum class option : unsigned {
-  acceptconn = SO_ACCEPTCONN,
-  broadcast = SO_BROADCAST,
+enum class option : int {
   debug = SO_DEBUG,
-  dontroute = SO_DONTROUTE,
-  error = SO_ERROR,
+  broadcast = SO_BROADCAST,
+  reuseaddr = SO_REUSEADDR,
   keepalive = SO_KEEPALIVE,
   linger = SO_LINGER,
   oobinline = SO_OOBINLINE,
   rcvbuf = SO_RCVBUF,
+  sndbuf = SO_SNDBUF,
+  dontroute = SO_DONTROUTE,
   rcvlowat = SO_RCVLOWAT,
   rcvtimeo = SO_RCVTIMEO,
-  reuseaddr = SO_REUSEADDR,
-  sndbuf = SO_SNDBUF,
   sndlowat = SO_SNDLOWAT,
   sndtimeo = SO_SNDTIMEO,
+
+  // TODO: Need to check these in the latest POSIX standard
+
+  acceptconn = SO_ACCEPTCONN,
+  error = SO_ERROR,
   type = SO_TYPE
 };
 
