@@ -1,5 +1,4 @@
-#ifndef PPOSIX_SOCKET_OPTION_HPP
-#define PPOSIX_SOCKET_OPTION_HPP
+#pragma once
 
 #include <sys/socket.h>
 
@@ -25,5 +24,3 @@ enum class option : unsigned {
 };
 
 }
-
-#endif  // PPOSIX_SOCKET_OPTION_HPP
