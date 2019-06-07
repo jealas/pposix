@@ -6,7 +6,7 @@
 #include <pposix/file/fd.hpp>
 
 struct nop_close {
-  std::error_code operator()(pposix::rawfd) const noexcept { return {}; }
+  std::error_code operator()(pposix::capi::rawfd) const noexcept { return {}; }
 };
 
 struct fd_tag {};
@@ -15,14 +15,14 @@ template <class Close>
 void require_is_empty(const pposix::unique_fd<fd_tag, Close> &fd) {
   REQUIRE(fd.empty());
   REQUIRE(not fd);
-  REQUIRE(fd.raw() == pposix::rawfd::null);
+  REQUIRE(fd.raw() == pposix::capi::nullfd);
 }
 
 template <class Close>
 void require_is_not_empty(const pposix::unique_fd<fd_tag, Close> &fd) {
   REQUIRE(not fd.empty());
   REQUIRE(fd);
-  REQUIRE(fd.raw() != pposix::rawfd::null);
+  REQUIRE(fd.raw() != pposix::capi::nullfd);
 }
 
 SCENARIO("File descriptors can be constructed", "[pposix][unique_fd]") {
@@ -33,13 +33,13 @@ SCENARIO("File descriptors can be constructed", "[pposix][unique_fd]") {
   }
 
   GIVEN("a file descriptor constructed with a nullfd") {
-    pposix::unique_fd<fd_tag, nop_close> fd{pposix::nullfd};
+    pposix::unique_fd<fd_tag, nop_close> fd{pposix::capi::nullfd};
 
     THEN("then file descriptor should be empty") { require_is_empty(fd); }
   }
 
   GIVEN("a file descriptor constructed with rawfd null") {
-    pposix::unique_fd<fd_tag, nop_close> fd{pposix::rawfd::null};
+    pposix::unique_fd<fd_tag, nop_close> fd{pposix::capi::nullfd};
 
     THEN("the file descriptor should be empty") { require_is_empty(fd); }
   }
@@ -58,13 +58,13 @@ SCENARIO("File descriptors can be released", "[pposix][unique_fd]") {
       THEN("the file descriptor remains empty") { require_is_empty(fd); }
 
       AND_THEN("the released raw file descriptor is null") {
-        REQUIRE(released_rawfd == pposix::rawfd::null);
+        REQUIRE(released_rawfd == pposix::capi::nullfd);
       }
     }
   }
 
   GIVEN("a non-empty file descriptor") {
-    constexpr pposix::rawfd VALID_FD{1};
+    constexpr pposix::capi::rawfd VALID_FD{1};
 
     pposix::unique_fd<fd_tag, nop_close> fd{VALID_FD};
 
@@ -88,7 +88,7 @@ class close_counter_policy {
  public:
   close_counter_policy() : close_count_{std::make_shared<unsigned>(0u)} {}
 
-  std::error_code operator()(pposix::rawfd rawfd) {
+  std::error_code operator()(pposix::capi::rawfd rawfd) {
     ++(*close_count_);
     return {};
   }
@@ -102,7 +102,7 @@ class close_counter_policy {
 SCENARIO("File descriptors can be closed", "[pposix][unique_fd]") {
   GIVEN("a null file descriptor") {
     auto fd =
-        std::make_unique<pposix::unique_fd<fd_tag, close_counter_policy>>(pposix::rawfd::null);
+        std::make_unique<pposix::unique_fd<fd_tag, close_counter_policy>>(pposix::capi::nullfd);
 
     require_is_empty(*fd);
 
@@ -138,7 +138,7 @@ SCENARIO("File descriptors can be closed", "[pposix][unique_fd]") {
   }
 
   GIVEN("a non-null file descriptor") {
-    auto fd = std::make_unique<pposix::unique_fd<fd_tag, close_counter_policy>>(pposix::rawfd{1});
+    auto fd = std::make_unique<pposix::unique_fd<fd_tag, close_counter_policy>>(pposix::capi::rawfd{1});
 
     require_is_not_empty(*fd);
 
@@ -179,7 +179,7 @@ SCENARIO("File descriptors can be closed", "[pposix][unique_fd]") {
 
 SCENARIO("File descriptors can be moved", "[pposix][unique_fd]") {
   GIVEN("a null file descriptor") {
-    pposix::unique_fd<fd_tag, nop_close> null_fd{pposix::nullfd};
+    pposix::unique_fd<fd_tag, nop_close> null_fd{pposix::capi::nullfd};
 
     REQUIRE(null_fd.empty());
 
@@ -194,7 +194,7 @@ SCENARIO("File descriptors can be moved", "[pposix][unique_fd]") {
   }
 
   GIVEN("a non-null file descriptor") {
-    constexpr pposix::rawfd VALID_FD{1u};
+    constexpr pposix::capi::rawfd VALID_FD{1u};
 
     pposix::unique_fd<fd_tag, nop_close> old_fd{VALID_FD};
 
@@ -206,7 +206,7 @@ SCENARIO("File descriptors can be moved", "[pposix][unique_fd]") {
       THEN("the old file descriptor is emptied") {
         REQUIRE(old_fd.empty());  // NOLINT use after move
         REQUIRE(old_fd.raw() != VALID_FD);
-        REQUIRE(old_fd.raw() == pposix::nullfd);
+        REQUIRE(old_fd.raw() == pposix::capi::nullfd);
 
         AND_THEN("the new file descriptor contains the old file descriptor") {
           REQUIRE(not new_fd.empty());

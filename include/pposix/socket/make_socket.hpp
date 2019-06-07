@@ -1,7 +1,6 @@
 #ifndef PPOSIX_SOCKET_MAKE_SOCKET_HPP
 #define PPOSIX_SOCKET_MAKE_SOCKET_HPP
 
-#include <sys/socket.h>
 
 #include "posix/result.hpp"
 #include "posix/rawfd.hpp"

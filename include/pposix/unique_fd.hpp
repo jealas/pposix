@@ -6,26 +6,26 @@
 
 #include "pposix/default_close_policy.hpp"
 #include "pposix/errno_code.hpp"
-#include "pposix/nullfd.hpp"
-#include "pposix/rawfd.hpp"
+#include "pposix/capi/nullfd.hpp"
+#include "pposix/capi/rawfd.hpp"
 
 namespace pposix {
 
 template <class Tag, class ClosePolicy = default_close_policy>
 class [[nodiscard]] unique_fd {
  public:
-  constexpr unique_fd() noexcept : unique_fd::unique_fd{nullfd} {}
+  constexpr unique_fd() noexcept : unique_fd::unique_fd{capi::nullfd} {}
 
-  constexpr unique_fd(nullfd_t) noexcept : close_{} {}  // NOLINT implicit constructor
+  constexpr unique_fd(capi::nullfd_t) noexcept : close_{} {}  // NOLINT implicit constructor
 
-  constexpr explicit unique_fd(const rawfd file_descriptor) noexcept(noexcept(ClosePolicy{}))
+  constexpr explicit unique_fd(const capi::rawfd file_descriptor) noexcept(noexcept(ClosePolicy{}))
       : raw_fd_{file_descriptor}, close_{} {}
 
-  constexpr explicit unique_fd(const rawfd file_descriptor, const ClosePolicy &close) noexcept(
+  constexpr explicit unique_fd(const capi::rawfd file_descriptor, const ClosePolicy &close) noexcept(
       noexcept(ClosePolicy{std::declval<const ClosePolicy &>()}))
       : raw_fd_{file_descriptor}, close_{close} {}
 
-  constexpr explicit unique_fd(const rawfd file_descriptor, ClosePolicy &&close) noexcept(
+  constexpr explicit unique_fd(const capi::rawfd file_descriptor, ClosePolicy &&close) noexcept(
       noexcept(ClosePolicy{std::declval<ClosePolicy &&>()}))
       : raw_fd_{file_descriptor}, close_{std::move(close)} {}
 
@@ -43,24 +43,24 @@ class [[nodiscard]] unique_fd {
 
   unique_fd &operator=(unique_fd &&) = delete;
 
-  bool empty() const noexcept { return raw_fd_ == nullfd; }
+  bool empty() const noexcept { return raw_fd_ == capi::nullfd; }
 
   explicit operator bool() const noexcept { return not empty(); }
 
-  rawfd raw() const noexcept { return raw_fd_; }
+  capi::rawfd raw() const noexcept { return raw_fd_; }
 
   ClosePolicy &get_close_policy() noexcept { return close_; }
 
   const ClosePolicy &get_close_policy() const noexcept { return close_; }
 
-  [[nodiscard]] rawfd release() noexcept {
+  [[nodiscard]] capi::rawfd release() noexcept {
     const auto tmp_fd = raw_fd_;
-    raw_fd_ = nullfd;
+    raw_fd_ = capi::nullfd;
     return tmp_fd;
   }
 
   [[nodiscard]] std::error_code close() noexcept(
-      noexcept(std::declval<ClosePolicy &>()(std::declval<rawfd>()))) {
+      noexcept(std::declval<ClosePolicy &>()(std::declval<capi::rawfd>()))) {
     if (not empty()) {
       while (const auto ec = close_(raw())) {
         if (ec == std::errc::interrupted) {
@@ -70,14 +70,14 @@ class [[nodiscard]] unique_fd {
         }
       }
 
-      raw_fd_ = nullfd;
+      raw_fd_ = capi::nullfd;
     }
 
     return {};
   }
 
  private:
-  rawfd raw_fd_{nullfd};
+  capi::rawfd raw_fd_{};
   ClosePolicy close_;
 };
 
