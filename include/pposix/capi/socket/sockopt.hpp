@@ -4,11 +4,14 @@
 
 #include <sys/socket.h>
 
+#include "pposix/any_span.hpp"
 #include "pposix/capi/socket/level.hpp"
 #include "pposix/capi/socket/option.hpp"
 #include "pposix/capi/socket/socketfd.hpp"
+#include "pposix/capi/socket/type.hpp"
 #include "pposix/duration.hpp"
 #include "pposix/errno_code.hpp"
+#include "pposix/result.hpp"
 #include "pposix/util/underlying_value.hpp"
 
 namespace pposix::capi::socket {
@@ -34,7 +37,7 @@ class linger {
   const ::linger &get() const noexcept { return linger_; }
 
  private:
-  ::linger linger_{};
+  ::linger linger_;
 };
 
 enum class oobinline : bool {};
@@ -59,7 +62,7 @@ class rcvtimeo {
   const ::timeval &get() const noexcept { return timeout_; }
 
  private:
-  ::timeval timeout_{};
+  ::timeval timeout_;
 };
 
 enum class sndlowat : int {};
@@ -80,13 +83,12 @@ class sndtimeo {
   const ::timeval &get() const noexcept { return timeout_; }
 
  private:
-  ::timeval timeout_{};
+  ::timeval timeout_;
 };
 
-std::error_code setsockopt(socketfd fd, level l, option o, void const *val,
-                           socklen_t len) noexcept {
-  const auto error =
-      ::setsockopt(fd.fd(), util::underlying_value(l), util::underlying_value(o), val, len);
+std::error_code setsockopt(socketfd fd, level l, option o, const any_cspan val) noexcept {
+  const auto error = ::setsockopt(fd.fd(), util::underlying_value(l), util::underlying_value(o),
+                                  val.data(), val.length());
 
   if (error == -1) {
     return errno_code();
@@ -98,7 +100,7 @@ std::error_code setsockopt(socketfd fd, level l, option o, void const *val,
 namespace detail {
 
 std::error_code setsockopt_int(socketfd fd, level l, option o, int i) noexcept {
-  return socket::setsockopt(fd, l, o, &i, sizeof(int));
+  return socket::setsockopt(fd, l, o, any_cspan{i});
 }
 
 std::error_code setsockopt_bool(socketfd fd, level l, option o, bool b) noexcept {
@@ -125,7 +127,7 @@ std::error_code setsockopt(socketfd fd, level l, keepalive k) noexcept {
 
 std::error_code setsockopt(socketfd fd, level l, linger lin) noexcept {
   const ::linger &posix_linger = lin.get();
-  return setsockopt(fd, l, option::linger, &posix_linger, sizeof(::linger));
+  return setsockopt(fd, l, option::linger, any_cspan{posix_linger});
 }
 
 std::error_code setsockopt(socketfd fd, level l, oobinline o) noexcept {
@@ -150,7 +152,7 @@ std::error_code setsockopt(socketfd fd, level l, rcvlowat r) noexcept {
 
 std::error_code setsockopt(socketfd fd, level l, rcvtimeo r) noexcept {
   const ::timeval &val = r.get();
-  return setsockopt(fd, l, option::rcvtimeo, &val, sizeof(::timeval));
+  return setsockopt(fd, l, option::rcvtimeo, any_cspan{val});
 }
 
 std::error_code setsockopt(socketfd fd, level l, sndlowat s) noexcept {
@@ -159,7 +161,115 @@ std::error_code setsockopt(socketfd fd, level l, sndlowat s) noexcept {
 
 std::error_code setsockopt(socketfd fd, level l, sndtimeo r) noexcept {
   const ::timeval &val = r.get();
-  return setsockopt(fd, l, option::sndtimeo, &val, sizeof(::timeval));
+  return setsockopt(fd, l, option::sndtimeo, any_cspan{val});
+}
+
+// getsockopt
+
+result<socklen_t> getsockopt(socketfd fd, level l, option o, any_span val) noexcept {
+  socklen_t len{0};
+
+  const auto error = ::getsockopt(fd.fd(), util::underlying_value(l), util::underlying_value(o),
+                                  val.data(), &len);
+
+  if (error == -1) {
+    return errno_code();
+  } else {
+    return len;
+  }
+}
+
+namespace detail {
+
+template <class T, option Option>
+result<T> getsockopt(socketfd fd, level l) noexcept {
+  T val{};
+
+  const auto result = socket::getsockopt(fd, l, Option, any_span{val});
+  if (const auto error = result.error()) {
+    return error;
+  } else {
+    return val;
+  }
+}
+
+}  // namespace detail
+
+template <class T>
+result<T> getsockopt(socketfd fd, level l) noexcept;
+
+template <>
+result<debug> getsockopt<debug>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<debug, option::debug>(fd, l);
+}
+
+enum class acceptconn : bool {};
+
+template <>
+result<acceptconn> getsockopt<acceptconn>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<acceptconn, option::acceptconn>(fd, l);
+}
+
+template <>
+result<keepalive> getsockopt<keepalive>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<keepalive, option::keepalive>(fd, l);
+}
+
+template <>
+result<linger> getsockopt<linger>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<linger, option::linger>(fd, l);
+}
+
+template <>
+result<oobinline> getsockopt<oobinline>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<oobinline, option::oobinline>(fd, l);
+}
+
+template <>
+result<sndbuf> getsockopt<sndbuf>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<sndbuf, option::sndbuf>(fd, l);
+}
+
+template <>
+result<rcvbuf> getsockopt<rcvbuf>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<rcvbuf, option::rcvbuf>(fd, l);
+}
+
+enum class error : int {};
+
+template <>
+result<error> getsockopt<error>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<error, option::error>(fd, l);
+}
+
+template <>
+result<type> getsockopt<type>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<type, option::type>(fd, l);
+}
+
+template <>
+result<dontroute> getsockopt<dontroute>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<dontroute, option::dontroute>(fd, l);
+}
+
+template <>
+result<rcvlowat> getsockopt<rcvlowat>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<rcvlowat, option::rcvlowat>(fd, l);
+}
+
+template <>
+result<rcvtimeo> getsockopt<rcvtimeo>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<rcvtimeo, option::rcvtimeo>(fd, l);
+}
+
+template <>
+result<sndlowat> getsockopt<sndlowat>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<sndlowat, option::sndlowat>(fd, l);
+}
+
+template <>
+result<sndtimeo> getsockopt<sndtimeo>(socketfd fd, level l) noexcept {
+  return detail::getsockopt<sndtimeo, option::sndtimeo>(fd, l);
 }
 
 }
