@@ -2,7 +2,7 @@ add_executable(
         test_pposix_capi
 
         test_main.cpp
-        test_sockopt.cpp
+        test_getsockopt.cpp
 )
 
 target_link_libraries(test_pposix_capi pposix)

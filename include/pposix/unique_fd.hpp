@@ -37,18 +37,16 @@ class [[nodiscard]] unique_fd {
   }
 
   unique_fd(const unique_fd &other) = delete;
-
   unique_fd(unique_fd && other) noexcept { std::swap(raw_fd_, other.raw_fd_); }
 
   unique_fd &operator=(const unique_fd &) = delete;
-
   unique_fd &operator=(unique_fd &&) = delete;
 
   bool empty() const noexcept { return raw_fd_ == capi::nullfd; }
-
   explicit operator bool() const noexcept { return not empty(); }
 
   Fd raw() const noexcept { return raw_fd_; }
+  Fd operator*() const noexcept { return raw(); }
 
   ClosePolicy &get_close_policy() noexcept { return close_; }
 
@@ -56,7 +54,7 @@ class [[nodiscard]] unique_fd {
 
   [[nodiscard]] Fd release() noexcept {
     const auto tmp_fd = raw_fd_;
-    raw_fd_ = capi::nullfd;
+    raw_fd_ = Fd{capi::nullfd};
     return tmp_fd;
   }
 
@@ -71,7 +69,7 @@ class [[nodiscard]] unique_fd {
         }
       }
 
-      raw_fd_ = capi::nullfd;
+      raw_fd_ = Fd{capi::nullfd};
     }
 
     return {};

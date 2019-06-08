@@ -2,6 +2,8 @@
 
 #include <sys/socket.h>
 
+#include "pposix/util/underlying_value.hpp"
+
 namespace pposix::capi::socket {
 
 enum class flag : unsigned { none = 0u, closexec = SOCK_CLOEXEC, nonblock = SOCK_NONBLOCK };

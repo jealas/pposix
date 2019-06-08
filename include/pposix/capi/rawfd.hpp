@@ -24,11 +24,6 @@ class rawfd {
   rawfd &operator=(const rawfd &) = default;
   rawfd &operator=(rawfd &&) = default;
 
-  constexpr rawfd &operator=(nullfd_t) noexcept {
-    fd_ = detail::NULLFD;
-    return *this;
-  }
-
   constexpr fd_t fd() const noexcept { return fd_; }
 
  private:

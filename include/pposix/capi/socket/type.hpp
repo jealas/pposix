@@ -4,10 +4,10 @@
 
 namespace pposix::capi::socket {
 
-enum class type : unsigned {
+enum class type : int {
   stream = SOCK_STREAM,
   dgram = SOCK_DGRAM,
-  seq = SOCK_SEQPACKET,
+  seqpacket = SOCK_SEQPACKET,
   raw = SOCK_RAW,
   rdm = SOCK_RDM
 };

@@ -7,7 +7,7 @@ namespace pposix::capi::socket {
 enum class domain : unsigned {
   unspec = AF_UNSPEC,
   local = AF_LOCAL,
-  unix = AF_UNIX,
+  unix_ = AF_UNIX,
   file = AF_FILE,
   inet = AF_INET,
   ax25 = AF_AX25,

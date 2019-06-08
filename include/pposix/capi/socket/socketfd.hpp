@@ -4,6 +4,8 @@
 
 namespace pposix::capi::socket {
 
-struct socketfd : rawfd {};
+struct socketfd : rawfd {
+  using rawfd::rawfd;
+};
 
-}
+}  // namespace pposix::capi::socket
