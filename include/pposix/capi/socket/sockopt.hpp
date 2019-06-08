@@ -86,7 +86,7 @@ class sndtimeo {
   ::timeval timeout_;
 };
 
-std::error_code setsockopt(socketfd fd, level l, option o, const any_cspan val) noexcept {
+std::error_code setsockopt(socketfd fd, level l, option o, any_cspan val) noexcept {
   const auto error = ::setsockopt(fd.fd(), util::underlying_value(l), util::underlying_value(o),
                                   val.data(), val.length());
 
