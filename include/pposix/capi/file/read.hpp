@@ -4,8 +4,8 @@
 
 #include <unistd.h>
 
+#include "pposix/byte_span.hpp"
 #include "pposix/capi/rawfd.hpp"
-#include "pposix/buffer_span.hpp"
 
 namespace pposix::capi::file {
 

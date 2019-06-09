@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <cstddef>
 
-#include "pposix/buffer_span.hpp"
+#include "pposix/byte_span.hpp"
 
-void require_is_empty_buffer_span(const pposix::buffer_span &buffer) {
+void require_is_empty_buffer_span(const pposix::byte_span &buffer) {
   REQUIRE(buffer.empty());
   REQUIRE(buffer.length() == 0u);
   REQUIRE(buffer.cbegin() == buffer.cend());
@@ -13,7 +13,7 @@ void require_is_empty_buffer_span(const pposix::buffer_span &buffer) {
 }
 
 SCENARIO("Buffer spans can be default constructed", "[pposix][buffer_span]") {
-  pposix::buffer_span buffer{};
+  pposix::byte_span buffer{};
 
   require_is_empty_buffer_span(buffer);
 }
@@ -24,7 +24,7 @@ SCENARIO("Buffer spans can be constructed with existing byte buffers", "[pposix]
   GIVEN("a byte c-array") {
     std::byte raw_buffer[RAW_BUFFER_SIZE];
 
-    pposix::buffer_span buffer{raw_buffer};
+    pposix::byte_span buffer{raw_buffer};
 
     REQUIRE(not buffer.empty());
     REQUIRE(buffer.length() == RAW_BUFFER_SIZE);
@@ -36,7 +36,7 @@ SCENARIO("Buffer spans can be constructed with existing byte buffers", "[pposix]
   GIVEN("a byte array") {
     std::array<std::byte, RAW_BUFFER_SIZE> raw_buffer{};
 
-    pposix::buffer_span buffer{raw_buffer};
+    pposix::byte_span buffer{raw_buffer};
 
     REQUIRE(not buffer.empty());
     REQUIRE(buffer.length() == RAW_BUFFER_SIZE);
@@ -51,7 +51,7 @@ SCENARIO("Buffer spans can be constructed with existing byte buffers", "[pposix]
 
     std::byte *raw_ptr = raw_buffer;
 
-    pposix::buffer_span buffer{raw_ptr, 1u};
+    pposix::byte_span buffer{raw_ptr, 1u};
 
     REQUIRE(not buffer.empty());
     REQUIRE(buffer.length() == 1u);
@@ -65,7 +65,7 @@ SCENARIO("Buffer spans can be constructed with existing byte buffers", "[pposix]
 
     std::byte *raw_ptr = raw_buffer;
 
-    pposix::buffer_span buffer{raw_ptr, 0u};
+    pposix::byte_span buffer{raw_ptr, 0u};
 
     REQUIRE(buffer.empty());
     REQUIRE(buffer.length() == 0u);
@@ -75,13 +75,13 @@ SCENARIO("Buffer spans can be constructed with existing byte buffers", "[pposix]
   }
 
   GIVEN("a null pointer and size") {
-    pposix::buffer_span buffer{nullptr, 10u};
+    pposix::byte_span buffer{nullptr, 10u};
 
     require_is_empty_buffer_span(buffer);
   }
 
   GIVEN("a null pointer and zero size") {
-    pposix::buffer_span buffer{nullptr, 0u};
+    pposix::byte_span buffer{nullptr, 0u};
 
     require_is_empty_buffer_span(buffer);
   }
@@ -89,7 +89,7 @@ SCENARIO("Buffer spans can be constructed with existing byte buffers", "[pposix]
 
 SCENARIO("Buffer spans can be sliced", "[pposix][buffer_span]") {
   GIVEN("empty buffer span") {
-    pposix::buffer_span buffer{};
+    pposix::byte_span buffer{};
 
     REQUIRE(buffer.empty());
 
@@ -120,7 +120,7 @@ SCENARIO("Buffer spans can be sliced", "[pposix][buffer_span]") {
 
   GIVEN("a non-empty buffer span") {
     std::byte raw_buffer[10u];
-    pposix::buffer_span buffer{raw_buffer};
+    pposix::byte_span buffer{raw_buffer};
 
     WHEN("slicing the entire string") {
       const auto slice = buffer.subspan(0u, buffer.length());
