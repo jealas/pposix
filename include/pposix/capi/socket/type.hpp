@@ -1,7 +1,5 @@
 #pragma once
 
-#include <sys/socket.h>
-
 namespace pposix::capi::socket {
 
 enum class type : int {
