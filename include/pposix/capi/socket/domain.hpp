@@ -1,14 +1,13 @@
-#ifndef PPOSIX_SOCKET_DOMAIN_HPP
-#define PPOSIX_SOCKET_DOMAIN_HPP
+#pragma once
 
 #include <sys/socket.h>
 
-namespace pposix::socket {
+namespace pposix::capi::socket {
 
 enum class domain : unsigned {
   unspec = AF_UNSPEC,
   local = AF_LOCAL,
-  unix = AF_UNIX,
+  unix_ = AF_UNIX,
   file = AF_FILE,
   inet = AF_INET,
   ax25 = AF_AX25,
@@ -35,5 +34,3 @@ enum class domain : unsigned {
 };
 
 }
-
-#endif  // PPOSIX_SOCKET_DOMAIN_HPP

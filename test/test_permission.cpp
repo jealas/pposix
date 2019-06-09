@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
 
-#include "pposix/file/permission.hpp"
+#include "pposix/capi/file/permission.hpp"
 
-using permission = pposix::file::permission;
+using permission = pposix::capi::file::permission;
 
 SCENARIO("Permission literals return the same result as or-ing the permission flags manually",
          "[pposix][permission]") {
@@ -15,7 +15,7 @@ SCENARIO("Permission literals return the same result as or-ing the permission fl
   REQUIRE(permission::other_all ==
           (permission::other_read | permission::other_write | permission::other_execute));
 
-  using namespace pposix::file::literals::permission_literals;
+  using namespace pposix::capi::file::literals::permission_literals;
 
   REQUIRE("rwx"_user == permission::user_all);
   REQUIRE("rwx"_group == permission::group_all);
