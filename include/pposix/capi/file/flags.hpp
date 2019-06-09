@@ -4,7 +4,7 @@
 
 #include "pposix/util/underlying_value.hpp"
 
-namespace pposix::file {
+namespace pposix::capi::file {
 
 enum class flags : unsigned {
   append = O_APPEND,
