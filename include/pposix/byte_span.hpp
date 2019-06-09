@@ -88,6 +88,8 @@ class byte_span {
   constexpr std::byte const *cbegin() const noexcept { return buffer_; }
   constexpr std::byte const *cend() const noexcept { return buffer_ + length_; }
 
+  constexpr operator byte_cspan() const noexcept { return byte_cspan{data(), length()}; }
+
   constexpr byte_span subspan(std::size_t offset, std::size_t count) const noexcept {
     if (offset >= length_ or (length_ - offset) < count) {
       return {};
