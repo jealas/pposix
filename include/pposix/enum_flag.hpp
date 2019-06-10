@@ -1,5 +1,4 @@
-#ifndef PPOSIX_ENUM_FLAG_HPP
-#define PPOSIX_ENUM_FLAG_HPP
+#pragma once
 
 namespace pposix {
 
@@ -9,5 +8,3 @@ struct enum_flag {
 };
 
 }  // namespace pposix
-
-#endif  // PPOSIX_ENUM_FLAG_HPP

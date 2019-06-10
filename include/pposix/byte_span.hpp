@@ -1,5 +1,4 @@
-#ifndef PPOSIX_BYTE_SPAN_HPP
-#define PPOSIX_BYTE_SPAN_HPP
+#pragma once
 
 #include <algorithm>
 #include <array>
@@ -104,5 +103,3 @@ class byte_span {
 };
 
 }  // namespace pposix
-
-#endif  // PPOSIX_BYTE_SPAN_HPP

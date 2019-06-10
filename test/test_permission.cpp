@@ -1,11 +1,12 @@
 #include <catch2/catch.hpp>
 
 #include "pposix/capi/file/permission.hpp"
+#include "pposix/file/permission.hpp"
 
 using permission = pposix::capi::file::permission;
 
 SCENARIO("Permission literals can be used in place of permission flags", "[pposix][permission]") {
-  using namespace pposix::capi::file::literals::permission_literals;
+  using namespace pposix::file::literals::permission_literals;
 
   WHEN("using the 'rwx' user permission literal") {
     THEN("all permission bits are set for user and only user") {
@@ -137,7 +138,7 @@ SCENARIO("Permission literals can be used in place of permission flags", "[pposi
 }
 
 SCENARIO("Permission literals set unique permission bits") {
-  using namespace pposix::capi::file::literals::permission_literals;
+  using namespace pposix::file::literals::permission_literals;
 
   REQUIRE((("r"_user != "w"_user) && ("w"_user != "x"_user) && ("x"_user != "r"_user)));
   REQUIRE((("r"_group != "w"_group) && ("w"_group != "x"_group) && ("x"_group != "r"_group)));
@@ -152,7 +153,7 @@ SCENARIO("Permission literals set unique permission bits") {
 }
 
 SCENARIO("Permission literals can be or'ed together", "[pposix][permission]") {
-  using namespace pposix::capi::file::literals::permission_literals;
+  using namespace pposix::file::literals::permission_literals;
 
   REQUIRE(("r"_user | "w"_user | "x"_user) == permission::user_all);
   REQUIRE(("r"_group | "w"_group | "x"_group) == permission::group_all);

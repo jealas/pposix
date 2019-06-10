@@ -5,6 +5,10 @@ add_executable(
         test_unique_fd.cpp
         test_permission.cpp
         test_buffer_span.cpp
+
+        # C-API
+        capi/test_getsockopt.cpp
+        capi/test_permission.cpp
 )
 
 target_link_libraries(
@@ -19,5 +23,3 @@ target_include_directories(
         PRIVATE
         ${CMAKE_SOURCE_DIR}/lib/catch2/single_include
 )
-
-add_subdirectory(capi)
