@@ -1,5 +1,4 @@
-#ifndef PPOSIX_RESULT_HPP
-#define PPOSIX_RESULT_HPP
+#pragma once
 
 #include <system_error>
 #include <type_traits>
@@ -33,5 +32,3 @@ class result {
 };
 
 }  // namespace pposix
-
-#endif  // PPOSIX_RESULT_HPP
