@@ -21,11 +21,12 @@ class byte_cspan {
       : buffer_{buffer}, length_{buffer ? length : 0u} {}
 
   template <std::size_t Length>
-  constexpr /*implicit*/ byte_cspan(std::byte (&buffer)[Length]) noexcept
+  constexpr byte_cspan(std::byte (&buffer)[Length]) noexcept  // NOLINT implicit constructor
       : buffer_{buffer}, length_{Length} {}
 
   template <std::size_t Length>
-  constexpr /*implicit*/ byte_cspan(std::array<std::byte, Length> &buffer) noexcept
+  constexpr byte_cspan(  // NOLINT implicit constructor
+      std::array<std::byte, Length> &buffer) noexcept
       : buffer_{buffer.data()}, length_{Length} {}
 
   constexpr bool empty() const noexcept { return length_ == 0u; }
@@ -67,11 +68,12 @@ class byte_span {
       : buffer_{buffer}, length_{buffer ? length : 0u} {}
 
   template <std::size_t Length>
-  constexpr /*implicit*/ byte_span(std::byte (&buffer)[Length]) noexcept
+  constexpr byte_span(std::byte (&buffer)[Length]) noexcept  // NOLINT implicit constructor
       : buffer_{buffer}, length_{Length} {}
 
   template <std::size_t Length>
-  constexpr /*implicit*/ byte_span(std::array<std::byte, Length> &buffer) noexcept
+  constexpr byte_span(  // NOLINT implicit constructor
+      std::array<std::byte, Length> &buffer) noexcept
       : buffer_{buffer.data()}, length_{Length} {}
 
   constexpr bool empty() const noexcept { return length_ == 0u; }
@@ -87,7 +89,9 @@ class byte_span {
   constexpr std::byte const *cbegin() const noexcept { return buffer_; }
   constexpr std::byte const *cend() const noexcept { return buffer_ + length_; }
 
-  constexpr operator byte_cspan() const noexcept { return byte_cspan{data(), length()}; }
+  constexpr operator byte_cspan() const noexcept {  // NOLINT implicit converter
+    return byte_cspan{data(), length()};
+  }
 
   constexpr byte_span subspan(std::size_t offset, std::size_t count) const noexcept {
     if (offset >= length_ or (length_ - offset) < count) {

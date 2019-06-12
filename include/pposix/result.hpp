@@ -16,9 +16,9 @@ class result {
   };
 
  public:
-  /*implicit*/ result(std::error_code ec) : result_{ec} {}
+  result(std::error_code ec) : result_{ec} {}  // NOLINT implicit constructor
 
-  constexpr /*implicit*/ result(const T &value) : result_{value} {}
+  constexpr result(const T &value) : result_{value} {}  // NOLINT implicit constructor
 
   std::error_code error() const noexcept { return std::visit(error_visitor{}, result_); }
 
