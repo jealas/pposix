@@ -25,9 +25,9 @@ enum class keepalive : bool { off = false, on = true };
 class linger {
  public:
   linger() = default;
-  constexpr linger(::linger l) : linger_{l} {}  // NOLINT implicit constructor
-  constexpr explicit linger(pposix::seconds duration) : linger_{true, duration.count()} {}
-  linger(bool enabled, pposix::seconds duration) : linger_{enabled, duration.count()} {}
+  constexpr linger(::linger l) noexcept : linger_{l} {}  // NOLINT implicit constructor
+  constexpr explicit linger(pposix::seconds duration) noexcept : linger_{true, duration.count()} {}
+  linger(bool enabled, pposix::seconds duration) noexcept : linger_{enabled, duration.count()} {}
 
   linger(const linger &) = default;
   linger(linger &&) = default;
