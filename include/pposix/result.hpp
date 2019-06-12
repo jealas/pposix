@@ -12,7 +12,6 @@ class result {
 
   struct error_visitor {
     std::error_code operator()(const std::error_code &ec) const noexcept { return ec; }
-
     std::error_code operator()(const T &) const noexcept { return {}; }
   };
 
