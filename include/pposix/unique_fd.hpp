@@ -1,5 +1,6 @@
 #pragma once
 
+#include <system_error>
 #include <type_traits>
 #include <utility>
 
@@ -30,9 +31,11 @@ class [[nodiscard]] unique_fd {
       noexcept(ClosePolicy{std::declval<ClosePolicy &&>()}))
       : raw_fd_{file_descriptor}, close_{std::move(close)} {}
 
-  ~unique_fd() {
+  ~unique_fd() noexcept(false) {
     if (const auto error = close()) {
-      // TODO: Log this fatal error.
+      throw std::system_error{error,
+                              "Failed to automatically close file descriptor. Try manually "
+                              "calling close() to catch and handle the error"};
     }
   }
 
@@ -48,9 +51,8 @@ class [[nodiscard]] unique_fd {
   Fd raw() const noexcept { return raw_fd_; }
   Fd operator*() const noexcept { return raw(); }
 
-  ClosePolicy &get_close_policy() noexcept { return close_; }
-
-  const ClosePolicy &get_close_policy() const noexcept { return close_; }
+  constexpr ClosePolicy &get_close_policy() noexcept { return close_; }
+  constexpr const ClosePolicy &get_close_policy() const noexcept { return close_; }
 
   [[nodiscard]] Fd release() noexcept {
     const auto tmp_fd = raw_fd_;
@@ -60,17 +62,19 @@ class [[nodiscard]] unique_fd {
 
   [[nodiscard]] std::error_code close() noexcept(
       noexcept(std::declval<ClosePolicy &>()(std::declval<Fd>()))) {
-    if (not empty()) {
-      while (const auto ec = close_(raw())) {
-        if (ec == std::errc::interrupted) {
-          continue;
-        } else {
-          return ec;
-        }
-      }
-
-      raw_fd_ = Fd{capi::nullfd};
+    if (empty()) {
+      return {};
     }
+
+    while (const auto ec = close_(raw())) {
+      if (ec == std::errc::interrupted) {
+        continue;
+      } else {
+        return ec;
+      }
+    }
+
+    raw_fd_ = Fd{capi::nullfd};
 
     return {};
   }
