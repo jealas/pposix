@@ -1,6 +1,9 @@
 #pragma once
 
+#include <cstddef>
 #include <memory>
+
+#include "pposix/byte_span.hpp"
 
 namespace pposix {
 
@@ -22,6 +25,10 @@ class any_cspan {
   constexpr void const *data() const noexcept { return data_; }
 
   constexpr std::size_t length() const noexcept { return len_; }
+
+  byte_cspan as_bytes() const noexcept {
+    return {reinterpret_cast<std::byte const *>(data_), len_};
+  }
 
  private:
   void const *data_;
@@ -48,8 +55,16 @@ class any_span {
 
   constexpr std::size_t length() const noexcept { return len_; }
 
-  constexpr operator any_cspan() const noexcept { // NOLINT implicit converter
-      return {data(), length()};
+  constexpr operator any_cspan() const noexcept {  // NOLINT implicit converter
+    return {data(), length()};
+  }
+
+  byte_cspan as_bytes() const noexcept {
+    return {reinterpret_cast<std::byte const *>(data_), len_};
+  }
+
+  byte_span as_writeable_bytes() const noexcept {
+    return {reinterpret_cast<std::byte *>(data_), len_};
   }
 
  private:
