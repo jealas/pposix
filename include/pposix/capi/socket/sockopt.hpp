@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <system_error>
 
 #include <sys/socket.h>
@@ -192,6 +193,10 @@ std::error_code setsockopt(socketfd fd, level l, sndtimeo r) noexcept {
 }
 
 result<socklen_t> getsockopt(socketfd fd, level l, option o, any_span val) noexcept {
+  if (val.length() > std::numeric_limits<socklen_t>::max()) {
+    return make_errno_code(std::errc::value_too_large);
+  }
+
   socklen_t len{static_cast<socklen_t>(val.length())};
 
   const auto error = ::getsockopt(fd.fd(), util::underlying_value(l), util::underlying_value(o),
@@ -225,8 +230,7 @@ result<Result> getsockopt_bool(socketfd fd, level l) noexcept {
   const auto result = socket::getsockopt(fd, l, Option, any_span{val});
   if (const auto error = result.error()) {
     return error;
-  }
-  else {
+  } else {
     return Result{val != 0};
   }
 }
