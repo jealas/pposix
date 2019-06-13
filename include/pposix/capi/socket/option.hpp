@@ -18,9 +18,6 @@ enum class option : int {
   rcvtimeo = SO_RCVTIMEO,
   sndlowat = SO_SNDLOWAT,
   sndtimeo = SO_SNDTIMEO,
-
-  // TODO: Need to check these in the latest POSIX standard
-
   acceptconn = SO_ACCEPTCONN,
   error = SO_ERROR,
   type = SO_TYPE

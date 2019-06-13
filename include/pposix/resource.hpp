@@ -7,32 +7,34 @@
 
 namespace pposix {
 
-template <class T, class Deleter>
-class resource {
-  static_assert(std::is_trivial_v<Deleter>);
+template <class T, class ClosePolicy>
+class [[nodiscard]] resource {
+  static_assert(std::is_trivial_v<ClosePolicy>);
 
  public:
   ~resource() noexcept(false) {
-    const auto error = reset();
-    if (error) {
+    if (const auto error = close()) {
       throw std::system_error{error,
                               "Failed to automatically close resource. Try manually calling "
-                              "reset() to catch and handle the error"};
+                              "close() to catch and handle the error"};
     }
   }
 
   constexpr resource() = default;
   constexpr explicit resource(nullptr_t) : resource::resource{} {};
-  constexpr explicit resource(T *resource) : resource_{resource} {};
+  constexpr explicit resource(T * resource) : resource_{resource} {};
 
-  constexpr resource(T *resource, const Deleter &deleter)
-      : resource_{resource}, deleter_{deleter} {};
+  constexpr resource(T * resource, const ClosePolicy &close)
+      : resource_{resource}, close_{close} {};
 
-  constexpr resource(T *resource, Deleter &&deleter)
-      : resource_{resource}, deleter_{std::move(deleter)} {};
+  constexpr resource(T * resource, ClosePolicy && close)
+      : resource_{resource}, close_{std::move(close)} {};
 
   constexpr T *get() noexcept { return resource_; }
   constexpr T const *get() const noexcept { return resource_; }
+
+  constexpr ClosePolicy &get_close() noexcept { return close_; }
+  constexpr const ClosePolicy &get_close() const noexcept { return close_; }
 
   constexpr T &operator*() noexcept { return *resource_; }
   constexpr const T &operator*() const noexcept { return *resource_; }
@@ -40,21 +42,29 @@ class resource {
   constexpr T &operator->() noexcept { return *resource_; }
   constexpr const T &operator->() const noexcept { return *resource_; }
 
-  constexpr T *release() noexcept {
+  [[nodiscard]] constexpr T *release() noexcept {
     T *old_resource = resource_;
     resource_ = nullptr;
 
     return old_resource;
   }
 
-  std::error_code reset(T *resource = nullptr) noexcept {
-    const auto error = deleter_(resource_);
-    if (error) {
-      return error;
-    } else {
-      resource_ = resource;
+  [[nodiscard]] std::error_code close() noexcept {
+    if (empty()) {
       return {};
     }
+
+    while (const auto ec = close_(resource_)) {
+      if (ec == std::errc::interrupted) {
+        continue
+      } else {
+        return ec;
+      }
+    }
+
+    resource_ = nullptr;
+
+    return {};
   }
 
   constexpr bool empty() const noexcept { return resource_ == nullptr; }
@@ -62,7 +72,7 @@ class resource {
 
  private:
   T *resource_{nullptr};
-  Deleter deleter_{};
+  ClosePolicy close_{};
 };
 
 }  // namespace pposix

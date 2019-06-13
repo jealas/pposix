@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <system_error>
 
 #include <sys/socket.h>
@@ -24,9 +25,9 @@ enum class keepalive : bool { off = false, on = true };
 class linger {
  public:
   linger() = default;
-  constexpr linger(::linger l) : linger_{l} {}  // NOLINT implicit constructor
-  constexpr explicit linger(pposix::seconds duration) : linger_{true, duration.count()} {}
-  linger(bool enabled, pposix::seconds duration) : linger_{enabled, duration.count()} {}
+  constexpr linger(::linger l) noexcept : linger_{l} {}  // NOLINT implicit constructor
+  constexpr explicit linger(pposix::seconds duration) noexcept : linger_{true, duration.count()} {}
+  linger(bool enabled, pposix::seconds duration) noexcept : linger_{enabled, duration.count()} {}
 
   linger(const linger &) = default;
   linger(linger &&) = default;
@@ -192,6 +193,10 @@ std::error_code setsockopt(socketfd fd, level l, sndtimeo r) noexcept {
 }
 
 result<socklen_t> getsockopt(socketfd fd, level l, option o, any_span val) noexcept {
+  if (val.length() > std::numeric_limits<socklen_t>::max()) {
+    return make_errno_code(std::errc::value_too_large);
+  }
+
   socklen_t len{static_cast<socklen_t>(val.length())};
 
   const auto error = ::getsockopt(fd.fd(), util::underlying_value(l), util::underlying_value(o),
@@ -225,8 +230,7 @@ result<Result> getsockopt_bool(socketfd fd, level l) noexcept {
   const auto result = socket::getsockopt(fd, l, Option, any_span{val});
   if (const auto error = result.error()) {
     return error;
-  }
-  else {
+  } else {
     return Result{val != 0};
   }
 }
