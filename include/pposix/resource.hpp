@@ -56,7 +56,7 @@ class [[nodiscard]] resource {
 
     while (const auto ec = close_(resource_)) {
       if (ec == std::errc::interrupted) {
-        continue
+        continue;
       } else {
         return ec;
       }
