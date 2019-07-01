@@ -13,6 +13,7 @@ using errno_t = int;
 
 inline errno_t get_errno() noexcept { return errno; }
 inline void set_errno(errno_t error_number) noexcept { errno = error_number; }
+inline void set_errno(std::errc err) noexcept { set_errno(util::underlying_value(err)); }
 
 class errno_context {
  public:
