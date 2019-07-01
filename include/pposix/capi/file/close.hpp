@@ -4,7 +4,7 @@
 
 #include <unistd.h>
 
-#include "pposix/capi/rawfd.hpp"
+#include "pposix/capi/raw_fd.hpp"
 #include "pposix/errno.hpp"
 
 namespace pposix::capi::file {

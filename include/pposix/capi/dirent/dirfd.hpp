@@ -2,7 +2,7 @@
 
 #include <dirent.h>
 
-#include "pposix/capi/nullfd.hpp"
+#include "pposix/capi/null_fd.hpp"
 #include "pposix/errno.hpp"
 #include "pposix/result.hpp"
 

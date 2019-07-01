@@ -2,8 +2,8 @@
 
 #include <unistd.h>
 
-#include "pposix/capi/nullfd.hpp"
-#include "pposix/capi/rawfd.hpp"
+#include "pposix/capi/null_fd.hpp"
+#include "pposix/capi/raw_fd.hpp"
 #include "pposix/errno.hpp"
 
 namespace pposix::capi::file {

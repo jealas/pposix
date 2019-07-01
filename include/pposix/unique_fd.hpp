@@ -4,8 +4,8 @@
 #include <type_traits>
 #include <utility>
 
-#include "pposix/capi/nullfd.hpp"
-#include "pposix/capi/rawfd.hpp"
+#include "pposix/capi/null_fd.hpp"
+#include "pposix/capi/raw_fd.hpp"
 #include "pposix/default_close_policy.hpp"
 #include "pposix/errno.hpp"
 
@@ -13,12 +13,12 @@ namespace pposix {
 
 template <class Fd, class ClosePolicy = default_close_policy>
 class [[nodiscard]] unique_fd {
-  static_assert(std::is_base_of_v<capi::rawfd, std::decay_t<Fd>>);
+  static_assert(std::is_base_of_v<capi::raw_fd, std::decay_t<Fd>>);
 
  public:
   constexpr unique_fd() noexcept : unique_fd::unique_fd{capi::nullfd} {}
 
-  constexpr unique_fd(capi::nullfd_t) noexcept : close_{} {}  // NOLINT implicit constructor
+  constexpr unique_fd(capi::null_fd_t) noexcept : close_{} {}  // NOLINT implicit constructor
 
   constexpr explicit unique_fd(const Fd file_descriptor) noexcept(noexcept(ClosePolicy{}))
       : raw_fd_{file_descriptor}, close_{} {}

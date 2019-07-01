@@ -11,7 +11,7 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
     const auto domain = GENERATE(sock::domain::local, sock::domain::unix_);
     const auto type = GENERATE(sock::type::seqpacket, sock::type::stream, sock::type::dgram);
 
-    const pposix::unique_fd<sock::socketfd> sockfd{
+    const pposix::unique_fd<sock::socket_fd> sockfd{
         sock::socket(domain, type, sock::flag::none, sock::protocol{0})};
 
     REQUIRE(sockfd);

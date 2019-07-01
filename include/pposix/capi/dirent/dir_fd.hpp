@@ -1,6 +1,6 @@
 #pragma once
 
-#include "pposix/capi/rawfd.hpp"
+#include "pposix/capi/raw_fd.hpp"
 
 namespace pposix::capi::dirent {
 
