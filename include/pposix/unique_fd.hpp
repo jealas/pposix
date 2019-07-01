@@ -7,7 +7,7 @@
 #include "pposix/capi/nullfd.hpp"
 #include "pposix/capi/rawfd.hpp"
 #include "pposix/default_close_policy.hpp"
-#include "pposix/errno_code.hpp"
+#include "pposix/errno.hpp"
 
 namespace pposix {
 

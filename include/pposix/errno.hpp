@@ -1,14 +1,18 @@
 #pragma once
 
-#include <cerrno>
+#include <system_error>
+
+#include <unistd.h>
+
+#include "pposix/util/underlying_value.hpp"
 
 namespace pposix {
 
 static_assert(std::is_same_v<std::decay_t<decltype(errno)>, int>);
 using errno_t = int;
 
-errno_t get_errno() noexcept { return errno; }
-void set_errno(errno_t error_number) noexcept { errno = error_number; }
+inline errno_t get_errno() noexcept { return errno; }
+inline void set_errno(errno_t error_number) noexcept { errno = error_number; }
 
 class errno_context {
  public:
@@ -21,5 +25,13 @@ class errno_context {
  private:
   const errno_t saved_errno_{};
 };
+
+inline std::error_code current_errno_code() noexcept {
+  return {get_errno(), std::system_category()};
+}
+
+inline std::error_code make_errno_code(std::errc err) noexcept {
+  return {util::underlying_value(err), std::system_category()};
+}
 
 }  // namespace pposix

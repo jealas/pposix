@@ -11,7 +11,7 @@
 #include "pposix/capi/socket/socketfd.hpp"
 #include "pposix/capi/socket/type.hpp"
 #include "pposix/duration.hpp"
-#include "pposix/errno_code.hpp"
+#include "pposix/errno.hpp"
 #include "pposix/result.hpp"
 #include "pposix/util/underlying_value.hpp"
 
@@ -107,7 +107,7 @@ std::error_code setsockopt(socketfd fd, level l, option o, any_cspan val) noexce
                                   val.data(), val.length());
 
   if (error == -1) {
-    return errno_code();
+    return current_errno_code();
   } else {
     return {};
   }
@@ -203,7 +203,7 @@ result<socklen_t> getsockopt(socketfd fd, level l, option o, any_span val) noexc
                                   val.data(), &len);
 
   if (error == -1) {
-    return errno_code();
+    return current_errno_code();
   } else {
     return len;
   }
