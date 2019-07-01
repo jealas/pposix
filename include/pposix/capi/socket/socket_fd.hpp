@@ -1,11 +1,11 @@
 #pragma once
 
-#include "pposix/capi/rawfd.hpp"
+#include "pposix/capi/raw_fd.hpp"
 
 namespace pposix::capi::socket {
 
-struct socketfd : rawfd {
-  using rawfd::rawfd;
+struct socket_fd : raw_fd {
+  using raw_fd::raw_fd;
 };
 
 }  // namespace pposix::capi::socket

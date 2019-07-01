@@ -4,8 +4,8 @@
 
 #include "pposix/capi/file/offset.hpp"
 #include "pposix/capi/file/whence.hpp"
-#include "pposix/capi/rawfd.hpp"
-#include "pposix/errno_code.hpp"
+#include "pposix/capi/raw_fd.hpp"
+#include "pposix/errno.hpp"
 #include "pposix/util/underlying_value.hpp"
 
 namespace pposix::capi::file {

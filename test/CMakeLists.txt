@@ -9,6 +9,7 @@ add_executable(
         # C-API
         capi/test_getsockopt.cpp
         capi/test_permission.cpp
+        test_sysconf.cpp
 )
 
 target_link_libraries(
