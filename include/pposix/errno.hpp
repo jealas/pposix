@@ -8,31 +8,25 @@
 
 namespace pposix {
 
-static_assert(std::is_same_v<std::decay_t<decltype(errno)>, int>);
-using errno_t = int;
-
-inline errno_t get_errno() noexcept { return errno; }
-inline void set_errno(errno_t error_number) noexcept { errno = error_number; }
-inline void set_errno(std::errc err) noexcept { set_errno(util::underlying_value(err)); }
+inline std::errc get_errno() noexcept { return std::errc{errno}; }
+inline void set_errno(std::errc err) noexcept { errno = util::underlying_value(err); }
 
 class errno_context {
  public:
   ~errno_context() { restore(); }
-  errno_context() noexcept : saved_errno_{get_errno()} { set_errno(0); }
+  errno_context() noexcept : saved_errno_{get_errno()} { set_errno(std::errc{0}); }
 
   void restore() const noexcept { set_errno(saved_errno_); }
-  errno_t saved_errno() const noexcept { return saved_errno_; }
+  std::errc saved_errno() const noexcept { return saved_errno_; }
 
  private:
-  const errno_t saved_errno_{};
+  const std::errc saved_errno_{};
 };
-
-inline std::error_code current_errno_code() noexcept {
-  return {get_errno(), std::system_category()};
-}
 
 inline std::error_code make_errno_code(std::errc err) noexcept {
   return {util::underlying_value(err), std::system_category()};
 }
+
+inline std::error_code current_errno_code() noexcept { return make_errno_code(get_errno()); }
 
 }  // namespace pposix
