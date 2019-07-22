@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "pposix/unique_fd.hpp"
-#include "pposix/raw_fd.hpp"
+#include "pposix/fd.hpp"
 
 struct nop_close {
   std::error_code operator()(pposix::raw_fd) const noexcept { return {}; }

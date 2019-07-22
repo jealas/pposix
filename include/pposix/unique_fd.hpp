@@ -1,19 +1,18 @@
 #pragma once
 
 #include <system_error>
-#include <type_traits>
 #include <utility>
 
 #include "pposix/default_close_policy.hpp"
 #include "pposix/errno.hpp"
+#include "pposix/fd.hpp"
 #include "pposix/null_fd.hpp"
-#include "pposix/raw_fd.hpp"
 
 namespace pposix {
 
 template <class Fd, class ClosePolicy = default_close_policy>
 class [[nodiscard]] unique_fd {
-  static_assert(std::is_base_of_v<raw_fd, std::decay_t<Fd>>);
+  static_assert(is_file_descriptor_v<Fd>);
 
  public:
   constexpr unique_fd() noexcept : unique_fd::unique_fd{nullfd} {}

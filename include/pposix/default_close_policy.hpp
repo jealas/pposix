@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #include "pposix/errno.hpp"
-#include "pposix/raw_fd.hpp"
+#include "pposix/fd.hpp"
 #include "pposix/util/underlying_value.hpp"
 
 namespace pposix {

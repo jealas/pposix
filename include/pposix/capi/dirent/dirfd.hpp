@@ -5,6 +5,7 @@
 #include "pposix/capi/null_fd.hpp"
 #include "pposix/errno.hpp"
 #include "pposix/result.hpp"
+#include "pposix/capi/dirent/dir_fd.hpp"
 
 namespace pposix::capi::dirent {
 
