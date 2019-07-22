@@ -1,12 +1,12 @@
 #include <catch2/catch.hpp>
 
-#include "pposix/capi/socket/socket.hpp"
-#include "pposix/capi/socket/sockopt.hpp"
+#include "pposix/socket/socket.hpp"
+#include "pposix/socket/sockopt.hpp"
 #include "pposix/unique_fd.hpp"
 
-namespace sock = pposix::capi::socket;
+namespace sock = pposix::socket;
 
-SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
+SCENARIO("Can get default socket options", "[pposix][socket]") {
   GIVEN("a valid unix/local socket") {
     const auto domain = GENERATE(sock::domain::local, sock::domain::unix_);
     const auto type = GENERATE(sock::type::seqpacket, sock::type::stream, sock::type::dgram);

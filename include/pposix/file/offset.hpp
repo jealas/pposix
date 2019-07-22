@@ -2,7 +2,7 @@
 
 #include <unistd.h>
 
-namespace pposix::capi::file {
+namespace pposix::file {
 
 using offset_t = off_t;
 

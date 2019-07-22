@@ -1,9 +1,9 @@
 #pragma once
 
-#include "pposix/capi/raw_fd.hpp"
+#include "pposix/fd.hpp"
 #include "pposix/fd.hpp"
 
-namespace pposix::capi::dirent {
+namespace pposix::dirent {
 
 struct dir_fd_tag {};
 

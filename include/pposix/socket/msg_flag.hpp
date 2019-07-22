@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pposix::capi::socket {
+namespace pposix::socket {
 
 enum class msg_flag : unsigned {};
 

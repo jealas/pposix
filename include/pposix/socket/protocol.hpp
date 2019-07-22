@@ -3,7 +3,7 @@
 #include <netinet/in.h>
 
 
-namespace pposix::capi::socket {
+namespace pposix::socket {
 
 enum class protocol : int {
     ip = IPPROTO_IP,

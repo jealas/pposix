@@ -6,7 +6,7 @@
 
 #include "pposix/errno.hpp"
 
-namespace pposix::capi::dirent {
+namespace pposix::dirent {
 
 std::error_code closedir(DIR *dir) noexcept {
   if (const auto error = ::closedir(dir); error == -1) {

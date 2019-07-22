@@ -2,12 +2,12 @@
 
 #include <dirent.h>
 
-#include "pposix/capi/null_fd.hpp"
+#include "pposix/null_fd.hpp"
 #include "pposix/errno.hpp"
 #include "pposix/result.hpp"
-#include "pposix/capi/dirent/dir_fd.hpp"
+#include "pposix/dirent/dir_fd.hpp"
 
-namespace pposix::capi::dirent {
+namespace pposix::dirent {
 
 result<dir_fd> dirfd(DIR *dir) noexcept {
   const dir_fd fd{::dirfd(dir)};

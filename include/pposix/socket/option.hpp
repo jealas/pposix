@@ -2,7 +2,7 @@
 
 #include <sys/socket.h>
 
-namespace pposix::capi::socket {
+namespace pposix::socket {
 
 enum class option : int {
   debug = SO_DEBUG,

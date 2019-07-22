@@ -6,16 +6,16 @@
 #include <sys/socket.h>
 
 #include "pposix/any_span.hpp"
-#include "pposix/capi/socket/level.hpp"
-#include "pposix/capi/socket/option.hpp"
-#include "pposix/capi/socket/socket_fd.hpp"
-#include "pposix/capi/socket/type.hpp"
 #include "pposix/duration.hpp"
 #include "pposix/errno.hpp"
 #include "pposix/result.hpp"
+#include "pposix/socket/level.hpp"
+#include "pposix/socket/option.hpp"
+#include "pposix/socket/socket_fd.hpp"
+#include "pposix/socket/type.hpp"
 #include "pposix/util/underlying_value.hpp"
 
-namespace pposix::capi::socket {
+namespace pposix::socket {
 
 enum class debug : bool { off = false, on = true };
 enum class broadcast : bool { off = false, on = true };

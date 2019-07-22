@@ -6,9 +6,8 @@ add_executable(
         test_permission.cpp
         test_buffer_span.cpp
 
-        # C-API
-        capi/test_getsockopt.cpp
-        capi/test_permission.cpp
+        test_getsockopt.cpp
+        test_permission.cpp
         test_sysconf.cpp
 )
 

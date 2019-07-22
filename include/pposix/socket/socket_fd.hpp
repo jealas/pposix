@@ -2,10 +2,10 @@
 
 #include "pposix/fd.hpp"
 
-namespace pposix::capi::socket {
+namespace pposix::socket {
 
 struct socket_fd_tag {};
 
 using socket_fd = fd<socket_fd_tag>;
 
-}  // namespace pposix::capi::socket
+}

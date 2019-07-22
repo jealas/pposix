@@ -2,7 +2,7 @@
 
 #include <sys/socket.h>
 
-namespace pposix::capi::socket {
+namespace pposix::socket {
 
 enum class domain : unsigned {
   unspec = AF_UNSPEC,
