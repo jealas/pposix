@@ -103,7 +103,7 @@ class sndtimeo {
 };
 
 std::error_code setsockopt(socket_fd fd, level l, option o, any_cspan val) noexcept {
-  const auto error = ::setsockopt(fd.fd(), util::underlying_value(l), util::underlying_value(o),
+  const auto error = ::setsockopt(fd.raw(), util::underlying_value(l), util::underlying_value(o),
                                   val.data(), val.length());
 
   if (error == -1) {
@@ -199,7 +199,7 @@ result<socklen_t> getsockopt(socket_fd fd, level l, option o, any_span val) noex
 
   socklen_t len{static_cast<socklen_t>(val.length())};
 
-  const auto error = ::getsockopt(fd.fd(), util::underlying_value(l), util::underlying_value(o),
+  const auto error = ::getsockopt(fd.raw(), util::underlying_value(l), util::underlying_value(o),
                                   val.data(), &len);
 
   if (error == -1) {

@@ -4,21 +4,21 @@
 #include <type_traits>
 #include <utility>
 
-#include "pposix/capi/null_fd.hpp"
-#include "pposix/capi/raw_fd.hpp"
 #include "pposix/default_close_policy.hpp"
 #include "pposix/errno.hpp"
+#include "pposix/null_fd.hpp"
+#include "pposix/raw_fd.hpp"
 
 namespace pposix {
 
 template <class Fd, class ClosePolicy = default_close_policy>
 class [[nodiscard]] unique_fd {
-  static_assert(std::is_base_of_v<capi::raw_fd, std::decay_t<Fd>>);
+  static_assert(std::is_base_of_v<raw_fd, std::decay_t<Fd>>);
 
  public:
-  constexpr unique_fd() noexcept : unique_fd::unique_fd{capi::nullfd} {}
+  constexpr unique_fd() noexcept : unique_fd::unique_fd{nullfd} {}
 
-  constexpr unique_fd(capi::null_fd_t) noexcept : close_{} {}  // NOLINT implicit constructor
+  constexpr unique_fd(null_fd_t) noexcept : close_{} {}  // NOLINT implicit constructor
 
   constexpr explicit unique_fd(const Fd file_descriptor) noexcept(noexcept(ClosePolicy{}))
       : raw_fd_{file_descriptor}, close_{} {}
@@ -45,7 +45,7 @@ class [[nodiscard]] unique_fd {
   unique_fd &operator=(const unique_fd &) = delete;
   unique_fd &operator=(unique_fd &&) = delete;
 
-  bool empty() const noexcept { return raw_fd_ == capi::nullfd; }
+  bool empty() const noexcept { return raw_fd_ == nullfd; }
   explicit operator bool() const noexcept { return not empty(); }
 
   Fd raw() const noexcept { return raw_fd_; }
@@ -56,7 +56,7 @@ class [[nodiscard]] unique_fd {
 
   [[nodiscard]] Fd release() noexcept {
     const auto tmp_fd = raw_fd_;
-    raw_fd_ = Fd{capi::nullfd};
+    raw_fd_ = Fd{nullfd};
     return tmp_fd;
   }
 
@@ -74,13 +74,13 @@ class [[nodiscard]] unique_fd {
       }
     }
 
-    raw_fd_ = Fd{capi::nullfd};
+    raw_fd_ = Fd{nullfd};
 
     return {};
   }
 
  private:
-  Fd raw_fd_{};
+  Fd raw_fd_{nullfd};
   ClosePolicy close_;
 };
 

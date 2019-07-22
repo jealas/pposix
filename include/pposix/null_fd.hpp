@@ -1,6 +1,6 @@
 #pragma once
 
-namespace pposix::capi {
+namespace pposix {
 
 struct null_fd_t {
   constexpr bool operator==(null_fd_t) const noexcept { return true; }
@@ -8,4 +8,4 @@ struct null_fd_t {
 
 constexpr null_fd_t nullfd{};
 
-}  // namespace pposix::capi
+}  // namespace pposix

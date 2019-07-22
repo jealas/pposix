@@ -16,7 +16,7 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
 
     REQUIRE(sockfd);
     REQUIRE(not sockfd.empty());
-    REQUIRE(sockfd.raw() != pposix::capi::nullfd);
+    REQUIRE(sockfd.raw() != pposix::nullfd);
 
     WHEN("getting the default debug option") {
       const auto option = sock::getsockopt<sock::debug>(*sockfd, sock::level::socket);
