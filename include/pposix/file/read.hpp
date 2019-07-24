@@ -9,7 +9,7 @@
 
 namespace pposix::file {
 
-ssize_t read(rawfd fd, buffer_cspan buffer) noexcept {
+ssize_t read(raw_fd fd, buffer_cspan buffer) noexcept {
   return ::read(fd.fd(), buffer.data(), buffer.length());
 }
 

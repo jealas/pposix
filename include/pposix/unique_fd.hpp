@@ -80,7 +80,7 @@ class [[nodiscard]] unique_fd {
 
  private:
   Fd raw_fd_{nullfd};
-  ClosePolicy close_;
+  ClosePolicy close_{};
 };
 
 }  // namespace pposix

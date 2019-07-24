@@ -9,7 +9,7 @@
 
 namespace pposix::file {
 
-ssize_t write(rawfd fd, buffer_cspan buffer) noexcept {
+ssize_t write(raw_fd fd, buffer_cspan buffer) noexcept {
   return ::write(fd.fd(), buffer.data(), buffer.length());
 }
 
