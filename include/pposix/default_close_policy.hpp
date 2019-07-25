@@ -11,13 +11,7 @@
 namespace pposix {
 
 struct default_close_policy {
-  std::error_code operator()(raw_fd fd) const noexcept {
-    if (const auto error = ::close(fd.raw()); error == -1) {
-      return current_errno_code();
-    }
-
-    return {};
-  }
+  std::error_code operator()(raw_fd fd) const noexcept;
 };
 
 }  // namespace pposix

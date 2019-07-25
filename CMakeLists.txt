@@ -7,6 +7,7 @@ add_library(
         ${CMAKE_PROJECT_NAME}
 
         src/errno.cpp
+        src/default_close_policy.cpp
 )
 
 target_include_directories(
