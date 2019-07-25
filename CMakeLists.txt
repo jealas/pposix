@@ -8,6 +8,7 @@ add_library(
 
         src/errno.cpp
         src/default_close_policy.cpp
+        src/sysconf.cpp
 )
 
 target_include_directories(
