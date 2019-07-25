@@ -9,11 +9,7 @@
 namespace pposix::dirent {
 
 std::error_code closedir(DIR *dir) noexcept {
-  if (const auto error = ::closedir(dir); error == -1) {
-    return current_errno_code();
-  } else {
-    return {};
-  }
+  return ::closedir(dir) == -1 ? current_errno_code() : {};
 }
 
 }

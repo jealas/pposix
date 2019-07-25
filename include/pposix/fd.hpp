@@ -20,14 +20,19 @@ template <class Tag>
 class fd {
  public:
   fd() = default;
-  constexpr explicit fd(fd_t fd) noexcept : fd_{fd} {}
-  constexpr explicit fd(null_fd_t) noexcept : fd_{NULLFD} {}
+  constexpr explicit fd(fd_t file_descriptor) noexcept : fd_{file_descriptor} {}
+  constexpr explicit fd(nullfd_t) noexcept : fd_{NULLFD} {}
 
   fd(const fd &) noexcept = default;
   fd(fd &&) noexcept = default;
 
-  fd &operator=(const fd &) = default;
+  fd &operator=(const fd &) noexcept = default;
   fd &operator=(fd &&) noexcept = default;
+
+  fd &operator=(nullfd_t) noexcept {
+    fd_ = NULLFD;
+    return *this;
+  }
 
   constexpr fd_t raw() const noexcept { return fd_; }
 
@@ -48,22 +53,22 @@ constexpr bool operator!=(fd<Tag> lhs, fd<Tag> rhs) {
 }
 
 template <class Tag>
-constexpr bool operator==(fd<Tag> fd, null_fd_t) noexcept {
+constexpr bool operator==(fd<Tag> fd, nullfd_t) noexcept {
   return fd.raw() == NULLFD;
 }
 
 template <class Tag>
-constexpr bool operator==(null_fd_t, fd<Tag> fd) noexcept {
+constexpr bool operator==(nullfd_t, fd<Tag> fd) noexcept {
   return fd == nullfd;
 }
 
 template <class Tag>
-constexpr bool operator!=(fd<Tag> fd, null_fd_t) noexcept {
-  return !(fd == nullfd);
+constexpr bool operator!=(fd<Tag> fd, nullfd_t) noexcept {
+  return not(fd == nullfd);
 }
 
 template <class Tag>
-constexpr bool operator!=(null_fd_t, fd<Tag> fd) noexcept {
+constexpr bool operator!=(nullfd_t, fd<Tag> fd) noexcept {
   return fd != nullfd;
 }
 

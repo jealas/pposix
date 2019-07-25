@@ -1,7 +1,6 @@
 #pragma once
 
 #include "pposix/fd.hpp"
-#include "pposix/fd.hpp"
 
 namespace pposix::dirent {
 

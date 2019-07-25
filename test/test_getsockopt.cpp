@@ -1,6 +1,9 @@
 #include <catch2/catch.hpp>
 
+#include <utility>
+
 #include "pposix/socket/socket.hpp"
+#include "pposix/socket/socket_fd.hpp"
 #include "pposix/socket/sockopt.hpp"
 #include "pposix/unique_fd.hpp"
 
@@ -11,8 +14,11 @@ SCENARIO("Can get default socket options", "[pposix][socket]") {
     const auto domain = GENERATE(sock::domain::local, sock::domain::unix_);
     const auto type = GENERATE(sock::type::seqpacket, sock::type::stream, sock::type::dgram);
 
-    const pposix::unique_fd<sock::socket_fd> sockfd{
-        sock::socket(domain, type, sock::flag::none, sock::protocol{0})};
+    auto socket_result{sock::socket(domain, type, sock::flag::none, sock::protocol{0})};
+
+    REQUIRE(socket_result);
+
+    pposix::unique_fd<pposix::socket::socket_fd> sockfd{std::move(*socket_result.value())};
 
     REQUIRE(sockfd);
     REQUIRE(not sockfd.empty());

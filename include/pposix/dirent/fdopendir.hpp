@@ -15,7 +15,7 @@ template <class ClosePolicy>
 result<resource<DIR, close_policy>> fdopendir(unique_fd<dir_fd, ClosePolicy> fd) noexcept {
   const auto fd = fd.release();
 
-  if (DIR *dir = ::fdopendir(fd.fd()); dir == nullptr) {
+  if (DIR *dir = ::fdopendir(fd.raw()); dir == nullptr) {
     return current_errno_code();
   } else {
     return resource<DIR, close_policy>{dir};

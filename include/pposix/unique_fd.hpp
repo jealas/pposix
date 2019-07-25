@@ -17,7 +17,7 @@ class [[nodiscard]] unique_fd {
  public:
   constexpr unique_fd() noexcept : unique_fd::unique_fd{nullfd} {}
 
-  constexpr unique_fd(null_fd_t) noexcept : close_{} {}  // NOLINT implicit constructor
+  constexpr unique_fd(nullfd_t) noexcept : close_{} {}  // NOLINT implicit constructor
 
   constexpr explicit unique_fd(const Fd file_descriptor) noexcept(noexcept(ClosePolicy{}))
       : raw_fd_{file_descriptor}, close_{} {}
@@ -55,7 +55,7 @@ class [[nodiscard]] unique_fd {
 
   [[nodiscard]] Fd release() noexcept {
     const auto tmp_fd = raw_fd_;
-    raw_fd_ = Fd{nullfd};
+    raw_fd_ = nullfd;
     return tmp_fd;
   }
 
@@ -73,7 +73,7 @@ class [[nodiscard]] unique_fd {
       }
     }
 
-    raw_fd_ = Fd{nullfd};
+    raw_fd_ = nullfd;
 
     return {};
   }

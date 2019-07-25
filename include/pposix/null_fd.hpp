@@ -2,10 +2,10 @@
 
 namespace pposix {
 
-struct null_fd_t {
-  constexpr bool operator==(null_fd_t) const noexcept { return true; }
+struct nullfd_t {
+  constexpr bool operator==(nullfd_t) const noexcept { return true; }
 };
 
-constexpr null_fd_t nullfd{};
+constexpr nullfd_t nullfd{};
 
 }  // namespace pposix

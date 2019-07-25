@@ -10,8 +10,7 @@
 namespace pposix::file {
 
 std::error_code close(raw_fd fd) noexcept {
-  const auto error = ::close(fd.fd());
-  return error == -1 ? current_errno_code() : {};
+  return ::close(fd.raw()) == -1 ? current_errno_code() : std::error_code{};
 }
 
 }  // namespace pposix::file
