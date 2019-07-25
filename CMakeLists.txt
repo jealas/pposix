@@ -6,13 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 add_library(
         ${CMAKE_PROJECT_NAME}
 
-        INTERFACE
+        src/errno.cpp
 )
 
 target_include_directories(
         ${CMAKE_PROJECT_NAME}
 
-        INTERFACE
+        PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
