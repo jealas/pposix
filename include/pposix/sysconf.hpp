@@ -2,9 +2,7 @@
 
 #include <unistd.h>
 
-#include "pposix/errno.hpp"
 #include "pposix/result.hpp"
-#include "pposix/util/underlying_value.hpp"
 
 namespace pposix {
 
@@ -137,16 +135,6 @@ enum class system_config_name : int {
 
 using system_config_value = long;
 
-result<system_config_value> sysconfig(system_config_name config_name) noexcept {
-  errno_context errno_ctx;
-
-  if (const auto value = ::sysconf(util::underlying_value(config_name)); value != -1) {
-    return value;
-  } else if (const auto error = current_errno_code()) {
-    return error;
-  } else {
-    return value;
-  }
-}
+result<system_config_value> sysconf(system_config_name config_name) noexcept;
 
 }  // namespace pposix

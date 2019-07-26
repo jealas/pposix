@@ -6,13 +6,18 @@ set(CMAKE_CXX_STANDARD 17)
 add_library(
         ${CMAKE_PROJECT_NAME}
 
-        INTERFACE
+        src/errno.cpp
+        src/unique_fd.cpp
+        src/sysconf.cpp
+        src/socket.cpp
+        src/file.cpp
+        src/dirent.cpp
 )
 
 target_include_directories(
         ${CMAKE_PROJECT_NAME}
 
-        INTERFACE
+        PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 

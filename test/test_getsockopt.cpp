@@ -1,61 +1,65 @@
 #include <catch2/catch.hpp>
 
-#include "pposix/capi/socket/socket.hpp"
-#include "pposix/capi/socket/sockopt.hpp"
+#include <utility>
+
+#include "pposix/socket.hpp"
 #include "pposix/unique_fd.hpp"
 
-namespace sock = pposix::capi::socket;
+using namespace pposix;
 
-SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
+SCENARIO("Can get default socket options", "[pposix][socket]") {
   GIVEN("a valid unix/local socket") {
-    const auto domain = GENERATE(sock::domain::local, sock::domain::unix_);
-    const auto type = GENERATE(sock::type::seqpacket, sock::type::stream, sock::type::dgram);
+    const auto domain = GENERATE(socket_domain::local, socket_domain::unix_);
+    const auto type = GENERATE(socket_type::seqpacket, socket_type::stream, socket_type::dgram);
 
-    const pposix::unique_fd<sock::socket_fd> sockfd{
-        sock::socket(domain, type, sock::flag::none, sock::protocol{0})};
+    auto socket_result{socket(domain, type, socket_flag::none, socket_protocol{0})};
+
+    REQUIRE(socket_result);
+
+    pposix::unique_fd<pposix::socket_fd> sockfd{std::move(*socket_result.value())};
 
     REQUIRE(sockfd);
     REQUIRE(not sockfd.empty());
-    REQUIRE(sockfd.raw() != pposix::capi::nullfd);
+    REQUIRE(sockfd.raw() != pposix::nullfd);
 
     WHEN("getting the default debug option") {
-      const auto option = sock::getsockopt<sock::debug>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<debug>(*sockfd, socket_level::socket);
 
       REQUIRE(option.value());
       REQUIRE(not option.error());
 
-      THEN("the value is off") { REQUIRE(*option.value() == sock::debug::off); }
+      THEN("the value is off") { REQUIRE(*option.value() == debug::off); }
     }
 
     WHEN("getting the default broadcast option") {
-      const auto option = sock::getsockopt<sock::broadcast>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<broadcast>(*sockfd, socket_level::socket);
 
       REQUIRE(option.value());
       REQUIRE(not option.error());
 
-      THEN("the value is off") { REQUIRE(*option.value() == sock::broadcast::off); }
+      THEN("the value is off") { REQUIRE(*option.value() == broadcast::off); }
     }
 
     WHEN("getting the default don't route option") {
-      const auto option = sock::getsockopt<sock::dontroute>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<dontroute>(*sockfd, socket_level::socket);
 
       REQUIRE(option.value());
       REQUIRE(not option.error());
 
-      THEN("the value is off") { REQUIRE(*option.value() == sock::dontroute::off); }
+      THEN("the value is off") { REQUIRE(*option.value() == dontroute::off); }
     }
 
     WHEN("getting the default keep alive option") {
-      const auto option = sock::getsockopt<sock::keepalive>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<keepalive>(*sockfd, socket_level::socket);
 
       REQUIRE(option.value());
       REQUIRE(not option.error());
 
-      THEN("the value is off") { REQUIRE(*option.value() == sock::keepalive::off); }
+      THEN("the value is off") { REQUIRE(*option.value() == keepalive::off); }
     }
 
     WHEN("getting the default linger option") {
-      const auto option = sock::getsockopt<sock::linger>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<pposix::linger>(*sockfd, socket_level::socket);
 
       REQUIRE(not option.error());
 
@@ -69,7 +73,7 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
     }
 
     WHEN("getting the default out of band inline option") {
-      const auto option = sock::getsockopt<sock::oobinline>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<oobinline>(*sockfd, socket_level::socket);
 
       REQUIRE(not option.error());
 
@@ -77,12 +81,12 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
         auto const* const value = option.value();
 
         REQUIRE(value);
-        REQUIRE(*value == sock::oobinline::off);
+        REQUIRE(*value == oobinline::off);
       }
     }
 
     WHEN("getting the default receive buffer size") {
-      const auto option = sock::getsockopt<sock::rcvbuf>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<rcvbuf>(*sockfd, socket_level::socket);
 
       THEN("the buffer size is returned") {
         REQUIRE(option.value());
@@ -93,7 +97,7 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
     }
 
     WHEN("getting the default receive low water line value") {
-      const auto option = sock::getsockopt<sock::rcvlowat>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<rcvlowat>(*sockfd, socket_level::socket);
 
       THEN("the default value 1 is returned") {
         auto const* const value = option.value();
@@ -101,12 +105,12 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
         REQUIRE(value);
         REQUIRE(not option.error());
 
-        REQUIRE(*value == sock::rcvlowat{1});
+        REQUIRE(*value == rcvlowat{1});
       }
     }
 
     WHEN("getting the default receive timeout value") {
-      const auto option = sock::getsockopt<sock::rcvtimeo>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<rcvtimeo>(*sockfd, socket_level::socket);
 
       THEN("the default value is 0 seconds and 0 microseconds") {
         auto const* const value = option.value();
@@ -120,7 +124,7 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
     }
 
     WHEN("getting the default reuse address value") {
-      const auto option = sock::getsockopt<sock::reuseaddr>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<reuseaddr>(*sockfd, socket_level::socket);
 
       THEN("the default value is off") {
         auto const* const value = option.value();
@@ -128,12 +132,12 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
         REQUIRE(value);
         REQUIRE(not option.error());
 
-        REQUIRE(*value == sock::reuseaddr::off);
+        REQUIRE(*value == reuseaddr::off);
       }
     }
 
     WHEN("getting the default send buffer size value") {
-      const auto option = sock::getsockopt<sock::sndbuf>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<sndbuf>(*sockfd, socket_level::socket);
 
       THEN("the buffer size is returned") {
         REQUIRE(option.value());
@@ -144,7 +148,7 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
     }
 
     WHEN("getting the send low water line value") {
-      const auto option = sock::getsockopt<sock::sndlowat>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<sndlowat>(*sockfd, socket_level::socket);
 
       THEN("the default value 1 is returned") {
         auto const* const value = option.value();
@@ -152,12 +156,12 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
         REQUIRE(value);
         REQUIRE(not option.error());
 
-        REQUIRE(*value == sock::sndlowat{1});
+        REQUIRE(*value == sndlowat{1});
       }
     }
 
     WHEN("getting the default send timeout value") {
-      const auto option = sock::getsockopt<sock::sndtimeo>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<sndtimeo>(*sockfd, socket_level::socket);
 
       THEN("the default value is 0 seconds and 0 microseconds") {
         auto const* const value = option.value();
@@ -171,7 +175,7 @@ SCENARIO("Can get default socket options", "[pposix][capi][socket]") {
     }
 
     WHEN("getting the type value") {
-      const auto option = sock::getsockopt<sock::type>(*sockfd, sock::level::socket);
+      const auto option = getsockopt<socket_type>(*sockfd, socket_level::socket);
 
       REQUIRE(not option.error());
 

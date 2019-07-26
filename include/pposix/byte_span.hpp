@@ -9,13 +9,13 @@ namespace pposix {
 
 class byte_cspan {
  public:
-  byte_cspan() = default;
+  constexpr byte_cspan() noexcept = default;
 
-  constexpr byte_cspan(const byte_cspan &) = default;
-  constexpr byte_cspan(byte_cspan &&) = default;
+  constexpr byte_cspan(const byte_cspan &) noexcept = default;
+  constexpr byte_cspan(byte_cspan &&) noexcept = default;
 
-  constexpr byte_cspan &operator=(const byte_cspan &) = default;
-  constexpr byte_cspan &operator=(byte_cspan &&) = default;
+  constexpr byte_cspan &operator=(const byte_cspan &) noexcept = default;
+  constexpr byte_cspan &operator=(byte_cspan &&) noexcept = default;
 
   constexpr byte_cspan(std::byte const *buffer, std::size_t length) noexcept
       : buffer_{buffer}, length_{buffer ? length : 0u} {}
@@ -50,19 +50,19 @@ class byte_cspan {
   }
 
  private:
-  std::byte const *buffer_;
-  std::size_t length_;
+  std::byte const *buffer_{nullptr};
+  std::size_t length_{};
 };
 
 class byte_span {
  public:
-  byte_span() = default;
+  constexpr byte_span() noexcept = default;
 
-  constexpr byte_span(const byte_span &) = default;
-  constexpr byte_span(byte_span &&) = default;
+  constexpr byte_span(const byte_span &) noexcept = default;
+  constexpr byte_span(byte_span &&) noexcept = default;
 
-  constexpr byte_span &operator=(const byte_span &) = default;
-  constexpr byte_span &operator=(byte_span &&) = default;
+  constexpr byte_span &operator=(const byte_span &) noexcept = default;
+  constexpr byte_span &operator=(byte_span &&) noexcept = default;
 
   constexpr byte_span(std::byte *buffer, std::size_t length) noexcept
       : buffer_{buffer}, length_{buffer ? length : 0u} {}
@@ -102,8 +102,8 @@ class byte_span {
   }
 
  private:
-  std::byte *buffer_;
-  std::size_t length_;
+  std::byte *buffer_{nullptr};
+  std::size_t length_{};
 };
 
 }  // namespace pposix
