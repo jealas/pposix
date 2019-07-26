@@ -10,7 +10,11 @@
 
 namespace pposix {
 
-template <class Fd, class ClosePolicy = default_close_policy>
+struct fd_close_policy {
+  std::error_code operator()(raw_fd fd) const noexcept;
+};
+
+template <class Fd, class ClosePolicy = fd_close_policy>
 class [[nodiscard]] unique_fd {
   static_assert(is_file_descriptor_v<Fd>);
 

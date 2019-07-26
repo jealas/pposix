@@ -7,7 +7,7 @@ add_library(
         ${CMAKE_PROJECT_NAME}
 
         src/errno.cpp
-        src/default_close_policy.cpp
+        src/unique_fd.cpp
         src/sysconf.cpp
         src/socket.cpp
         src/file.cpp
