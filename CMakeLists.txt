@@ -11,6 +11,7 @@ add_library(
         src/sysconf.cpp
         src/socket.cpp
         src/file.cpp
+        src/dirent.cpp
 )
 
 target_include_directories(
