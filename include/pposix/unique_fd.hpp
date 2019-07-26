@@ -3,10 +3,10 @@
 #include <system_error>
 #include <utility>
 
-#include "pposix/default_close_policy.hpp"
 #include "pposix/errno.hpp"
 #include "pposix/fd.hpp"
 #include "pposix/null_fd.hpp"
+#include "pposix/unique_fd.hpp"
 
 namespace pposix {
 
