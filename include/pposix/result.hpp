@@ -19,7 +19,9 @@ class result {
   constexpr result(const T &value) : result_{value} {}        // NOLINT implicit constructor
   constexpr result(T &&value) : result_{std::move(value)} {}  // NOLINT implicit constructor
 
-  std::error_code error() const noexcept { return std::visit(error_visitor{}, result_); }
+  [[nodiscard]] std::error_code error() const noexcept {
+    return std::visit(error_visitor{}, result_);
+  }
 
   T *value() noexcept { return std::get_if<T>(&result_); }
 

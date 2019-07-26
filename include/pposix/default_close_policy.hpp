@@ -2,11 +2,7 @@
 
 #include <system_error>
 
-#include <unistd.h>
-
-#include "pposix/errno.hpp"
 #include "pposix/fd.hpp"
-#include "pposix/util/underlying_value.hpp"
 
 namespace pposix {
 

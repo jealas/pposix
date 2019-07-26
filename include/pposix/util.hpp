@@ -1,9 +1,8 @@
-#ifndef PPOSIX_UTIL_UNDERLYING_VALUE_HPP
-#define PPOSIX_UTIL_UNDERLYING_VALUE_HPP
+#pragma once
 
 #include <type_traits>
 
-namespace pposix::util {
+namespace pposix {
 
 template <class Enum>
 constexpr decltype(auto) underlying_value(const Enum e) {
@@ -14,6 +13,7 @@ constexpr decltype(auto) underlying_value(const Enum e) {
   return static_cast<std::underlying_type_t<enum_t>>(e);
 }
 
-}  // namespace pposix::util
+template <class T>
+constexpr bool always_false = false;
 
-#endif  // PPOSIX_UTIL_UNDERLYING_VALUE_HPP
+}  // namespace pposix

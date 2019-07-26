@@ -6,7 +6,7 @@
 
 #include "pposix/errno.hpp"
 #include "pposix/fd.hpp"
-#include "pposix/util/underlying_value.hpp"
+#include "pposix/util.hpp"
 
 namespace pposix {
 
