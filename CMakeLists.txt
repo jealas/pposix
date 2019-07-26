@@ -10,6 +10,7 @@ add_library(
         src/default_close_policy.cpp
         src/sysconf.cpp
         src/socket.cpp
+        src/file.cpp
 )
 
 target_include_directories(
