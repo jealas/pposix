@@ -23,11 +23,14 @@ class fd {
   constexpr explicit fd(fd_t file_descriptor) noexcept : fd_{file_descriptor} {}
   constexpr explicit fd(nullfd_t) noexcept : fd_{NULLFD} {}
 
-  fd(const fd &) noexcept = default;
-  fd(fd &&) noexcept = default;
+  fd(const fd &) noexcept = delete;
+  fd(fd &&other) noexcept { std::swap(fd_, other.fd_); }
 
-  fd &operator=(const fd &) noexcept = default;
-  fd &operator=(fd &&) noexcept = default;
+  fd &operator=(const fd &) noexcept = delete;
+  fd &operator=(fd &&other) noexcept {
+    std::swap(fd_, other.fd_);
+    return *this;
+  };
 
   fd &operator=(nullfd_t) noexcept {
     fd_ = NULLFD;
@@ -39,36 +42,36 @@ class fd {
   constexpr operator raw_fd() const noexcept { return raw_fd{raw()}; }
 
  private:
-  fd_t fd_;
+  fd_t fd_{NULLFD};
 };
 
 template <class Tag>
-constexpr bool operator==(fd<Tag> lhs, fd<Tag> rhs) {
+constexpr bool operator==(const fd<Tag> &lhs, const fd<Tag> &rhs) {
   return lhs.raw() == rhs.raw();
 }
 
 template <class Tag>
-constexpr bool operator!=(fd<Tag> lhs, fd<Tag> rhs) {
+constexpr bool operator!=(const fd<Tag> &lhs, const fd<Tag> &rhs) {
   return lhs.raw() != rhs.raw();
 }
 
 template <class Tag>
-constexpr bool operator==(fd<Tag> fd, nullfd_t) noexcept {
+constexpr bool operator==(const fd<Tag> &fd, nullfd_t) noexcept {
   return fd.raw() == NULLFD;
 }
 
 template <class Tag>
-constexpr bool operator==(nullfd_t, fd<Tag> fd) noexcept {
+constexpr bool operator==(nullfd_t, const fd<Tag> &fd) noexcept {
   return fd == nullfd;
 }
 
 template <class Tag>
-constexpr bool operator!=(fd<Tag> fd, nullfd_t) noexcept {
+constexpr bool operator!=(const fd<Tag> &fd, nullfd_t) noexcept {
   return not(fd == nullfd);
 }
 
 template <class Tag>
-constexpr bool operator!=(nullfd_t, fd<Tag> fd) noexcept {
+constexpr bool operator!=(nullfd_t, const fd<Tag> &fd) noexcept {
   return fd != nullfd;
 }
 

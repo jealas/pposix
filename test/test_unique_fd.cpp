@@ -3,11 +3,11 @@
 #include <functional>
 #include <memory>
 
-#include "pposix/unique_fd.hpp"
 #include "pposix/fd.hpp"
+#include "pposix/unique_fd.hpp"
 
 struct nop_close {
-  std::error_code operator()(pposix::raw_fd) const noexcept { return {}; }
+  std::error_code operator()(const pposix::raw_fd &) const noexcept { return {}; }
 };
 
 template <class Close>
@@ -63,9 +63,7 @@ SCENARIO("File descriptors can be released", "[pposix][unique_fd]") {
   }
 
   GIVEN("a non-empty file descriptor") {
-    constexpr pposix::raw_fd VALID_FD{1};
-
-    pposix::unique_fd<pposix::raw_fd, nop_close> fd{VALID_FD};
+    pposix::unique_fd<pposix::raw_fd, nop_close> fd{pposix::raw_fd{1}};
 
     require_is_not_empty(fd);
 
@@ -77,7 +75,7 @@ SCENARIO("File descriptors can be released", "[pposix][unique_fd]") {
       AND_THEN(
           "the released raw file descriptor is the same as what was used to construct the file "
           "descriptor") {
-        REQUIRE(released_rawfd == VALID_FD);
+        REQUIRE(released_rawfd == pposix::raw_fd{1});
       }
     }
   }
@@ -87,7 +85,7 @@ class close_counter_policy {
  public:
   close_counter_policy() : close_count_{std::make_shared<unsigned>(0u)} {}
 
-  std::error_code operator()(pposix::raw_fd rawfd) {
+  std::error_code operator()(const pposix::raw_fd &rawfd) {
     ++(*close_count_);
     return {};
   }
@@ -100,8 +98,8 @@ class close_counter_policy {
 
 SCENARIO("File descriptors can be closed", "[pposix][unique_fd]") {
   GIVEN("a null file descriptor") {
-    auto fd = std::make_unique<pposix::unique_fd<pposix::raw_fd, close_counter_policy>>(
-        pposix::nullfd);
+    auto fd =
+        std::make_unique<pposix::unique_fd<pposix::raw_fd, close_counter_policy>>(pposix::nullfd);
 
     require_is_empty(*fd);
 
@@ -194,9 +192,7 @@ SCENARIO("File descriptors can be moved", "[pposix][unique_fd]") {
   }
 
   GIVEN("a non-null file descriptor") {
-    constexpr pposix::raw_fd VALID_FD{1u};
-
-    pposix::unique_fd<pposix::raw_fd, nop_close> old_fd{VALID_FD};
+    pposix::unique_fd<pposix::raw_fd, nop_close> old_fd{pposix::raw_fd{1}};
 
     REQUIRE(not old_fd.empty());
 
@@ -205,12 +201,12 @@ SCENARIO("File descriptors can be moved", "[pposix][unique_fd]") {
 
       THEN("the old file descriptor is emptied") {
         REQUIRE(old_fd.empty());  // NOLINT use after move
-        REQUIRE(old_fd.raw() != VALID_FD);
+        REQUIRE(old_fd.raw() != pposix::raw_fd{1});
         REQUIRE(old_fd.raw() == pposix::nullfd);
 
         AND_THEN("the new file descriptor contains the old file descriptor") {
           REQUIRE(not new_fd.empty());
-          REQUIRE(new_fd.raw() == VALID_FD);
+          REQUIRE(new_fd.raw() == pposix::raw_fd{1});
         }
       }
     }

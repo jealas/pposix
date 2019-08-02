@@ -11,7 +11,7 @@
 namespace pposix {
 
 struct fd_close_policy {
-  std::error_code operator()(raw_fd fd) const noexcept;
+  std::error_code operator()(const raw_fd &fd) const noexcept;
 };
 
 template <class Fd, class ClosePolicy = fd_close_policy>
@@ -23,16 +23,16 @@ class [[nodiscard]] unique_fd {
 
   constexpr unique_fd(nullfd_t) noexcept : close_{} {}  // NOLINT implicit constructor
 
-  constexpr explicit unique_fd(const Fd file_descriptor) noexcept(noexcept(ClosePolicy{}))
-      : raw_fd_{file_descriptor}, close_{} {}
+  constexpr explicit unique_fd(Fd && file_descriptor) noexcept(noexcept(ClosePolicy{}))
+      : raw_fd_{std::move(file_descriptor)}, close_{} {}
 
-  constexpr explicit unique_fd(const Fd file_descriptor, const ClosePolicy &close) noexcept(
+  constexpr explicit unique_fd(Fd && file_descriptor, const ClosePolicy &close) noexcept(
       noexcept(ClosePolicy{std::declval<const ClosePolicy &>()}))
-      : raw_fd_{file_descriptor}, close_{close} {}
+      : raw_fd_{std::move(file_descriptor)}, close_{close} {}
 
-  constexpr explicit unique_fd(const Fd file_descriptor, ClosePolicy &&close) noexcept(
+  constexpr explicit unique_fd(Fd && file_descriptor, ClosePolicy && close) noexcept(
       noexcept(ClosePolicy{std::declval<ClosePolicy &&>()}))
-      : raw_fd_{file_descriptor}, close_{std::move(close)} {}
+      : raw_fd_{std::move(file_descriptor)}, close_{std::move(close)} {}
 
   ~unique_fd() noexcept(false) {
     if (const auto error = close()) {
@@ -51,16 +51,16 @@ class [[nodiscard]] unique_fd {
   bool empty() const noexcept { return raw_fd_ == nullfd; }
   explicit operator bool() const noexcept { return not empty(); }
 
-  Fd raw() const noexcept { return raw_fd_; }
-  Fd operator*() const noexcept { return raw(); }
+  const Fd &raw() const noexcept { return raw_fd_; }
+  const Fd &operator*() const noexcept { return raw(); }
 
   constexpr ClosePolicy &get_close_policy() noexcept { return close_; }
   constexpr const ClosePolicy &get_close_policy() const noexcept { return close_; }
 
   [[nodiscard]] Fd release() noexcept {
-    const auto tmp_fd = raw_fd_;
+    Fd tmp_fd{std::move(raw_fd_)};
     raw_fd_ = nullfd;
-    return tmp_fd;
+    return std::move(tmp_fd);
   }
 
   [[nodiscard]] std::error_code close() noexcept(
