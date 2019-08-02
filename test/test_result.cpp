@@ -27,9 +27,6 @@ TEMPLATE_TEST_CASE("Results can be constructed", "[pposix][result]", PPOSIX_RESU
         return false;
       })};
       AND_THEN("the error code is preserved in the new result type") {
-        REQUIRE(new_res.has_error());
-        REQUIRE(not new_res.has_value());
-        REQUIRE(not new_res);
         REQUIRE(new_res.error() == std::make_error_code(errc));
         REQUIRE(new_res.error() == res.error());
       }

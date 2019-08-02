@@ -19,7 +19,13 @@ namespace detail {
 template <class T>
 const std::error_code *result_get_error_unsafe(const result<T> &) noexcept;
 
-}
+template <class T>
+const T *result_get_value_unsafe(const result<T> &) noexcept;
+
+template <class T>
+T *result_get_value_unsafe(result<T> &) noexcept;
+
+}  // namespace detail
 
 template <class T>
 class result {
@@ -74,16 +80,22 @@ class result {
 
   explicit operator bool() const noexcept { return has_value(); }
 
-  const T &operator*() const noexcept { return *std::get_if<T>(&result_); }
-  T &operator*() noexcept { return *std::get_if<T>(&result_); }
+  const T &operator*() const noexcept { return *detail::result_get_value_unsafe(*this); }
+  T &operator*() noexcept { return *detail::result_get_value_unsafe(*this); }
 
-  const T *operator->() const noexcept { return *std::get_if<T>(&result_); }
-  T *operator->() noexcept { return *std::get_if<T>(&result_); }
+  const T *operator->() const noexcept { return *detail::result_get_value_unsafe(*this); }
+  T *operator->() noexcept { return *detail::result_get_value_unsafe(*this); }
 
   // Friends
   template <class U>
   friend const std::error_code *pposix::detail::result_get_error_unsafe(
       const result<U> &) noexcept;
+
+  template <class U>
+  friend const U *pposix::detail::result_get_value_unsafe(const result<U> &) noexcept;
+
+  template <class U>
+  friend U *pposix::detail::result_get_value_unsafe(result<U> &) noexcept;
 
  private:
   std::variant<T, std::error_code> result_;
@@ -96,6 +108,16 @@ const std::error_code *result_get_error_unsafe(const result<T> &res) noexcept {
   return std::get_if<std::error_code>(&res.result_);
 }
 
+template <class T>
+const T *result_get_value_unsafe(const result<T> &res) noexcept {
+  return std::get_if<T>(&res.result_);
+}
+
+template <class T>
+T *result_get_value_unsafe(result<T> &res) noexcept {
+  return std::get_if<T>(&res.result_);
+}
+
 }  // namespace detail
 
 template <class U, class T, class Func>
@@ -104,7 +126,7 @@ result<U> result_map(const result<T> &result,
   if (result.has_error()) {
     return *detail::result_get_error_unsafe(result);
   } else {
-    return std::forward<Func>(func)(*result);
+    return std::forward<Func>(func)(*detail::result_get_value_unsafe(result));
   }
 }
 
