@@ -119,7 +119,7 @@ SCENARIO("Buffer spans can be sliced", "[pposix][buffer_span]") {
   }
 
   GIVEN("a non-empty buffer span") {
-    std::byte raw_buffer[10u];
+    std::byte raw_buffer[10u]{};
     pposix::byte_span buffer{raw_buffer};
 
     WHEN("slicing the entire string") {
