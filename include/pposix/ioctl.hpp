@@ -17,7 +17,26 @@ namespace pposix {
 // File ioctl
 using ioctl_result = int;
 
-enum class ioctl_request : int {};
+enum class ioctl_request : int {
+  push = I_PUSH,
+  pop = I_POP,
+  look = I_LOOK,
+  flush = I_FLUSH,
+  flush_band = I_FLUSHBAND,
+  set_signal = I_SETSIG,
+  get_signal = I_GETSIG,
+  find = I_FIND,
+  peek = I_PEEK,
+  set_read_option = I_SRDOPT,
+  get_read_option = I_GRDOPT,
+  nread = I_NREAD,
+  send_command = I_STR,
+  set_write_option = I_SWROPT,
+  get_write_option = I_GWROPT,
+  send_file_descriptor = I_SENDFD,
+  receive_file_descriptor = I_RECVFD,
+  list_module_names = I_LIST,
+};
 
 result<ioctl_result> ioctl(const raw_fd &, ioctl_request, int) noexcept;
 result<ioctl_result> ioctl(const raw_fd &, ioctl_request, void *) noexcept;
