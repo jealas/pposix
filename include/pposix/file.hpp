@@ -129,18 +129,18 @@ constexpr file_permission operator"" _other(char const *c_str, size_t len) {
 }  // namespace permission_literals
 
 // File close
-std::error_code close(const raw_fd &fd) noexcept;
+std::error_code close(raw_fd fd) noexcept;
 
 // File dup
-result<unique_fd<raw_fd>> dup(const raw_fd &fd) noexcept;
+result<unique_fd<raw_fd>> dup(raw_fd fd) noexcept;
 
 // File lseek
-result<off_t> lseek(const raw_fd &fd, off_t offset, file_whence wh) noexcept;
+result<off_t> lseek(raw_fd fd, off_t offset, file_whence wh) noexcept;
 
 // File read
-result<ssize_t> read(const raw_fd &fd, byte_span buffer) noexcept;
+result<ssize_t> read(raw_fd fd, byte_span buffer) noexcept;
 
 // File write
-result<ssize_t> write(const raw_fd &fd, byte_cspan buffer) noexcept;
+result<ssize_t> write(raw_fd fd, byte_cspan buffer) noexcept;
 
 }  // namespace pposix

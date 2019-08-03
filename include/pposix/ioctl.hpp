@@ -49,12 +49,12 @@ enum class ioctl_request : ioctl_int {
   unlink_permanent_stream = I_PUNLINK,
 };
 
-result<ioctl_int> ioctl(const raw_fd &, ioctl_request, int) noexcept;
-result<ioctl_int> ioctl(const raw_fd &, ioctl_request, void *) noexcept;
-result<ioctl_int> ioctl(const raw_fd &, ioctl_request, const void *) noexcept;
-result<ioctl_int> ioctl(const raw_fd &, ioctl_request, nullptr_t) noexcept;
-result<ioctl_int> ioctl(const raw_fd &, ioctl_request, any_span) noexcept;
-result<ioctl_int> ioctl(const raw_fd &, ioctl_request, any_cspan) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_request, int) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_request, void *) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_request, const void *) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_request, nullptr_t) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_request, any_span) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_request, any_cspan) noexcept;
 
 struct ioctl_push {
   char *const name;
@@ -69,10 +69,10 @@ struct ioctl_look {
 
 enum ioctl_flush : ioctl_int { read_queues = FLUSHR, write_queues = FLUSHW, all_queues = FLUSHRW };
 
-result<ioctl_int> ioctl(const raw_fd &, ioctl_push) noexcept;
-result<ioctl_int> ioctl(const raw_fd &, decltype(ioctl_pop)) noexcept;
-result<ioctl_int> ioctl(const raw_fd &, ioctl_look) noexcept;
-result<ioctl_int> ioctl(const raw_fd &, ioctl_flush) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_push) noexcept;
+result<ioctl_int> ioctl(raw_fd, decltype(ioctl_pop)) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_look) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_flush) noexcept;
 
 struct ioctl_flush_band {
   ioctl_flush command;
@@ -87,7 +87,7 @@ struct ioctl_flush_band {
   }
 };
 
-result<ioctl_int> ioctl(const raw_fd &, ioctl_flush_band) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_flush_band) noexcept;
 
 enum class ioctl_signal : ioctl_int {
   none = 0,
@@ -117,25 +117,25 @@ struct ioctl_set_signal {
   ioctl_signal signals;
 };
 
-result<ioctl_int> ioctl(const raw_fd &, ioctl_set_signal) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_set_signal) noexcept;
 
 struct {
 } ioctl_get_signal;
 
-result<ioctl_signal> ioctl(const raw_fd &, decltype(ioctl_get_signal)) noexcept;
+result<ioctl_signal> ioctl(raw_fd, decltype(ioctl_get_signal)) noexcept;
 
 struct ioctl_find {
   const char *name;
 };
 
-result<bool> ioctl(const raw_fd &, ioctl_find) noexcept;
+result<bool> ioctl(raw_fd, ioctl_find) noexcept;
 
 struct {
 } ioctl_peek;
 
 // TODO: Wrap strpeek
 
-result<strpeek> ioctl(const raw_fd &, decltype(ioctl_peek)) noexcept;
+result<strpeek> ioctl(raw_fd, decltype(ioctl_peek)) noexcept;
 
 enum class ioctl_read_mode : ioctl_int {
   byte_stream = RNORM,
@@ -178,12 +178,12 @@ struct ioctl_set_read_option {
   ioctl_read_option read_option;
 };
 
-result<ioctl_int> ioctl(const raw_fd &, ioctl_set_read_option) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_set_read_option) noexcept;
 
 struct {
 } ioctl_get_read_option;
 
-result<ioctl_read_option> ioctl(const raw_fd &, decltype(ioctl_get_read_option)) noexcept;
+result<ioctl_read_option> ioctl(raw_fd, decltype(ioctl_get_read_option)) noexcept;
 
 class next_message_count {
  public:
@@ -205,7 +205,7 @@ class next_message_count {
 struct {
 } ioctl_get_next_message_count{};
 
-result<next_message_count> ioctl(const raw_fd &, decltype(ioctl_get_next_message_count)) noexcept;
+result<next_message_count> ioctl(raw_fd, decltype(ioctl_get_next_message_count)) noexcept;
 
 // TODO: Implement FDINSERT
 
@@ -239,7 +239,7 @@ struct ioctl_send_command {
   ioctl_command command;
 };
 
-result<ioctl_command> ioctl(const raw_fd &, ioctl_send_command) noexcept;
+result<ioctl_command> ioctl(raw_fd, ioctl_send_command) noexcept;
 
 enum class ioctl_write_option : ioctl_int {
   dont_send_zero_length_message = 0,
@@ -250,25 +250,25 @@ struct ioctl_set_write_option {
   ioctl_write_option write_option;
 };
 
-result<ioctl_int> ioctl(const raw_fd &, ioctl_set_write_option) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_set_write_option) noexcept;
 
 struct {
 } ioctl_get_write_option;
 
-result<ioctl_write_option> ioctl(const raw_fd &, decltype(ioctl_get_write_option)) noexcept;
+result<ioctl_write_option> ioctl(raw_fd, decltype(ioctl_get_write_option)) noexcept;
 
 struct ioctl_send_file_descriptor {
   raw_fd file_descriptor;
 };
 
-result<ioctl_int> ioctl(const raw_fd &, ioctl_send_file_descriptor) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_send_file_descriptor) noexcept;
 
 struct {
 } ioctl_receive_file_descriptor;
 
 class ioctl_new_file_descriptor {
  public:
-  constexpr ioctl_new_file_descriptor(const raw_fd &fd, group_id gid, user_id uid) noexcept {
+  constexpr ioctl_new_file_descriptor(raw_fd fd, group_id gid, user_id uid) noexcept {
     new_fd_.fd = fd.raw();
     new_fd_.gid = underlying_value(gid);
     new_fd_.uid = underlying_value(uid);
@@ -284,13 +284,12 @@ class ioctl_new_file_descriptor {
   ::strrecvfd new_fd_{};
 };
 
-result<ioctl_new_file_descriptor> ioctl(const raw_fd &,
-                                        decltype(ioctl_receive_file_descriptor)) noexcept;
+result<ioctl_new_file_descriptor> ioctl(raw_fd, decltype(ioctl_receive_file_descriptor)) noexcept;
 
 struct {
 } ioctl_get_module_count;
 
-result<ioctl_int> ioctl(const raw_fd &, decltype(ioctl_get_module_count)) noexcept;
+result<ioctl_int> ioctl(raw_fd, decltype(ioctl_get_module_count)) noexcept;
 
 struct ioctl_get_module_names {
   int num_modules;
@@ -307,7 +306,7 @@ class ioctl_module_name_list {
   unsigned module_name_count_{};
 };
 
-result<ioctl_module_name_list> ioctl(const raw_fd &, ioctl_get_module_names) noexcept(false);
+result<ioctl_module_name_list> ioctl(raw_fd, ioctl_get_module_names) noexcept(false);
 
 enum class ioctl_mark : ioctl_int { any = ANYMARK, last = LASTMARK };
 
@@ -319,62 +318,62 @@ struct ioctl_atmark {
   ioctl_mark mark;
 };
 
-result<bool> ioctl(const raw_fd &, ioctl_atmark) noexcept;
+result<bool> ioctl(raw_fd, ioctl_atmark) noexcept;
 
 struct ioctl_check_band {
   int priority;
 };
 
-result<bool> ioctl(const raw_fd &, ioctl_check_band) noexcept;
+result<bool> ioctl(raw_fd, ioctl_check_band) noexcept;
 
 struct {
 } ioctl_get_band;
 
 using ioctl_band_priority = int;
 
-result<ioctl_band_priority> ioctl(const raw_fd &, decltype(ioctl_get_band)) noexcept;
+result<ioctl_band_priority> ioctl(raw_fd, decltype(ioctl_get_band)) noexcept;
 
 struct ioctl_priority_band_writeable {
   int priority_band;
 };
 
-result<bool> ioctl(const raw_fd &, ioctl_priority_band_writeable) noexcept;
+result<bool> ioctl(raw_fd, ioctl_priority_band_writeable) noexcept;
 
 struct ioctl_set_close_time_delay {
   milliseconds delay;
 };
 
-result<ioctl_int> ioctl(const raw_fd &, ioctl_set_close_time_delay) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_set_close_time_delay) noexcept;
 
 struct {
 } ioctl_get_close_time_delay;
 
-result<milliseconds> ioctl(const raw_fd &, decltype(ioctl_get_close_time_delay)) noexcept;
+result<milliseconds> ioctl(raw_fd, decltype(ioctl_get_close_time_delay)) noexcept;
 
 struct ioctl_link_stream {
-  const raw_fd &stream_fd;
+  raw_fd stream_fd;
 };
 
 enum class ioctl_multiplexer_id : ioctl_int { all = MUXID_ALL };
 
-result<ioctl_multiplexer_id> ioctl(const raw_fd &, ioctl_link_stream) noexcept;
+result<ioctl_multiplexer_id> ioctl(raw_fd, ioctl_link_stream) noexcept;
 
 struct ioctl_unlink_stream {
   ioctl_multiplexer_id multiplexer_id;
 };
 
-result<ioctl_int> ioctl(const raw_fd &, ioctl_unlink_stream) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_unlink_stream) noexcept;
 
 struct ioctl_link_permanent_stream {
-  const raw_fd &stream_fd;
+  raw_fd stream_fd;
 };
 
-result<ioctl_multiplexer_id> ioctl(const raw_fd &, ioctl_link_permanent_stream) noexcept;
+result<ioctl_multiplexer_id> ioctl(raw_fd, ioctl_link_permanent_stream) noexcept;
 
 struct ioctl_unlink_permanent_stream {
   ioctl_multiplexer_id multiplexer_id;
 };
 
-result<ioctl_int> ioctl(const raw_fd &, ioctl_unlink_permanent_stream) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_unlink_permanent_stream) noexcept;
 
 }

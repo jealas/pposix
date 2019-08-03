@@ -8,7 +8,7 @@
 
 namespace pposix {
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_request r, int i) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, int i) noexcept {
   if (const auto res{::ioctl(fd.raw(), underlying_value(r), i)}; res == -1) {
     return current_errno_code();
   } else {
@@ -16,7 +16,7 @@ result<ioctl_int> ioctl(const raw_fd &fd, ioctl_request r, int i) noexcept {
   }
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_request r, void *ptr) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, void *ptr) noexcept {
   if (const auto res{::ioctl(fd.raw(), underlying_value(r), ptr)}; res == -1) {
     return current_errno_code();
   } else {
@@ -24,7 +24,7 @@ result<ioctl_int> ioctl(const raw_fd &fd, ioctl_request r, void *ptr) noexcept {
   }
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_request r, const void *ptr) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, const void *ptr) noexcept {
   if (const auto res{::ioctl(fd.raw(), underlying_value(r), ptr)}; res == -1) {
     return current_errno_code();
   } else {
@@ -32,45 +32,45 @@ result<ioctl_int> ioctl(const raw_fd &fd, ioctl_request r, const void *ptr) noex
   }
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_request r, nullptr_t) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, nullptr_t) noexcept {
   void *ptr = nullptr;
   return pposix::ioctl(fd, r, ptr);
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_request r, any_span val) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, any_span val) noexcept {
   return pposix::ioctl(fd, r, val.data());
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_request r, any_cspan val) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, any_cspan val) noexcept {
   return pposix::ioctl(fd, r, val.data());
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_push p) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_push p) noexcept {
   return pposix::ioctl(fd, ioctl_request::push, p.name);
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, decltype(ioctl_pop)) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, decltype(ioctl_pop)) noexcept {
   return pposix::ioctl(fd, ioctl_request::pop, 0);
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_look l) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_look l) noexcept {
   return pposix::ioctl(fd, ioctl_request::look, l.name);
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_flush f) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_flush f) noexcept {
   return pposix::ioctl(fd, ioctl_request::flush, underlying_value(f));
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_flush_band b) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_flush_band b) noexcept {
   ::bandinfo info = b;
   return pposix::ioctl(fd, ioctl_request::flush_band, &info);
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_set_signal s) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_set_signal s) noexcept {
   return pposix::ioctl(fd, ioctl_request::set_signal, underlying_value(s.signals));
 }
 
-result<ioctl_signal> ioctl(const raw_fd &fd, decltype(ioctl_get_signal)) noexcept {
+result<ioctl_signal> ioctl(raw_fd fd, decltype(ioctl_get_signal)) noexcept {
   int arg{};
 
   const auto result = pposix::ioctl(fd, ioctl_request::get_signal, &arg);
@@ -78,34 +78,33 @@ result<ioctl_signal> ioctl(const raw_fd &fd, decltype(ioctl_get_signal)) noexcep
                                   [&](ioctl_int /*ignored*/) { return ioctl_signal{arg}; });
 }
 
-result<bool> ioctl(const raw_fd &fd, ioctl_find f) noexcept {
+result<bool> ioctl(raw_fd fd, ioctl_find f) noexcept {
   const auto res{pposix::ioctl(fd, ioctl_request::find, f.name)};
   return result_map<bool>(res, [](ioctl_int found) { return found != 0; });
 }
 
 // TODO: Finish implementing correctly.
-result<strpeek> ioctl(const raw_fd &fd, decltype(ioctl_peek)) noexcept {
+result<strpeek> ioctl(raw_fd fd, decltype(ioctl_peek)) noexcept {
   strpeek peek{};
 
   const auto res{pposix::ioctl(fd, ioctl_request::peek, &peek)};
   return result_map<strpeek>(res, [&](ioctl_int /*ignored*/) { return peek; });
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_set_read_option o) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_set_read_option o) noexcept {
   ioctl_read_option &read_option = o.read_option;
 
   return pposix::ioctl(fd, ioctl_request::set_read_option, o.read_option.raw_read_option());
 }
 
-result<ioctl_read_option> ioctl(const raw_fd &fd, decltype(ioctl_get_read_option)) noexcept {
+result<ioctl_read_option> ioctl(raw_fd fd, decltype(ioctl_get_read_option)) noexcept {
   int option{};
   const auto res{pposix::ioctl(fd, ioctl_request::get_read_option, &option)};
   return result_map<ioctl_read_option>(
       res, [&](ioctl_int /*ignored*/) { return ioctl_read_option{option}; });
 }
 
-result<next_message_count> ioctl(const raw_fd &fd,
-                                 decltype(ioctl_get_next_message_count)) noexcept {
+result<next_message_count> ioctl(raw_fd fd, decltype(ioctl_get_next_message_count)) noexcept {
   int next_message_length{};
   const auto res{pposix::ioctl(fd, ioctl_request::nread, &next_message_length)};
   return result_map<next_message_count>(res, [&](ioctl_int num_messages) {
@@ -113,7 +112,7 @@ result<next_message_count> ioctl(const raw_fd &fd,
   });
 }
 
-result<ioctl_command> ioctl(const raw_fd &fd, ioctl_send_command send_command) noexcept {
+result<ioctl_command> ioctl(raw_fd fd, ioctl_send_command send_command) noexcept {
   ::strioctl ioctl_cmd(send_command.command);
 
   const auto res{pposix::ioctl(fd, ioctl_request::send_command, &ioctl_cmd)};
@@ -123,12 +122,12 @@ result<ioctl_command> ioctl(const raw_fd &fd, ioctl_send_command send_command) n
   });
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_set_write_option write_option) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_set_write_option write_option) noexcept {
   return pposix::ioctl(fd, ioctl_request::set_write_option,
                        underlying_value(write_option.write_option));
 }
 
-result<ioctl_write_option> ioctl(const raw_fd &fd, decltype(ioctl_get_write_option)) noexcept {
+result<ioctl_write_option> ioctl(raw_fd fd, decltype(ioctl_get_write_option)) noexcept {
   int write_option{};
 
   const auto res{pposix::ioctl(fd, ioctl_request::get_write_option, &write_option)};
@@ -136,11 +135,11 @@ result<ioctl_write_option> ioctl(const raw_fd &fd, decltype(ioctl_get_write_opti
       res, [&](ioctl_int /*ignored*/) { return ioctl_write_option{write_option}; });
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_send_file_descriptor send_fd) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_send_file_descriptor send_fd) noexcept {
   return pposix::ioctl(fd, ioctl_request::send_file_descriptor, send_fd.file_descriptor.raw());
 }
 
-result<ioctl_new_file_descriptor> ioctl(const raw_fd &fd,
+result<ioctl_new_file_descriptor> ioctl(raw_fd fd,
                                         decltype(ioctl_receive_file_descriptor)) noexcept {
   ::strrecvfd new_fd{};
   const auto res{pposix::ioctl(fd, ioctl_request::receive_file_descriptor, &new_fd)};
@@ -148,7 +147,7 @@ result<ioctl_new_file_descriptor> ioctl(const raw_fd &fd,
       res, [&](ioctl_int /*ignored*/) { return ioctl_new_file_descriptor{new_fd}; });
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, decltype(ioctl_get_module_count)) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, decltype(ioctl_get_module_count)) noexcept {
   return pposix::ioctl(fd, ioctl_request::list_module_names, nullptr);
 }
 
@@ -166,7 +165,7 @@ std::string_view ioctl_module_name_list::at(std::size_t index) const noexcept(fa
   }
 }
 
-result<ioctl_module_name_list> ioctl(const raw_fd &fd,
+result<ioctl_module_name_list> ioctl(raw_fd fd,
                                      ioctl_get_module_names module_names) noexcept(false) {
   ::str_list module_name_list{};
 
@@ -182,26 +181,26 @@ result<ioctl_module_name_list> ioctl(const raw_fd &fd,
   });
 }
 
-result<bool> ioctl(const raw_fd &fd, ioctl_atmark atmark) noexcept {
+result<bool> ioctl(raw_fd fd, ioctl_atmark atmark) noexcept {
   const auto res{pposix::ioctl(fd, ioctl_request::at_mark, underlying_value(atmark.mark))};
   return result_map<bool>(res,
                           [](ioctl_int condition_satisfied) { return condition_satisfied != 0; });
 }
 
-result<bool> ioctl(const raw_fd &fd, ioctl_check_band check_band) noexcept {
+result<bool> ioctl(raw_fd fd, ioctl_check_band check_band) noexcept {
   const auto res{pposix::ioctl(fd, ioctl_request::check_band, check_band.priority)};
   return result_map<bool>(
       res, [](ioctl_int priority_band_exists) { return priority_band_exists != 0; });
 }
 
-result<ioctl_band_priority> ioctl(const raw_fd &fd, decltype(ioctl_get_band)) noexcept {
+result<ioctl_band_priority> ioctl(raw_fd fd, decltype(ioctl_get_band)) noexcept {
   int band_priority{};
   const auto res{pposix::ioctl(fd, ioctl_request::get_band_priority, &band_priority)};
   return result_map<ioctl_band_priority>(res,
                                          [&](ioctl_int /*ignored*/) { return band_priority; });
 }
 
-result<bool> ioctl(const raw_fd &fd, ioctl_priority_band_writeable writeable) noexcept {
+result<bool> ioctl(raw_fd fd, ioctl_priority_band_writeable writeable) noexcept {
   const auto res{
       pposix::ioctl(fd, ioctl_request::priority_band_writeable, writeable.priority_band)};
   return result_map<bool>(res, [](ioctl_int is_writeable) {
@@ -210,34 +209,34 @@ result<bool> ioctl(const raw_fd &fd, ioctl_priority_band_writeable writeable) no
   });
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_set_close_time_delay close_delay) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_set_close_time_delay close_delay) noexcept {
   int delay{close_delay.delay.count()};
   return pposix::ioctl(fd, ioctl_request::set_close_time_delay, &delay);
 }
 
-result<milliseconds> ioctl(const raw_fd &fd, decltype(ioctl_get_close_time_delay)) noexcept {
+result<milliseconds> ioctl(raw_fd fd, decltype(ioctl_get_close_time_delay)) noexcept {
   int delay{};
   const auto res{pposix::ioctl(fd, ioctl_request::get_close_time_delay, &delay)};
   return result_map<milliseconds>(res, [&](ioctl_int /*ignored*/) { return milliseconds{delay}; });
 }
 
-result<ioctl_multiplexer_id> ioctl(const raw_fd &fd, ioctl_link_stream stream) noexcept {
+result<ioctl_multiplexer_id> ioctl(raw_fd fd, ioctl_link_stream stream) noexcept {
   const auto res{pposix::ioctl(fd, ioctl_request::link_stream, stream.stream_fd.raw())};
   return result_map<ioctl_multiplexer_id>(
       res, [](ioctl_int multiplexer_id) { return ioctl_multiplexer_id{multiplexer_id}; });
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_unlink_stream stream) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_unlink_stream stream) noexcept {
   return pposix::ioctl(fd, ioctl_request::unlink_stream, underlying_value(stream.multiplexer_id));
 }
 
-result<ioctl_multiplexer_id> ioctl(const raw_fd &fd, ioctl_link_permanent_stream stream) noexcept {
+result<ioctl_multiplexer_id> ioctl(raw_fd fd, ioctl_link_permanent_stream stream) noexcept {
   const auto res{pposix::ioctl(fd, ioctl_request::link_permanent_stream, stream.stream_fd.raw())};
   return result_map<ioctl_multiplexer_id>(
       res, [](ioctl_int multiplexer_id) { return ioctl_multiplexer_id{multiplexer_id}; });
 }
 
-result<ioctl_int> ioctl(const raw_fd &fd, ioctl_unlink_permanent_stream stream) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_unlink_permanent_stream stream) noexcept {
   return pposix::ioctl(fd, ioctl_request::link_permanent_stream,
                        underlying_value(stream.multiplexer_id));
 }

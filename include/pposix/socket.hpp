@@ -198,28 +198,28 @@ class sndtimeo {
 };
 
 // Set socket option
-std::error_code setsockopt(const socket_fd &, socket_level, socket_option, any_cspan) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, debug) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, broadcast) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, reuseaddr) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, keepalive) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, linger) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, oobinline) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, sndbuf) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, rcvbuf) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, dontroute) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, rcvlowat) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, rcvtimeo) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, sndlowat) noexcept;
-std::error_code setsockopt(const socket_fd &, socket_level, sndtimeo) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_option, any_cspan) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, debug) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, broadcast) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, reuseaddr) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, keepalive) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, linger) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, oobinline) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, sndbuf) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, rcvbuf) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, dontroute) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, rcvlowat) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, rcvtimeo) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, sndlowat) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, sndtimeo) noexcept;
 
 // Get socket option
 enum class acceptconn : bool {};
 enum class error : int {};
 
-result<socklen_t> getsockopt(const socket_fd &, socket_level, socket_option, any_span) noexcept;
+result<socklen_t> getsockopt(socket_fd, socket_level, socket_option, any_span) noexcept;
 
 template <class T>
-result<T> getsockopt(const socket_fd &, socket_level) noexcept;
+result<T> getsockopt(socket_fd, socket_level) noexcept;
 
 }
