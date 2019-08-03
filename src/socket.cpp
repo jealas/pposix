@@ -50,57 +50,57 @@ std::error_code setsockopt_bool(socket_fd fd, socket_level l, socket_option o, b
 
 }  // namespace
 
-std::error_code setsockopt(socket_fd fd, socket_level l, debug d) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_debug d) noexcept {
   return setsockopt_bool(fd, l, socket_option::debug, underlying_value(d));
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, broadcast b) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_broadcast b) noexcept {
   return setsockopt_bool(fd, l, socket_option::broadcast, underlying_value(b));
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, reuseaddr r) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_reuseaddr r) noexcept {
   return setsockopt_bool(fd, l, socket_option::reuseaddr, underlying_value(r));
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, keepalive k) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_keepalive k) noexcept {
   return setsockopt_bool(fd, l, socket_option::keepalive, underlying_value(k));
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, linger lin) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_linger lin) noexcept {
   const ::linger &posix_linger = lin.get();
   return setsockopt(fd, l, socket_option::linger, any_cview{&posix_linger});
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, oobinline o) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_oobinline o) noexcept {
   return setsockopt_bool(fd, l, socket_option::oobinline, underlying_value(o));
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, sndbuf s) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_sndbuf s) noexcept {
   return setsockopt_int(fd, l, socket_option::sndbuf, underlying_value(s));
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, rcvbuf r) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_rcvbuf r) noexcept {
   return setsockopt_int(fd, l, socket_option::rcvbuf, underlying_value(r));
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, dontroute d) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_dontroute d) noexcept {
   return setsockopt_bool(fd, l, socket_option::dontroute, underlying_value(d));
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, rcvlowat r) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_rcvlowat r) noexcept {
   return setsockopt_int(fd, l, socket_option::rcvlowat, underlying_value(r));
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, rcvtimeo r) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_rcvtimeo r) noexcept {
   const ::timeval &val = r.get();
   return setsockopt(fd, l, socket_option::rcvtimeo, any_cview{&val});
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, sndlowat s) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_sndlowat s) noexcept {
   return setsockopt_int(fd, l, socket_option::sndlowat, underlying_value(s));
 }
 
-std::error_code setsockopt(socket_fd fd, socket_level l, sndtimeo r) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_sndtimeo r) noexcept {
   const ::timeval &val = r.get();
   return setsockopt(fd, l, socket_option::sndtimeo, any_cview{&val});
 }
@@ -155,53 +155,53 @@ result<Result> getsockopt_struct(socket_fd fd, socket_level l, socket_option o) 
 }  // namespace detail
 
 template <>
-result<debug> getsockopt<debug>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_bool<debug>(fd, l, socket_option::debug);
+result<socket_debug> getsockopt<socket_debug>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_bool<socket_debug>(fd, l, socket_option::debug);
 }
 
 template <>
-result<broadcast> getsockopt<broadcast>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_bool<broadcast>(fd, l, socket_option::broadcast);
+result<socket_broadcast> getsockopt<socket_broadcast>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_bool<socket_broadcast>(fd, l, socket_option::broadcast);
 }
 
 template <>
-result<reuseaddr> getsockopt<reuseaddr>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_bool<reuseaddr>(fd, l, socket_option::reuseaddr);
+result<socket_reuseaddr> getsockopt<socket_reuseaddr>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_bool<socket_reuseaddr>(fd, l, socket_option::reuseaddr);
 }
 
 template <>
-result<acceptconn> getsockopt<acceptconn>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_bool<acceptconn>(fd, l, socket_option::acceptconn);
+result<socket_acceptconn> getsockopt<socket_acceptconn>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_bool<socket_acceptconn>(fd, l, socket_option::acceptconn);
 }
 
 template <>
-result<keepalive> getsockopt<keepalive>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_bool<keepalive>(fd, l, socket_option::keepalive);
+result<socket_keepalive> getsockopt<socket_keepalive>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_bool<socket_keepalive>(fd, l, socket_option::keepalive);
 }
 
 template <>
-result<linger> getsockopt<linger>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_struct<linger>(fd, l, socket_option::linger);
+result<socket_linger> getsockopt<socket_linger>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_struct<socket_linger>(fd, l, socket_option::linger);
 }
 
 template <>
-result<oobinline> getsockopt<oobinline>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_bool<oobinline>(fd, l, socket_option::oobinline);
+result<socket_oobinline> getsockopt<socket_oobinline>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_bool<socket_oobinline>(fd, l, socket_option::oobinline);
 }
 
 template <>
-result<sndbuf> getsockopt<sndbuf>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_int<sndbuf>(fd, l, socket_option::sndbuf);
+result<socket_sndbuf> getsockopt<socket_sndbuf>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_int<socket_sndbuf>(fd, l, socket_option::sndbuf);
 }
 
 template <>
-result<rcvbuf> getsockopt<rcvbuf>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_int<rcvbuf>(fd, l, socket_option::rcvbuf);
+result<socket_rcvbuf> getsockopt<socket_rcvbuf>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_int<socket_rcvbuf>(fd, l, socket_option::rcvbuf);
 }
 
 template <>
-result<error> getsockopt<error>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_int<error>(fd, l, socket_option::error);
+result<socket_error> getsockopt<socket_error>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_int<socket_error>(fd, l, socket_option::error);
 }
 
 template <>
@@ -210,28 +210,28 @@ result<socket_type> getsockopt<socket_type>(socket_fd fd, socket_level l) noexce
 }
 
 template <>
-result<dontroute> getsockopt<dontroute>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_bool<dontroute>(fd, l, socket_option::dontroute);
+result<socket_dontroute> getsockopt<socket_dontroute>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_bool<socket_dontroute>(fd, l, socket_option::dontroute);
 }
 
 template <>
-result<rcvlowat> getsockopt<rcvlowat>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_int<rcvlowat>(fd, l, socket_option::rcvlowat);
+result<socket_rcvlowat> getsockopt<socket_rcvlowat>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_int<socket_rcvlowat>(fd, l, socket_option::rcvlowat);
 }
 
 template <>
-result<rcvtimeo> getsockopt<rcvtimeo>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_struct<rcvtimeo>(fd, l, socket_option::rcvtimeo);
+result<socket_rcvtimeo> getsockopt<socket_rcvtimeo>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_struct<socket_rcvtimeo>(fd, l, socket_option::rcvtimeo);
 }
 
 template <>
-result<sndlowat> getsockopt<sndlowat>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_int<sndlowat>(fd, l, socket_option::sndlowat);
+result<socket_sndlowat> getsockopt<socket_sndlowat>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_int<socket_sndlowat>(fd, l, socket_option::sndlowat);
 }
 
 template <>
-result<sndtimeo> getsockopt<sndtimeo>(socket_fd fd, socket_level l) noexcept {
-  return detail::getsockopt_struct<sndtimeo>(fd, l, socket_option::sndtimeo);
+result<socket_sndtimeo> getsockopt<socket_sndtimeo>(socket_fd fd, socket_level l) noexcept {
+  return detail::getsockopt_struct<socket_sndtimeo>(fd, l, socket_option::sndtimeo);
 }
 
 }  // namespace pposix
