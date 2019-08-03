@@ -114,7 +114,7 @@ constexpr ioctl_signal &operator|=(ioctl_signal &lhs, ioctl_signal rhs) {
 }
 
 struct ioctl_set_signal {
-  ioctl_signal signals{};
+  ioctl_signal signals;
 };
 
 result<ioctl_int> ioctl(const raw_fd &, ioctl_set_signal) noexcept;
@@ -293,7 +293,7 @@ struct {
 result<ioctl_int> ioctl(const raw_fd &, decltype(ioctl_get_module_count)) noexcept;
 
 struct ioctl_get_module_names {
-  int num_modules{};
+  int num_modules;
 };
 
 class ioctl_module_name_list {
