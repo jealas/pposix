@@ -123,10 +123,10 @@ T *result_get_value_unsafe(result<T> &res) noexcept {
 template <class U, class T, class Func>
 result<U> result_map(const result<T> &result,
                      Func &&func) noexcept(noexcept(func(std::declval<const T &>()))) {
-  if (result.has_error()) {
-    return *detail::result_get_error_unsafe(result);
+  if (const auto *value_ptr = detail::result_get_value_unsafe(result)) {
+    return std::forward<Func>(func)(*value_ptr);
   } else {
-    return std::forward<Func>(func)(*detail::result_get_value_unsafe(result));
+    return *detail::result_get_error_unsafe(result);
   }
 }
 
