@@ -5,7 +5,7 @@
 
 #include <stropts.h>
 
-#include "pposix/any_span.hpp"
+#include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
 #include "pposix/fd.hpp"
 #include "pposix/result.hpp"
@@ -53,8 +53,8 @@ result<ioctl_int> ioctl(raw_fd, ioctl_request, int) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, void *) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, const void *) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, nullptr_t) noexcept;
-result<ioctl_int> ioctl(raw_fd, ioctl_request, any_span) noexcept;
-result<ioctl_int> ioctl(raw_fd, ioctl_request, any_cspan) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_request, any_view) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_request, any_cview) noexcept;
 
 struct ioctl_push {
   char *const name;
@@ -214,7 +214,7 @@ static constexpr seconds ioctl_implementation_defined_timeout{0};
 
 class ioctl_command {
  public:
-  constexpr ioctl_command(ioctl_request request, seconds timeout, any_span data) noexcept {
+  constexpr ioctl_command(ioctl_request request, seconds timeout, any_view data) noexcept {
     command_.ic_cmd = underlying_value(request);
     command_.ic_timout = timeout.count();
     command_.ic_dp = static_cast<char *>(data.data());
@@ -225,8 +225,8 @@ class ioctl_command {
 
   constexpr seconds timeout() const noexcept { return seconds{command_.ic_timout}; }
 
-  constexpr any_span data() const noexcept {
-    return any_span{command_.ic_dp, static_cast<size_t>(command_.ic_len)};
+  constexpr any_view data() const noexcept {
+    return any_view{command_.ic_dp, static_cast<size_t>(command_.ic_len)};
   }
 
   constexpr explicit operator ::strioctl() const noexcept { return command_; }
