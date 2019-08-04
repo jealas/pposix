@@ -29,11 +29,11 @@ result<resource<DIR, dirent_close_policy>> opendir(const std::string &dirname) n
 
 // Dirent get directory file descriptor
 result<unique_fd<dir_fd>> dirfd(DIR *dir) noexcept {
-  dir_fd fd{::dirfd(dir)};
+  const dir_fd fd{::dirfd(dir)};
   if (fd == nullfd) {
     return current_errno_code();
   } else {
-    return unique_fd<dir_fd>{std::move(fd)};
+    return unique_fd<dir_fd>{fd};
   }
 }
 

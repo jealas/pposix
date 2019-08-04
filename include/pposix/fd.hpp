@@ -6,72 +6,68 @@
 
 namespace pposix {
 
-using fd_t = int;
-static constexpr fd_t NULLFD = -1;
+using fd_int = int;
+static constexpr fd_int NULLFD = -1;
 
 template <class>
 class fd;
 
 struct raw_fd_tag {};
-
 using raw_fd = fd<raw_fd_tag>;
 
 template <class Tag>
 class fd {
  public:
   fd() = default;
-  constexpr explicit fd(fd_t file_descriptor) noexcept : fd_{file_descriptor} {}
+  constexpr explicit fd(fd_int file_descriptor) noexcept : fd_{file_descriptor} {}
   constexpr explicit fd(nullfd_t) noexcept : fd_{NULLFD} {}
 
-  fd(const fd &) noexcept = delete;
-  fd(fd &&other) noexcept { std::swap(fd_, other.fd_); }
+  constexpr fd(const fd &) noexcept = default;
+  constexpr fd(fd &&other) noexcept = default;
 
-  fd &operator=(const fd &) noexcept = delete;
-  fd &operator=(fd &&other) noexcept {
-    std::swap(fd_, other.fd_);
-    return *this;
-  };
+  constexpr fd &operator=(const fd &) noexcept = default;
+  constexpr fd &operator=(fd &&other) noexcept = default;
 
-  fd &operator=(nullfd_t) noexcept {
+  constexpr fd &operator=(nullfd_t) noexcept {
     fd_ = NULLFD;
     return *this;
   }
 
-  constexpr fd_t raw() const noexcept { return fd_; }
+  constexpr fd_int raw() const noexcept { return fd_; }
 
   constexpr operator raw_fd() const noexcept { return raw_fd{raw()}; }
 
  private:
-  fd_t fd_{NULLFD};
+  fd_int fd_{NULLFD};
 };
 
 template <class Tag>
-constexpr bool operator==(const fd<Tag> &lhs, const fd<Tag> &rhs) {
+constexpr bool operator==(fd<Tag> lhs, fd<Tag> rhs) {
   return lhs.raw() == rhs.raw();
 }
 
 template <class Tag>
-constexpr bool operator!=(const fd<Tag> &lhs, const fd<Tag> &rhs) {
+constexpr bool operator!=(fd<Tag> lhs, fd<Tag> rhs) {
   return lhs.raw() != rhs.raw();
 }
 
 template <class Tag>
-constexpr bool operator==(const fd<Tag> &fd, nullfd_t) noexcept {
+constexpr bool operator==(fd<Tag> fd, nullfd_t) noexcept {
   return fd.raw() == NULLFD;
 }
 
 template <class Tag>
-constexpr bool operator==(nullfd_t, const fd<Tag> &fd) noexcept {
+constexpr bool operator==(nullfd_t, fd<Tag> fd) noexcept {
   return fd == nullfd;
 }
 
 template <class Tag>
-constexpr bool operator!=(const fd<Tag> &fd, nullfd_t) noexcept {
+constexpr bool operator!=(fd<Tag> fd, nullfd_t) noexcept {
   return not(fd == nullfd);
 }
 
 template <class Tag>
-constexpr bool operator!=(nullfd_t, const fd<Tag> &fd) noexcept {
+constexpr bool operator!=(nullfd_t, fd<Tag> fd) noexcept {
   return fd != nullfd;
 }
 

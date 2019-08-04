@@ -11,34 +11,33 @@
 namespace pposix {
 
 struct fd_close_policy {
-  std::error_code operator()(const raw_fd &fd) const noexcept;
+  std::error_code operator()(raw_fd fd) const noexcept;
 };
 
 template <class Fd, class ClosePolicy = fd_close_policy>
-class [[nodiscard]] unique_fd {
+class [[nodiscard]] unique_fd : private ClosePolicy {
   static_assert(is_file_descriptor_v<Fd>);
 
  public:
   constexpr unique_fd() noexcept : unique_fd::unique_fd{nullfd} {}
 
-  constexpr unique_fd(nullfd_t) noexcept : close_{} {}  // NOLINT implicit constructor
+  constexpr unique_fd(nullfd_t) noexcept(noexcept(ClosePolicy{}))
+      : ClosePolicy{} {}  // NOLINT implicit constructor
 
-  constexpr explicit unique_fd(Fd && file_descriptor) noexcept(noexcept(ClosePolicy{}))
-      : raw_fd_{std::move(file_descriptor)}, close_{} {}
+  constexpr explicit unique_fd(Fd file_descriptor) noexcept(noexcept(ClosePolicy{}))
+      : ClosePolicy{}, raw_fd_{file_descriptor} {}
 
-  constexpr explicit unique_fd(Fd && file_descriptor, const ClosePolicy &close) noexcept(
+  constexpr explicit unique_fd(Fd file_descriptor, const ClosePolicy &close) noexcept(
       noexcept(ClosePolicy{std::declval<const ClosePolicy &>()}))
-      : raw_fd_{std::move(file_descriptor)}, close_{close} {}
+      : raw_fd_{file_descriptor}, ClosePolicy{close} {}
 
-  constexpr explicit unique_fd(Fd && file_descriptor, ClosePolicy && close) noexcept(
+  constexpr explicit unique_fd(Fd file_descriptor, ClosePolicy && close) noexcept(
       noexcept(ClosePolicy{std::declval<ClosePolicy &&>()}))
-      : raw_fd_{std::move(file_descriptor)}, close_{std::move(close)} {}
+      : ClosePolicy{std::move(close)}, raw_fd_{file_descriptor} {}
 
-  ~unique_fd() noexcept(false) {
+  ~unique_fd() {
     if (const auto error = close()) {
-      throw std::system_error{error,
-                              "Failed to automatically close file descriptor. Try manually "
-                              "calling close() to catch and handle the error"};
+      // TODO: Log this fatal error.
     }
   }
 
@@ -51,16 +50,16 @@ class [[nodiscard]] unique_fd {
   bool empty() const noexcept { return raw_fd_ == nullfd; }
   explicit operator bool() const noexcept { return not empty(); }
 
-  const Fd &raw() const noexcept { return raw_fd_; }
-  const Fd &operator*() const noexcept { return raw(); }
+  Fd raw() const noexcept { return raw_fd_; }
+  Fd operator*() const noexcept { return raw(); }
 
-  constexpr ClosePolicy &get_close_policy() noexcept { return close_; }
-  constexpr const ClosePolicy &get_close_policy() const noexcept { return close_; }
+  constexpr ClosePolicy &get_close_policy() noexcept { return *this; }
+  constexpr const ClosePolicy &get_close_policy() const noexcept { return *this; }
 
   [[nodiscard]] Fd release() noexcept {
-    Fd tmp_fd{std::move(raw_fd_)};
+    Fd tmp_fd{raw_fd_};
     raw_fd_ = nullfd;
-    return std::move(tmp_fd);
+    return tmp_fd;
   }
 
   [[nodiscard]] std::error_code close() noexcept(
@@ -69,22 +68,16 @@ class [[nodiscard]] unique_fd {
       return {};
     }
 
-    while (const auto ec = close_(raw())) {
-      if (ec == std::errc::interrupted) {
-        continue;
-      } else {
-        return ec;
-      }
+    const auto error = ClosePolicy::operator()(raw());
+    if (not error) {
+      raw_fd_ = nullfd;
     }
 
-    raw_fd_ = nullfd;
-
-    return {};
+    return error;
   }
 
  private:
   Fd raw_fd_{nullfd};
-  ClosePolicy close_{};
 };
 
 }  // namespace pposix

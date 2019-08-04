@@ -3,22 +3,22 @@
 namespace pposix {
 
 // File close
-std::error_code close(const raw_fd &fd) noexcept {
+std::error_code close(raw_fd fd) noexcept {
   return ::close(fd.raw()) == -1 ? current_errno_code() : std::error_code{};
 }
 
 // File dup
-result<unique_fd<raw_fd>> dup(const raw_fd &fd) noexcept {
-  raw_fd newfd{::dup(fd.raw())};
+result<unique_fd<raw_fd>> dup(raw_fd fd) noexcept {
+  const raw_fd newfd{::dup(fd.raw())};
   if (newfd == nullfd) {
     return current_errno_code();
   } else {
-    return unique_fd<raw_fd>{std::move(newfd)};
+    return unique_fd<raw_fd>{newfd};
   }
 }
 
 // File lseek
-result<off_t> lseek(const raw_fd &fd, off_t offset, file_whence wh) noexcept {
+result<off_t> lseek(raw_fd fd, off_t offset, file_whence wh) noexcept {
   const auto lseek_count{::lseek(fd.raw(), offset, underlying_value(wh))};
   if (lseek_count == off_t{-1}) {
     return current_errno_code();
@@ -28,7 +28,7 @@ result<off_t> lseek(const raw_fd &fd, off_t offset, file_whence wh) noexcept {
 }
 
 // File read
-result<ssize_t> read(const raw_fd &fd, byte_span buffer) noexcept {
+result<ssize_t> read(raw_fd fd, byte_span buffer) noexcept {
   const auto bytes_read{::read(fd.raw(), buffer.data(), buffer.length())};
   if (bytes_read == -1) {
     return current_errno_code();
