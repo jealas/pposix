@@ -15,24 +15,25 @@ struct fd_close_policy {
 };
 
 template <class Fd, class ClosePolicy = fd_close_policy>
-class [[nodiscard]] unique_fd {
+class [[nodiscard]] unique_fd : private ClosePolicy {
   static_assert(is_file_descriptor_v<Fd>);
 
  public:
   constexpr unique_fd() noexcept : unique_fd::unique_fd{nullfd} {}
 
-  constexpr unique_fd(nullfd_t) noexcept : close_{} {}  // NOLINT implicit constructor
+  constexpr unique_fd(nullfd_t) noexcept(noexcept(ClosePolicy{}))
+      : ClosePolicy{} {}  // NOLINT implicit constructor
 
   constexpr explicit unique_fd(Fd file_descriptor) noexcept(noexcept(ClosePolicy{}))
-      : raw_fd_{file_descriptor}, close_{} {}
+      : ClosePolicy{}, raw_fd_{file_descriptor} {}
 
   constexpr explicit unique_fd(Fd file_descriptor, const ClosePolicy &close) noexcept(
       noexcept(ClosePolicy{std::declval<const ClosePolicy &>()}))
-      : raw_fd_{file_descriptor}, close_{close} {}
+      : raw_fd_{file_descriptor}, ClosePolicy{close} {}
 
   constexpr explicit unique_fd(Fd file_descriptor, ClosePolicy && close) noexcept(
       noexcept(ClosePolicy{std::declval<ClosePolicy &&>()}))
-      : raw_fd_{file_descriptor}, close_{std::move(close)} {}
+      : ClosePolicy{std::move(close)}, raw_fd_{file_descriptor} {}
 
   ~unique_fd() {
     if (const auto error = close()) {
@@ -52,8 +53,8 @@ class [[nodiscard]] unique_fd {
   Fd raw() const noexcept { return raw_fd_; }
   Fd operator*() const noexcept { return raw(); }
 
-  constexpr ClosePolicy &get_close_policy() noexcept { return close_; }
-  constexpr const ClosePolicy &get_close_policy() const noexcept { return close_; }
+  constexpr ClosePolicy &get_close_policy() noexcept { return *this; }
+  constexpr const ClosePolicy &get_close_policy() const noexcept { return *this; }
 
   [[nodiscard]] Fd release() noexcept {
     Fd tmp_fd{raw_fd_};
@@ -67,7 +68,7 @@ class [[nodiscard]] unique_fd {
       return {};
     }
 
-    const auto error = close_(raw());
+    const auto error = ClosePolicy::operator()(raw());
     if (not error) {
       raw_fd_ = nullfd;
     }
@@ -77,7 +78,6 @@ class [[nodiscard]] unique_fd {
 
  private:
   Fd raw_fd_{nullfd};
-  ClosePolicy close_{};
 };
 
 }  // namespace pposix
