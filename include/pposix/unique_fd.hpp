@@ -34,11 +34,9 @@ class [[nodiscard]] unique_fd {
       noexcept(ClosePolicy{std::declval<ClosePolicy &&>()}))
       : raw_fd_{file_descriptor}, close_{std::move(close)} {}
 
-  ~unique_fd() noexcept(false) {
+  ~unique_fd() {
     if (const auto error = close()) {
-      throw std::system_error{error,
-                              "Failed to automatically close file descriptor. Try manually "
-                              "calling close() to catch and handle the error"};
+      // TODO: Log this fatal error.
     }
   }
 
@@ -69,17 +67,12 @@ class [[nodiscard]] unique_fd {
       return {};
     }
 
-    while (const auto ec = close_(raw())) {
-      if (ec == std::errc::interrupted) {
-        continue;
-      } else {
-        return ec;
-      }
+    const auto error = close_(raw());
+    if (not error) {
+      raw_fd_ = nullfd;
     }
 
-    raw_fd_ = nullfd;
-
-    return {};
+    return error;
   }
 
  private:

@@ -9,11 +9,11 @@ std::error_code close(raw_fd fd) noexcept {
 
 // File dup
 result<unique_fd<raw_fd>> dup(raw_fd fd) noexcept {
-  raw_fd newfd{::dup(fd.raw())};
+  const raw_fd newfd{::dup(fd.raw())};
   if (newfd == nullfd) {
     return current_errno_code();
   } else {
-    return unique_fd<raw_fd>{std::move(newfd)};
+    return unique_fd<raw_fd>{newfd};
   }
 }
 

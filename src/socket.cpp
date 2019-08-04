@@ -20,13 +20,13 @@ socket_flag operator|(const socket_flag &lhs, const socket_flag &rhs) noexcept {
 // Socket
 result<unique_fd<socket_fd>> socket(socket_domain dom, socket_type typ, socket_flag flags,
                                     socket_protocol prot) noexcept {
-  socket_fd sock_fd{::socket(underlying_value(dom),
+  const socket_fd sock_fd{::socket(underlying_value(dom),
                              underlying_value(typ) | underlying_value(flags),
                              underlying_value(prot))};
   if (sock_fd == nullfd) {
     return current_errno_code();
   } else {
-    return unique_fd<socket_fd>{std::move(sock_fd)};
+    return unique_fd<socket_fd>{sock_fd};
   }
 }
 
