@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <memory>
 
@@ -12,6 +13,14 @@ class any_cview {
   constexpr any_cview() noexcept = default;
 
   constexpr any_cview(void const *data, std::size_t len) noexcept : data_{data}, len_{len} {}
+
+  template <class T, size_t Count>
+  explicit constexpr any_cview(std::array<const T, Count> *array) noexcept
+      : data_{array->data()}, len_{sizeof(T) * array->size()} {}
+
+  template <class T, size_t Count>
+  explicit constexpr any_cview(const T (*array)[Count]) noexcept
+      : data_{array}, len_{sizeof(T) * Count} {}
 
   template <class T>
   explicit constexpr any_cview(const T *ptr) noexcept : data_{ptr}, len_{sizeof(T)} {}
@@ -40,6 +49,14 @@ class any_view {
   constexpr any_view() noexcept = default;
 
   constexpr any_view(void *data, std::size_t len) noexcept : data_{data}, len_{len} {}
+
+  template <class T, size_t Count>
+  explicit constexpr any_view(std::array<const T, Count> *array) noexcept
+      : data_{array->data()}, len_{sizeof(T) * array->size()} {}
+
+  template <class T, size_t Count>
+  explicit constexpr any_view(T (*array)[Count]) noexcept
+      : data_{array}, len_{sizeof(T) * Count} {}
 
   template <class T>
   explicit constexpr any_view(T *ptr) noexcept : data_{ptr}, len_{sizeof(T)} {}
