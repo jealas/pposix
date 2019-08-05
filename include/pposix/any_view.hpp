@@ -31,6 +31,8 @@ class any_cview {
   constexpr any_cview &operator=(const any_cview &) noexcept = default;
   constexpr any_cview &operator=(any_cview &&) noexcept = default;
 
+  constexpr bool empty() const noexcept { return length() == 0u; }
+
   constexpr void const *data() const noexcept { return data_; }
 
   constexpr std::size_t length() const noexcept { return len_; }
@@ -66,6 +68,8 @@ class any_view {
 
   constexpr any_view &operator=(const any_view &) noexcept = default;
   constexpr any_view &operator=(any_view &&) noexcept = default;
+
+  constexpr bool empty() const noexcept { return length() == 0u; }
 
   constexpr void *data() noexcept { return data_; }
   constexpr void const *data() const noexcept { return data_; }

@@ -13,6 +13,7 @@ TEMPLATE_TEST_CASE("any_view can be constructed", "[pposix][any_view]", ANY_VIEW
 
     THEN("the data pointer is null") { REQUIRE(view.data() == nullptr); }
     AND_THEN("the length is zero") { REQUIRE(view.length() == 0u); }
+    AND_THEN("it is empty") { REQUIRE(view.empty()); }
 
     AND_WHEN("getting a read-only byte span") {
       const auto bytes{view.as_bytes()};
@@ -37,6 +38,8 @@ TEMPLATE_TEST_CASE("any_view can be constructed", "[pposix][any_view]", ANY_VIEW
     AND_THEN("the length is the same as the size of the object") {
       REQUIRE(view.length() == sizeof(object));
     }
+
+    AND_THEN("it is not empty") { REQUIRE(not view.empty()); }
   }
 
   GIVEN("an any_view constructed with a c-array") {
@@ -50,6 +53,7 @@ TEMPLATE_TEST_CASE("any_view can be constructed", "[pposix][any_view]", ANY_VIEW
     AND_THEN("the length is the same as the byte size of the array") {
       REQUIRE(view.length() == sizeof(c_array));
     }
+    AND_THEN("it is not empty") { REQUIRE(not view.empty()); }
   }
 
   GIVEN("an any_view constructed with a std::array") {
@@ -63,6 +67,7 @@ TEMPLATE_TEST_CASE("any_view can be constructed", "[pposix][any_view]", ANY_VIEW
     AND_THEN("the length is the same as the byte size of the array") {
       REQUIRE(view.length() == std_array.size() * sizeof(TestType));
     }
+    AND_THEN("it is not empty") { REQUIRE(not view.empty()); }
   }
 }
 
@@ -77,6 +82,7 @@ TEMPLATE_TEST_CASE("any_cview can be constructed", "[pposix][any_view]", ANY_VIE
       const auto bytes{view.as_bytes()};
       THEN("it also has a null data pointer") { REQUIRE(bytes.data() == nullptr); }
       AND_THEN("it also has a length of 0") { REQUIRE(bytes.length() == 0u); }
+      AND_THEN("it is empty") { REQUIRE(view.empty()); }
     }
   }
 
@@ -90,6 +96,7 @@ TEMPLATE_TEST_CASE("any_cview can be constructed", "[pposix][any_view]", ANY_VIE
     AND_THEN("the length is the same as the size of the object") {
       REQUIRE(view.length() == sizeof(object));
     }
+    AND_THEN("it is not empty") { REQUIRE(not view.empty()); }
   }
 
   GIVEN("an any_cview constructed with a c-array") {
@@ -103,6 +110,7 @@ TEMPLATE_TEST_CASE("any_cview can be constructed", "[pposix][any_view]", ANY_VIE
     AND_THEN("the length is the same as the byte size of the array") {
       REQUIRE(view.length() == sizeof(c_array));
     }
+    AND_THEN("it is not empty") { REQUIRE(not view.empty()); }
   }
 
   GIVEN("an any_cview constructed with a std::array") {
@@ -116,5 +124,6 @@ TEMPLATE_TEST_CASE("any_cview can be constructed", "[pposix][any_view]", ANY_VIE
     AND_THEN("the length is the same as the byte size of the array") {
       REQUIRE(view.length() == std_array.size() * sizeof(TestType));
     }
+    AND_THEN("it is not empty") { REQUIRE(not view.empty()); }
   }
 }
