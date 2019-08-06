@@ -21,12 +21,12 @@ class byte_cspan {
       : buffer_{buffer}, length_{buffer ? length : 0u} {}
 
   template <std::size_t Length>
-  constexpr byte_cspan(std::byte (&buffer)[Length]) noexcept  // NOLINT implicit constructor
+  constexpr byte_cspan(const std::byte (&buffer)[Length]) noexcept  // NOLINT implicit constructor
       : buffer_{buffer}, length_{Length} {}
 
   template <std::size_t Length>
   constexpr byte_cspan(  // NOLINT implicit constructor
-      std::array<std::byte, Length> &buffer) noexcept
+      const std::array<std::byte, Length> &buffer) noexcept
       : buffer_{buffer.data()}, length_{Length} {}
 
   constexpr bool empty() const noexcept { return length_ == 0u; }

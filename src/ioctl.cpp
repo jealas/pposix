@@ -37,11 +37,11 @@ result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, nullptr_t) noexcept {
   return pposix::ioctl(fd, r, ptr);
 }
 
-result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, any_span val) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, any_view val) noexcept {
   return pposix::ioctl(fd, r, val.data());
 }
 
-result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, any_cspan val) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, any_cview val) noexcept {
   return pposix::ioctl(fd, r, val.data());
 }
 
@@ -118,7 +118,7 @@ result<ioctl_command> ioctl(raw_fd fd, ioctl_send_command send_command) noexcept
   const auto res{pposix::ioctl(fd, ioctl_request::send_command, &ioctl_cmd)};
   return result_map<ioctl_command>(res, [&](ioctl_int /*ignored*/) {
     return ioctl_command{ioctl_request{ioctl_cmd.ic_cmd}, seconds{ioctl_cmd.ic_timout},
-                         any_span{ioctl_cmd.ic_dp, static_cast<size_t>(ioctl_cmd.ic_len)}};
+                         any_view{ioctl_cmd.ic_dp, static_cast<size_t>(ioctl_cmd.ic_len)}};
   });
 }
 

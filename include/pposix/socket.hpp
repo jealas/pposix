@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "pposix/any_span.hpp"
+#include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
 #include "pposix/fd.hpp"
 #include "pposix/result.hpp"
@@ -198,7 +198,7 @@ class sndtimeo {
 };
 
 // Set socket option
-std::error_code setsockopt(socket_fd, socket_level, socket_option, any_cspan) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_option, any_cview) noexcept;
 std::error_code setsockopt(socket_fd, socket_level, debug) noexcept;
 std::error_code setsockopt(socket_fd, socket_level, broadcast) noexcept;
 std::error_code setsockopt(socket_fd, socket_level, reuseaddr) noexcept;
@@ -217,7 +217,7 @@ std::error_code setsockopt(socket_fd, socket_level, sndtimeo) noexcept;
 enum class acceptconn : bool {};
 enum class error : int {};
 
-result<socklen_t> getsockopt(socket_fd, socket_level, socket_option, any_span) noexcept;
+result<socklen_t> getsockopt(socket_fd, socket_level, socket_option, any_view) noexcept;
 
 template <class T>
 result<T> getsockopt(socket_fd, socket_level) noexcept;

@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include "pposix/any_span.hpp"
+#include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
 #include "pposix/fd.hpp"
 #include "pposix/result.hpp"
@@ -21,8 +21,8 @@ socket_flag operator|(const socket_flag &lhs, const socket_flag &rhs) noexcept {
 result<unique_fd<socket_fd>> socket(socket_domain dom, socket_type typ, socket_flag flags,
                                     socket_protocol prot) noexcept {
   const socket_fd sock_fd{::socket(underlying_value(dom),
-                             underlying_value(typ) | underlying_value(flags),
-                             underlying_value(prot))};
+                                   underlying_value(typ) | underlying_value(flags),
+                                   underlying_value(prot))};
   if (sock_fd == nullfd) {
     return current_errno_code();
   } else {
@@ -31,7 +31,7 @@ result<unique_fd<socket_fd>> socket(socket_domain dom, socket_type typ, socket_f
 }
 
 // Set socket option
-std::error_code setsockopt(socket_fd fd, socket_level l, socket_option o, any_cspan val) noexcept {
+std::error_code setsockopt(socket_fd fd, socket_level l, socket_option o, any_cview val) noexcept {
   const auto error =
       ::setsockopt(fd.raw(), underlying_value(l), underlying_value(o), val.data(), val.length());
 
@@ -45,7 +45,7 @@ std::error_code setsockopt(socket_fd fd, socket_level l, socket_option o, any_cs
 namespace {
 
 std::error_code setsockopt_int(socket_fd fd, socket_level l, socket_option o, int i) noexcept {
-  return pposix::setsockopt(fd, l, o, any_cspan{i});
+  return pposix::setsockopt(fd, l, o, any_cview{&i});
 }
 
 std::error_code setsockopt_bool(socket_fd fd, socket_level l, socket_option o, bool b) noexcept {
@@ -72,7 +72,7 @@ std::error_code setsockopt(socket_fd fd, socket_level l, keepalive k) noexcept {
 
 std::error_code setsockopt(socket_fd fd, socket_level l, linger lin) noexcept {
   const ::linger &posix_linger = lin.get();
-  return setsockopt(fd, l, socket_option::linger, any_cspan{posix_linger});
+  return setsockopt(fd, l, socket_option::linger, any_cview{&posix_linger});
 }
 
 std::error_code setsockopt(socket_fd fd, socket_level l, oobinline o) noexcept {
@@ -97,7 +97,7 @@ std::error_code setsockopt(socket_fd fd, socket_level l, rcvlowat r) noexcept {
 
 std::error_code setsockopt(socket_fd fd, socket_level l, rcvtimeo r) noexcept {
   const ::timeval &val = r.get();
-  return setsockopt(fd, l, socket_option::rcvtimeo, any_cspan{val});
+  return setsockopt(fd, l, socket_option::rcvtimeo, any_cview{&val});
 }
 
 std::error_code setsockopt(socket_fd fd, socket_level l, sndlowat s) noexcept {
@@ -106,12 +106,12 @@ std::error_code setsockopt(socket_fd fd, socket_level l, sndlowat s) noexcept {
 
 std::error_code setsockopt(socket_fd fd, socket_level l, sndtimeo r) noexcept {
   const ::timeval &val = r.get();
-  return setsockopt(fd, l, socket_option::sndtimeo, any_cspan{val});
+  return setsockopt(fd, l, socket_option::sndtimeo, any_cview{&val});
 }
 
 // Get socket option
 result<socklen_t> getsockopt(socket_fd fd, socket_level l, socket_option o,
-                             any_span val) noexcept {
+                             any_view val) noexcept {
   if (val.length() > std::numeric_limits<socklen_t>::max()) {
     return make_errno_code(std::errc::value_too_large);
   }
@@ -134,7 +134,7 @@ template <class Result>
 result<Result> getsockopt_int(socket_fd fd, socket_level l, socket_option o) noexcept {
   int val{};
 
-  const auto result = pposix::getsockopt(fd, l, o, any_span{val});
+  const auto result = pposix::getsockopt(fd, l, o, any_view{&val});
   return result_map<Result>(result, [&](int /*ignored*/) { return Result{val}; });
 }
 
@@ -142,7 +142,7 @@ template <class Result>
 result<Result> getsockopt_bool(socket_fd fd, socket_level l, socket_option o) noexcept {
   int val{};
 
-  const auto result = pposix::getsockopt(fd, l, o, any_span{val});
+  const auto result = pposix::getsockopt(fd, l, o, any_view{&val});
   return result_map<Result>(result, [&](int /*ignored*/) { return Result{val != 0}; });
 }
 
@@ -152,7 +152,7 @@ result<Result> getsockopt_struct(socket_fd fd, socket_level l, socket_option o) 
 
   Result val{};
 
-  const auto result = pposix::getsockopt(fd, l, o, any_span{val});
+  const auto result = pposix::getsockopt(fd, l, o, any_view{&val});
   return result_map<Result>(result, [&](int /*ignored*/) { return val; });
 }
 

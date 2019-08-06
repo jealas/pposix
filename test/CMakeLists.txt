@@ -6,6 +6,7 @@ add_executable(
         test_permission.cpp
         test_buffer_span.cpp
         test_result.cpp
+        test_any_view.cpp
 
         test_getsockopt.cpp
         test_permission.cpp
