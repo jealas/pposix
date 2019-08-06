@@ -13,6 +13,7 @@ add_library(
         src/file.cpp
         src/ioctl.cpp
         src/dirent.cpp
+        src/syslog.cpp
 )
 
 target_include_directories(
