@@ -34,7 +34,7 @@ result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, const void *ptr) noexcept {
   }
 }
 
-result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, nullptr_t) noexcept {
+result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, std::nullptr_t) noexcept {
   void *ptr = nullptr;
   return pposix::ioctl(fd, r, ptr);
 }
