@@ -13,10 +13,6 @@
 
 namespace pposix {
 
-socket_flag operator|(const socket_flag &lhs, const socket_flag &rhs) noexcept {
-  return socket_flag{underlying_value(lhs) | underlying_value(rhs)};
-}
-
 // Socket
 result<unique_fd<socket_fd>> socket(socket_domain dom, socket_type typ, socket_flag flags,
                                     socket_protocol prot) noexcept {

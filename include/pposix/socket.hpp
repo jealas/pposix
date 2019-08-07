@@ -34,7 +34,10 @@ enum class socket_type : int {
   dgram = SOCK_DGRAM,
   seqpacket = SOCK_SEQPACKET,
   raw = SOCK_RAW,
-  rdm = SOCK_RDM
+
+#ifdef SOCK_RDM
+  rdm = SOCK_RDM,
+#endif
 };
 
 // Socket protocol
@@ -51,28 +54,44 @@ enum class socket_protocol : int {
 
 // Socket option
 enum class socket_option : int {
-  debug = SO_DEBUG,
+  acceptconn = SO_ACCEPTCONN,
   broadcast = SO_BROADCAST,
-  reuseaddr = SO_REUSEADDR,
+  debug = SO_DEBUG,
+  dontroute = SO_DONTROUTE,
+  error = SO_ERROR,
   keepalive = SO_KEEPALIVE,
   linger = SO_LINGER,
   oobinline = SO_OOBINLINE,
   rcvbuf = SO_RCVBUF,
-  sndbuf = SO_SNDBUF,
-  dontroute = SO_DONTROUTE,
   rcvlowat = SO_RCVLOWAT,
   rcvtimeo = SO_RCVTIMEO,
+  reuseaddr = SO_REUSEADDR,
+  sndbuf = SO_SNDBUF,
   sndlowat = SO_SNDLOWAT,
   sndtimeo = SO_SNDTIMEO,
-  acceptconn = SO_ACCEPTCONN,
-  error = SO_ERROR,
   type = SO_TYPE
 };
 
 // Socket flag
-enum class socket_flag : unsigned { none = 0u, closexec = SOCK_CLOEXEC, nonblock = SOCK_NONBLOCK };
+enum class socket_flag : unsigned {
+  none = 0u,
 
-socket_flag operator|(const socket_flag &lhs, const socket_flag &rhs) noexcept;
+#ifdef SOCK_CLOEXEC
+  closexec = SOCK_CLOEXEC,
+#endif
+
+#ifdef SOCK_NONBLOCK
+  nonblock = SOCK_NONBLOCK,
+#endif
+
+#ifdef SOCK_DNS
+  dns = SOCK_DNS,
+#endif
+};
+
+constexpr socket_flag operator|(socket_flag lhs, socket_flag rhs) noexcept {
+  return socket_flag{underlying_value(lhs) | underlying_value(rhs)};
+}
 
 // Socket level
 enum class socket_level : int {
