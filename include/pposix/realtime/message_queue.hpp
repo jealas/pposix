@@ -1,6 +1,6 @@
 #pragma once
 
-add_library(
+#include <mqueue.h>
 
-
-)
+namespace pposix {
+}
