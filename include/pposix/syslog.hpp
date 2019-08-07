@@ -94,13 +94,13 @@ void closelog() noexcept;
 
 template <class... Args>
 void syslog(syslog_priority priority, const char *format, Args &&... args) noexcept {
-  pposix::syslog(priority, syslog_facility::user, format, args...);
+  pposix::syslog(priority, syslog_facility::user, format, std::forward<Args>(args)...);
 }
 
 template <class... Args>
 void syslog(syslog_priority priority, syslog_facility facility, const char *format,
             Args &&... args) noexcept {
-  ::syslog(underlying_value(priority) | underlying_value(facility), args...);
+  ::syslog(underlying_value(priority) | underlying_value(facility), std::forward<Args>(args)...);
 }
 
 }  // namespace pposix
