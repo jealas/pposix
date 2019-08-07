@@ -6,6 +6,7 @@
 
 #include "pposix/char_span.hpp"
 #include "pposix/result.hpp"
+#include "pposix/platform.hpp"
 
 namespace pposix {
 
@@ -24,7 +25,7 @@ enum class confstr_name : int {
   v7_lpbig_offbig_ldflags = _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS,
   v7_lpbig_offbig_libs = _CS_POSIX_V7_LPBIG_OFFBIG_LIBS,
 
-#ifndef linux
+#if !PPOSIX_PLATFORM_LINUX
   v7_threads_cflags = _CS_POSIX_V7_THREADS_CFLAGS,
   v7_threads_ldflags = _CS_POSIX_V7_THREADS_LDFLAGS,
 #endif

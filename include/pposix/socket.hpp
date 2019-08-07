@@ -7,6 +7,7 @@
 #include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
 #include "pposix/fd.hpp"
+#include "pposix/platform.hpp"
 #include "pposix/result.hpp"
 #include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
@@ -26,7 +27,7 @@ enum class socket_domain : unsigned {
   unspecified = AF_UNSPEC,
 
 // Linux-specific socket domains
-#ifdef linux
+#if PPOSIX_PLATFORM_LINUX
   local = AF_LOCAL,
   file = AF_FILE,
   ax25 = AF_AX25,
@@ -58,10 +59,6 @@ enum class socket_type : int {
   dgram = SOCK_DGRAM,
   seqpacket = SOCK_SEQPACKET,
   raw = SOCK_RAW,
-
-#ifdef SOCK_RDM
-  rdm = SOCK_RDM,
-#endif
 };
 
 // Socket protocol
@@ -100,16 +97,9 @@ enum class socket_option : int {
 enum class socket_flag : unsigned {
   none = 0u,
 
-#ifdef SOCK_CLOEXEC
+#if PPOSIX_PLATFORM_LINUX
   closexec = SOCK_CLOEXEC,
-#endif
-
-#ifdef SOCK_NONBLOCK
   nonblock = SOCK_NONBLOCK,
-#endif
-
-#ifdef SOCK_DNS
-  dns = SOCK_DNS,
 #endif
 };
 

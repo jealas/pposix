@@ -18,7 +18,7 @@ result<unique_fd<raw_fd>> dup(raw_fd fd) noexcept {
 }
 
 // File lseek
-result<off_t> lseek(raw_fd fd, off_t offset, file_whence wh) noexcept {
+result<off_t> lseek(raw_fd fd, off_t offset, file_seek wh) noexcept {
   const auto lseek_count{::lseek(fd.raw(), offset, underlying_value(wh))};
   if (lseek_count == off_t{-1}) {
     return current_errno_code();

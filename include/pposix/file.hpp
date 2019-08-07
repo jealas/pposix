@@ -11,6 +11,7 @@
 #include "pposix/result.hpp"
 #include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
+#include "pposix/platform.hpp"
 
 namespace pposix {
 
@@ -22,7 +23,11 @@ enum class file_flags : unsigned {
   exclusive = O_EXCL,
   noctty = O_NOCTTY,
   nonblock = O_NONBLOCK,
+
+#if !PPOSIX_PLATFORM_MAC_OS
   rsync = O_RSYNC,
+#endif
+
   sync = O_SYNC,
   truncate = O_TRUNC,
 };
@@ -36,11 +41,11 @@ constexpr file_flags &operator|=(file_flags &lhs, file_flags rhs) noexcept {
   return lhs;
 }
 
-// File whence
-enum class file_whence { set = SEEK_SET, current = SEEK_CUR, end = SEEK_END };
-
 // File mode
 enum class file_mode : unsigned { read = O_RDONLY, write = O_WRONLY, read_write = O_RDWR };
+
+// File seek whence
+enum class file_seek { set = SEEK_SET, current = SEEK_CUR, end = SEEK_END };
 
 // File permission
 enum class file_permission : unsigned {
@@ -128,6 +133,8 @@ constexpr file_permission operator"" _other(char const *c_str, size_t len) {
 
 }  // namespace permission_literals
 
+// File open
+
 // File close
 std::error_code close(raw_fd fd) noexcept;
 
@@ -135,7 +142,7 @@ std::error_code close(raw_fd fd) noexcept;
 result<unique_fd<raw_fd>> dup(raw_fd fd) noexcept;
 
 // File lseek
-result<off_t> lseek(raw_fd fd, off_t offset, file_whence wh) noexcept;
+result<off_t> lseek(raw_fd fd, off_t offset, file_seek wh) noexcept;
 
 // File read
 result<ssize_t> read(raw_fd fd, byte_span buffer) noexcept;
