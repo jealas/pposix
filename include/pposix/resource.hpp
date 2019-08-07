@@ -21,7 +21,7 @@ class [[nodiscard]] resource {
   }
 
   constexpr resource() = default;
-  constexpr explicit resource(nullptr_t) : resource::resource{} {};
+  constexpr explicit resource(std::nullptr_t) : resource::resource{} {};
   constexpr explicit resource(T * resource) : resource_{resource} {};
 
   constexpr resource(T * resource, const ClosePolicy &close)

@@ -9,10 +9,9 @@ using namespace pposix;
 
 SCENARIO("Can get default socket options", "[pposix][socket]") {
   GIVEN("a valid unix/local socket") {
-    const auto domain = GENERATE(socket_domain::local, socket_domain::unix_);
     const auto type = GENERATE(socket_type::seqpacket, socket_type::stream, socket_type::dgram);
 
-    auto socket_result{socket(domain, type, socket_flag::none, socket_protocol{0})};
+    auto socket_result{socket(socket_domain::unix, type, socket_flag::none, socket_protocol{0})};
 
     REQUIRE(socket_result);
 
@@ -142,16 +141,10 @@ SCENARIO("Can get default socket options", "[pposix][socket]") {
       }
     }
 
-    WHEN("getting the send low water line value") {
+    WHEN("getting the send low water line value works") {
       const auto option = getsockopt<sndlowat>(*sockfd, socket_level::socket);
 
-      THEN("the default value 1 is returned") {
-        const auto &value = option.value();
-
-        REQUIRE(not option.has_error());
-
-        REQUIRE(value == sndlowat{1});
-      }
+      REQUIRE(not option.has_error());
     }
 
     WHEN("getting the default send timeout value") {

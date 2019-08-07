@@ -21,7 +21,7 @@ enum class ioctl_request : ioctl_int {};
 result<ioctl_int> ioctl(raw_fd, ioctl_request, int) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, void *) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, const void *) noexcept;
-result<ioctl_int> ioctl(raw_fd, ioctl_request, nullptr_t) noexcept;
+result<ioctl_int> ioctl(raw_fd, ioctl_request, std::nullptr_t) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, any_view) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, any_cview) noexcept;
 

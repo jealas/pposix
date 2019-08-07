@@ -4,6 +4,7 @@
 #include <system_error>
 
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "pposix/byte_span.hpp"
