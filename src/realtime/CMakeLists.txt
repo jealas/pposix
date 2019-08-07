@@ -9,6 +9,6 @@ target_link_libraries(
         pposix_realtime
 
         PUBLIC
-        rt
+        $<$<PLATFORM_ID:Linux>:rt>
         pposix
 )
