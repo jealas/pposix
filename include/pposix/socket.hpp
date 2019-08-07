@@ -22,8 +22,7 @@ enum class socket_domain : unsigned {
   // POSIX defined socket domains
   inet = AF_INET,
   inet6 = AF_INET6,
-#undef unix
-  unix = AF_UNIX,
+  unix_ = AF_UNIX,
   unspecified = AF_UNSPEC,
 
 // Linux-specific socket domains

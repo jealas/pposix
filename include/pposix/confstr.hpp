@@ -24,12 +24,8 @@ enum class confstr_name : int {
   v7_lpbig_offbig_ldflags = _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS,
   v7_lpbig_offbig_libs = _CS_POSIX_V7_LPBIG_OFFBIG_LIBS,
 
-// TODO: Remove temporary solution for missing flags on Linux.
-#ifdef _CS_POSIX_V7_THREADS_CFLAGS
+#ifndef linux
   v7_threads_cflags = _CS_POSIX_V7_THREADS_CFLAGS,
-#endif
-
-#ifdef _CS_POSIX_V7_THREADS_LDFLAGS
   v7_threads_ldflags = _CS_POSIX_V7_THREADS_LDFLAGS,
 #endif
 

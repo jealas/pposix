@@ -11,7 +11,7 @@ SCENARIO("Can get default socket options", "[pposix][socket]") {
   GIVEN("a valid unix/local socket") {
     const auto type = GENERATE(socket_type::seqpacket, socket_type::stream, socket_type::dgram);
 
-    auto socket_result{socket(socket_domain::unix, type, socket_flag::none, socket_protocol{0})};
+    auto socket_result{socket(socket_domain::unix_, type, socket_flag::none, socket_protocol{0})};
 
     REQUIRE(socket_result);
 
