@@ -141,16 +141,10 @@ SCENARIO("Can get default socket options", "[pposix][socket]") {
       }
     }
 
-    WHEN("getting the send low water line value") {
+    WHEN("getting the send low water line value works") {
       const auto option = getsockopt<sndlowat>(*sockfd, socket_level::socket);
 
-      THEN("the default value 1 is returned") {
-        const auto &value = option.value();
-
-        REQUIRE(not option.has_error());
-
-        REQUIRE(value == sndlowat{1});
-      }
+      REQUIRE(not option.has_error());
     }
 
     WHEN("getting the default send timeout value") {
