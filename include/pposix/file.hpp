@@ -31,7 +31,7 @@ constexpr file_flags operator|(file_flags lhs, file_flags rhs) noexcept {
   return file_flags{underlying_value(lhs) | underlying_value(rhs)};
 }
 
-constexpr file_flags &operator|=(file_flags lhs, file_flags rhs) noexcept {
+constexpr file_flags &operator|=(file_flags &lhs, file_flags rhs) noexcept {
   lhs = lhs | rhs;
   return lhs;
 }
