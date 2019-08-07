@@ -31,7 +31,7 @@ constexpr file_flags operator|(file_flags lhs, file_flags rhs) noexcept {
   return file_flags{underlying_value(lhs) | underlying_value(rhs)};
 }
 
-constexpr file_flags &operator|=(file_flags &lhs, file_flags rhs) noexcept {
+constexpr file_flags &operator|=(file_flags lhs, file_flags rhs) noexcept {
   lhs = lhs | rhs;
   return lhs;
 }
@@ -43,7 +43,6 @@ enum class file_whence { set = SEEK_SET, current = SEEK_CUR, end = SEEK_END };
 enum class file_mode : unsigned { read = O_RDONLY, write = O_WRONLY, read_write = O_RDWR };
 
 // File permission
-
 enum class file_permission : unsigned {
   none = 0u,
 
