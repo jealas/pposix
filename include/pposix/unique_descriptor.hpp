@@ -3,33 +3,31 @@
 #include <system_error>
 #include <utility>
 
+#include "pposix/descriptor.hpp"
 #include "pposix/errno.hpp"
-#include "pposix/fd.hpp"
-#include "pposix/null_fd.hpp"
-#include "pposix/unique_fd.hpp"
 
 namespace pposix {
 
 template <class Descriptor, class ClosePolicy>
 class [[nodiscard]] unique_descriptor : private ClosePolicy {
-  static_assert(is_file_descriptor_v<Descriptor>);
+  static_assert(is_descriptor_v<Descriptor>);
 
  public:
-  constexpr unique_descriptor() noexcept : unique_descriptor::unique_descriptor{nullfd} {}
+  constexpr unique_descriptor() noexcept = default;
 
-  constexpr unique_descriptor(nullfd_t) noexcept(noexcept(ClosePolicy{}))
+  constexpr unique_descriptor(null_descriptor_t) noexcept(noexcept(ClosePolicy{}))
       : ClosePolicy{} {}  // NOLINT implicit constructor
 
-  constexpr explicit unique_descriptor(Descriptor file_descriptor) noexcept(noexcept(ClosePolicy{}))
-      : ClosePolicy{}, raw_fd_{file_descriptor} {}
+  constexpr explicit unique_descriptor(Descriptor descriptor) noexcept(noexcept(ClosePolicy{}))
+      : ClosePolicy{}, raw_descriptor_{descriptor} {}
 
-  constexpr explicit unique_descriptor(Descriptor file_descriptor, const ClosePolicy &close) noexcept(
+  constexpr explicit unique_descriptor(Descriptor descriptor, const ClosePolicy &close) noexcept(
       noexcept(ClosePolicy{std::declval<const ClosePolicy &>()}))
-      : raw_fd_{file_descriptor}, ClosePolicy{close} {}
+      : raw_descriptor_{descriptor}, ClosePolicy{close} {}
 
-  constexpr explicit unique_descriptor(Descriptor file_descriptor, ClosePolicy && close) noexcept(
+  constexpr explicit unique_descriptor(Descriptor descriptor, ClosePolicy && close) noexcept(
       noexcept(ClosePolicy{std::declval<ClosePolicy &&>()}))
-      : ClosePolicy{std::move(close)}, raw_fd_{file_descriptor} {}
+      : ClosePolicy{std::move(close)}, raw_descriptor_{descriptor} {}
 
   ~unique_descriptor() {
     if (const auto error = close()) {
@@ -38,23 +36,25 @@ class [[nodiscard]] unique_descriptor : private ClosePolicy {
   }
 
   unique_descriptor(const unique_descriptor &other) = delete;
-  unique_descriptor(unique_descriptor && other) noexcept { std::swap(raw_fd_, other.raw_fd_); }
+  unique_descriptor(unique_descriptor && other) noexcept {
+    std::swap(raw_descriptor_, other.raw_descriptor_);
+  }
 
   unique_descriptor &operator=(const unique_descriptor &) = delete;
   unique_descriptor &operator=(unique_descriptor &&) = delete;
 
-  bool empty() const noexcept { return raw_fd_ == nullfd; }
+  bool empty() const noexcept { return raw_descriptor_ == null_descriptor; }
   explicit operator bool() const noexcept { return not empty(); }
 
-  Descriptor raw() const noexcept { return raw_fd_; }
+  Descriptor raw() const noexcept { return raw_descriptor_; }
   Descriptor operator*() const noexcept { return raw(); }
 
   constexpr ClosePolicy &get_close_policy() noexcept { return *this; }
   constexpr const ClosePolicy &get_close_policy() const noexcept { return *this; }
 
   [[nodiscard]] Descriptor release() noexcept {
-    Descriptor tmp_fd{raw_fd_};
-    raw_fd_ = nullfd;
+    Descriptor tmp_fd{raw_descriptor_};
+    raw_descriptor_ = null_descriptor;
     return tmp_fd;
   }
 
@@ -66,14 +66,14 @@ class [[nodiscard]] unique_descriptor : private ClosePolicy {
 
     const auto error = ClosePolicy::operator()(raw());
     if (not error) {
-      raw_fd_ = nullfd;
+      raw_descriptor_ = null_descriptor;
     }
 
     return error;
   }
 
  private:
-  Descriptor raw_fd_{nullfd};
+  Descriptor raw_descriptor_{null_descriptor};
 };
 
 }  // namespace pposix
