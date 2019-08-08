@@ -132,7 +132,8 @@ class socket_linger {
  public:
   constexpr socket_linger() noexcept = default;
   constexpr socket_linger(::linger l) noexcept : linger_{l} {}  // NOLINT implicit constructor
-  constexpr explicit socket_linger(pposix::seconds duration) noexcept : linger_{true, duration.count()} {}
+  constexpr explicit socket_linger(pposix::seconds duration) noexcept
+      : linger_{true, duration.count()} {}
   constexpr socket_linger(bool enabled, pposix::seconds duration) noexcept
       : linger_{enabled, duration.count()} {}
 
