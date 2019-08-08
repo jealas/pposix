@@ -8,10 +8,10 @@
 #include <unistd.h>
 
 #include "pposix/byte_span.hpp"
+#include "pposix/platform.hpp"
 #include "pposix/result.hpp"
 #include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
-#include "pposix/platform.hpp"
 
 namespace pposix {
 
@@ -132,8 +132,6 @@ constexpr file_permission operator"" _other(char const *c_str, size_t len) {
 }
 
 }  // namespace permission_literals
-
-// File open
 
 // File close
 std::error_code close(raw_fd fd) noexcept;

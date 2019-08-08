@@ -6,8 +6,8 @@
 
 #include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
+#include "pposix/extension.hpp"
 #include "pposix/fd.hpp"
-#include "pposix/platform.hpp"
 #include "pposix/result.hpp"
 #include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
@@ -20,14 +20,14 @@ using socket_fd = fd<socket_fd_tag>;
 
 // Socket domain
 enum class socket_domain : unsigned {
-  // POSIX defined socket domains
+  // POSIX-defined socket domains
   inet = AF_INET,
   inet6 = AF_INET6,
   unix_ = AF_UNIX,
   unspecified = AF_UNSPEC,
 
 // Linux-specific socket domains
-#if PPOSIX_PLATFORM_LINUX
+#if _PPOSIX_LINUX_EXTENSION_ENABLED
   local = AF_LOCAL,
   file = AF_FILE,
   ax25 = AF_AX25,
@@ -97,7 +97,7 @@ enum class socket_option : int {
 enum class socket_flag : unsigned {
   none = 0u,
 
-#if PPOSIX_PLATFORM_LINUX
+#if _PPOSIX_LINUX_EXTENSION_ENABLED
   closexec = SOCK_CLOEXEC,
   nonblock = SOCK_NONBLOCK,
 #endif
