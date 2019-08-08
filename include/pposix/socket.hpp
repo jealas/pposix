@@ -6,6 +6,7 @@
 
 #include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
+#include "pposix/extension.hpp"
 #include "pposix/fd.hpp"
 #include "pposix/result.hpp"
 #include "pposix/unique_fd.hpp"
@@ -19,13 +20,37 @@ using socket_fd = fd<socket_fd_tag>;
 
 // Socket domain
 enum class socket_domain : unsigned {
+  // POSIX-defined socket domains
   inet = AF_INET,
   inet6 = AF_INET6,
+  unix_ = AF_UNIX,
+  unspecified = AF_UNSPEC,
 
-#undef unix
-  unix = AF_UNIX,
-
-  unspecified = AF_UNSPEC
+// Linux-specific socket domains
+#if _PPOSIX_LINUX_EXTENSION_ENABLED
+  local = AF_LOCAL,
+  file = AF_FILE,
+  ax25 = AF_AX25,
+  ipx = AF_IPX,
+  appletalk = AF_APPLETALK,
+  x25 = AF_X25,
+  decnet = AF_DECnet,
+  key = AF_KEY,
+  netlink = AF_NETLINK,
+  packet = AF_PACKET,
+  rds = AF_RDS,
+  pppox = AF_PPPOX,
+  llc = AF_LLC,
+  ib = AF_IB,
+  mpls = AF_MPLS,
+  can = AF_CAN,
+  tipc = AF_TIPC,
+  bluetooth = AF_BLUETOOTH,
+  alg = AF_ALG,
+  vsock = AF_VSOCK,
+  kcm = AF_KCM,
+  xdp = AF_XDP,
+#endif
 };
 
 // Socket type
@@ -34,7 +59,6 @@ enum class socket_type : int {
   dgram = SOCK_DGRAM,
   seqpacket = SOCK_SEQPACKET,
   raw = SOCK_RAW,
-  rdm = SOCK_RDM
 };
 
 // Socket protocol
@@ -51,28 +75,37 @@ enum class socket_protocol : int {
 
 // Socket option
 enum class socket_option : int {
-  debug = SO_DEBUG,
+  acceptconn = SO_ACCEPTCONN,
   broadcast = SO_BROADCAST,
-  reuseaddr = SO_REUSEADDR,
+  debug = SO_DEBUG,
+  dontroute = SO_DONTROUTE,
+  error = SO_ERROR,
   keepalive = SO_KEEPALIVE,
   linger = SO_LINGER,
   oobinline = SO_OOBINLINE,
   rcvbuf = SO_RCVBUF,
-  sndbuf = SO_SNDBUF,
-  dontroute = SO_DONTROUTE,
   rcvlowat = SO_RCVLOWAT,
   rcvtimeo = SO_RCVTIMEO,
+  reuseaddr = SO_REUSEADDR,
+  sndbuf = SO_SNDBUF,
   sndlowat = SO_SNDLOWAT,
   sndtimeo = SO_SNDTIMEO,
-  acceptconn = SO_ACCEPTCONN,
-  error = SO_ERROR,
   type = SO_TYPE
 };
 
 // Socket flag
-enum class socket_flag : unsigned { none = 0u, closexec = SOCK_CLOEXEC, nonblock = SOCK_NONBLOCK };
+enum class socket_flag : unsigned {
+  none = 0u,
 
-socket_flag operator|(const socket_flag &lhs, const socket_flag &rhs) noexcept;
+#if _PPOSIX_LINUX_EXTENSION_ENABLED
+  closexec = SOCK_CLOEXEC,
+  nonblock = SOCK_NONBLOCK,
+#endif
+};
+
+constexpr socket_flag operator|(socket_flag lhs, socket_flag rhs) noexcept {
+  return socket_flag{underlying_value(lhs) | underlying_value(rhs)};
+}
 
 // Socket level
 enum class socket_level : int {

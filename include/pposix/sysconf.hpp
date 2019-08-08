@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 
+#include "pposix/platform.hpp"
 #include "pposix/result.hpp"
 
 namespace pposix {
@@ -67,8 +68,12 @@ enum class system_config_name : int {
   thread_prio_protect = _SC_THREAD_PRIO_PROTECT,
   thread_priority_scheduling = _SC_THREAD_PRIORITY_SCHEDULING,
   thread_process_shared = _SC_THREAD_PROCESS_SHARED,
+
+#if !PPOSIX_PLATFORM_MAC_OS
   thread_robust_prio_inherit = _SC_THREAD_ROBUST_PRIO_INHERIT,
   thread_robust_prio_protect = _SC_THREAD_ROBUST_PRIO_PROTECT,
+#endif
+
   thread_safe_functions = _SC_THREAD_SAFE_FUNCTIONS,
   thread_sporadic_server = _SC_THREAD_SPORADIC_SERVER,
   threads = _SC_THREADS,
@@ -84,10 +89,14 @@ enum class system_config_name : int {
   trace_user_event_max = _SC_TRACE_USER_EVENT_MAX,
   typed_memory_objects = _SC_TYPED_MEMORY_OBJECTS,
   version = _SC_VERSION,
+
+#if !PPOSIX_PLATFORM_MAC_OS
   v7_ilp32_off32 = _SC_V7_ILP32_OFF32,
   v7_ilp32_offbig = _SC_V7_ILP32_OFFBIG,
   v7_lp64_off64 = _SC_V7_LP64_OFF64,
   v7_lpbig_offbig = _SC_V7_LPBIG_OFFBIG,
+#endif
+
   v6_ilp32_off32 = _SC_V6_ILP32_OFF32,
   v6_ilp32_offbig = _SC_V6_ILP32_OFFBIG,
   v6_lp64_off64 = _SC_V6_LP64_OFF64,
