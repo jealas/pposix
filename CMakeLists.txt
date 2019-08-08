@@ -24,8 +24,8 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-add_subdirectory(src/realtime)
+add_subdirectory(src/rt)
 
 # Testing
 add_subdirectory(test)
-add_subdirectory(test/realtime)
+add_subdirectory(test/rt)

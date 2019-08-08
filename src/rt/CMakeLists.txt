@@ -1,12 +1,12 @@
 add_library(
-        pposix_realtime
+        pposix_rt
 
         SHARED
-        message_queue.cpp
+        mqueue.cpp
 )
 
 target_link_libraries(
-        pposix_realtime
+        pposix_rt
 
         PUBLIC
         $<$<PLATFORM_ID:Linux>:rt>
