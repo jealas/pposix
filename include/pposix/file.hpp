@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <string_view>
 #include <system_error>
 
@@ -18,7 +19,10 @@ namespace pposix {
 // File flags
 enum class file_flags : unsigned {
   append = O_APPEND,
+  cloexec = O_CLOEXEC,
   create = O_CREAT,
+
+  directory = O_DIRECTORY,
 
 #if !PPOSIX_PLATFORM_FREE_BSD
   dsync = O_DSYNC,
@@ -26,6 +30,7 @@ enum class file_flags : unsigned {
 
   exclusive = O_EXCL,
   noctty = O_NOCTTY,
+  nofollow = O_NOFOLLOW,
   nonblock = O_NONBLOCK,
 
 #if !PPOSIX_PLATFORM_MAC_OS && !PPOSIX_PLATFORM_FREE_BSD
@@ -34,6 +39,10 @@ enum class file_flags : unsigned {
 
   sync = O_SYNC,
   truncate = O_TRUNC,
+
+#if !PPOSIX_PLATFORM_LINUX
+  tty_init = O_TTY_INIT
+#endif
 };
 
 constexpr file_flags operator|(file_flags lhs, file_flags rhs) noexcept {
@@ -46,7 +55,20 @@ constexpr file_flags &operator|=(file_flags &lhs, file_flags rhs) noexcept {
 }
 
 // File mode
-enum class file_mode : unsigned { read = O_RDONLY, write = O_WRONLY, read_write = O_RDWR };
+enum class file_mode : unsigned {
+#if !PPOSIX_PLATFORM_LINUX
+  exec = O_EXEC,
+#endif
+
+  read = O_RDONLY,
+  read_write = O_RDWR,
+
+#if !PPOSIX_PLATFORM_LINUX
+  search = O_SEARCH,
+#endif
+
+  write = O_WRONLY
+};
 
 // File seek whence
 enum class file_seek { set = SEEK_SET, current = SEEK_CUR, end = SEEK_END };
@@ -136,6 +158,11 @@ constexpr file_permission operator"" _other(char const *c_str, size_t len) {
 }
 
 }  // namespace permission_literals
+
+// File open: file
+result<unique_fd<raw_fd>> open(const char *path, file_mode mode, file_flags flags) noexcept;
+result<unique_fd<raw_fd>> open(const std::filesystem::path &path, file_mode mode,
+                               file_flags flags) noexcept;
 
 // File close
 std::error_code close(raw_fd fd) noexcept;
