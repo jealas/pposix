@@ -19,12 +19,16 @@ namespace pposix {
 enum class file_flags : unsigned {
   append = O_APPEND,
   create = O_CREAT,
+
+#if !PPOSIX_PLATFORM_FREE_BSD
   dsync = O_DSYNC,
+#endif
+
   exclusive = O_EXCL,
   noctty = O_NOCTTY,
   nonblock = O_NONBLOCK,
 
-#if !PPOSIX_PLATFORM_MAC_OS
+#if !PPOSIX_PLATFORM_MAC_OS && !PPOSIX_PLATFORM_FREE_BSD
   rsync = O_RSYNC,
 #endif
 
