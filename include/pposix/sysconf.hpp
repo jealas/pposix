@@ -59,7 +59,11 @@ enum class system_config_name : int {
   pawn = _SC_SPAWN,
   pin_locks = _SC_SPIN_LOCKS,
   poradic_server = _SC_SPORADIC_SERVER,
+
+#if !PPOSIX_PLATFORM_FREE_BSD
   repl_max = _SC_SS_REPL_MAX,
+#endif
+
   ynchronized_io = _SC_SYNCHRONIZED_IO,
   thread_attr_stackaddr = _SC_THREAD_ATTR_STACKADDR,
   thread_attr_stacksize = _SC_THREAD_ATTR_STACKSIZE,
@@ -69,7 +73,7 @@ enum class system_config_name : int {
   thread_priority_scheduling = _SC_THREAD_PRIORITY_SCHEDULING,
   thread_process_shared = _SC_THREAD_PROCESS_SHARED,
 
-#if !PPOSIX_PLATFORM_MAC_OS
+#if !PPOSIX_PLATFORM_MAC_OS && !PPOSIX_PLATFORM_FREE_BSD
   thread_robust_prio_inherit = _SC_THREAD_ROBUST_PRIO_INHERIT,
   thread_robust_prio_protect = _SC_THREAD_ROBUST_PRIO_PROTECT,
 #endif
@@ -81,17 +85,28 @@ enum class system_config_name : int {
   timers = _SC_TIMERS,
   trace = _SC_TRACE,
   trace_event_filter = _SC_TRACE_EVENT_FILTER,
+
+#if !PPOSIX_PLATFORM_FREE_BSD
   trace_event_name_max = _SC_TRACE_EVENT_NAME_MAX,
+#endif
+
   trace_inherit = _SC_TRACE_INHERIT,
   trace_log = _SC_TRACE_LOG,
+
+#if !PPOSIX_PLATFORM_FREE_BSD
   trace_name_max = _SC_TRACE_NAME_MAX,
   trace_sys_max = _SC_TRACE_SYS_MAX,
   trace_user_event_max = _SC_TRACE_USER_EVENT_MAX,
+#endif
+
   typed_memory_objects = _SC_TYPED_MEMORY_OBJECTS,
   version = _SC_VERSION,
 
-#if !PPOSIX_PLATFORM_MAC_OS
+#if !PPOSIX_PLATFORM_MAC_OS && !PPOSIX_PLATFORM_FREE_BSD
   v7_ilp32_off32 = _SC_V7_ILP32_OFF32,
+#endif
+
+#if !PPOSIX_PLATFORM_MAC_OS && !PPOSIX_PLATFORM_FREE_BSD
   v7_ilp32_offbig = _SC_V7_ILP32_OFFBIG,
   v7_lp64_off64 = _SC_V7_LP64_OFF64,
   v7_lpbig_offbig = _SC_V7_LPBIG_OFFBIG,
