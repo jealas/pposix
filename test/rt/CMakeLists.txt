@@ -1,8 +1,8 @@
 add_executable(
         test_pposix_rt
 
-        test_message_queue.cpp
         test_pposix_rt_main.cpp
+        test_mqueue.cpp
 )
 
 target_link_libraries(
