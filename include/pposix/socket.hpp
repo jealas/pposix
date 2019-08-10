@@ -27,7 +27,7 @@ enum class socket_domain : unsigned {
   unspecified = AF_UNSPEC,
 
 // Linux-specific socket domains
-#if _PPOSIX_LINUX_EXTENSION_ENABLED
+#if PPOSIX_LINUX_EXTENSION_ENABLED
   local = AF_LOCAL,
   file = AF_FILE,
   ax25 = AF_AX25,
@@ -97,7 +97,7 @@ enum class socket_option : int {
 enum class socket_flag : unsigned {
   none = 0u,
 
-#if _PPOSIX_LINUX_EXTENSION_ENABLED
+#if PPOSIX_LINUX_EXTENSION_ENABLED
   closexec = SOCK_CLOEXEC,
   nonblock = SOCK_NONBLOCK,
 #endif
