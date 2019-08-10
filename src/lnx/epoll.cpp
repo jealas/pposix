@@ -7,26 +7,21 @@
 
 namespace pposix::lnx {
 
-std::error_code epoll_close_policy::operator()(epoll_d descriptor) const noexcept {
-  return ::close(underlying_value(descriptor.raw())) == -1 ? current_errno_code()
-                                                           : std::error_code{};
-}
-
 namespace capi {
 
-result<unique_epoll_d> epoll_create(size_t size) noexcept {
-  if (const epoll_d_t res{::epoll_create(size)}; res < epoll_d_t{0}) {
+result<unique_epoll_fd> epoll_create(size_t size) noexcept {
+  if (const int res{::epoll_create(size)}; res < 0) {
     return current_errno_code();
   } else {
-    return unique_epoll_d{epoll_d{res}};
+    return unique_epoll_fd{epoll_fd{res}};
   }
 }
 
-result<unique_epoll_d> epoll_create1(epoll_flag flags) noexcept {
-  if (const epoll_d_t res{::epoll_create1(underlying_value(flags))}; res < epoll_d_t{0}) {
+result<unique_epoll_fd> epoll_create1(epoll_flag flags) noexcept {
+  if (const int res{::epoll_create1(underlying_value(flags))}; res < 0) {
     return current_errno_code();
   } else {
-    return unique_epoll_d{epoll_d{res}};
+    return unique_epoll_fd{epoll_fd{res}};
   }
 }
 
@@ -56,10 +51,9 @@ epoll_event::epoll_event(epoll_event_flag event_flags, uint64_t data) noexcept
   this->data.u64 = data;
 }
 
-std::error_code epoll_ctl(epoll_d epoll_descriptor, epoll_operation op, raw_fd fd,
+std::error_code epoll_ctl(epoll_fd epoll_fdescriptor, epoll_operation op, raw_fd fd,
                           epoll_event event) noexcept {
-  const int res{::epoll_ctl(underlying_value(epoll_descriptor.raw()), underlying_value(op),
-                            fd.raw(), &event)};
+  const int res{::epoll_ctl(epoll_fdescriptor.raw(), underlying_value(op), fd.raw(), &event)};
   if (res == -1) {
     return current_errno_code();
   } else {
@@ -67,12 +61,12 @@ std::error_code epoll_ctl(epoll_d epoll_descriptor, epoll_operation op, raw_fd f
   }
 }
 
-result<unsigned> epoll_wait(epoll_d epoll_descriptor, span<capi::epoll_event> events,
+result<unsigned> epoll_wait(epoll_fd epoll_fdescriptor, span<capi::epoll_event> events,
                             milliseconds timeout) noexcept {
   // TODO: Assert that events.length() <= std::numeric_literals<int>::max()
 
-  const int res{::epoll_wait(underlying_value(epoll_descriptor.raw()), events.data(),
-                             events.length(), timeout.count())};
+  const int res{
+      ::epoll_wait(epoll_fdescriptor.raw(), events.data(), events.length(), timeout.count())};
   if (res == -1) {
     return current_errno_code();
   } else {
@@ -82,12 +76,12 @@ result<unsigned> epoll_wait(epoll_d epoll_descriptor, span<capi::epoll_event> ev
   }
 }
 
-result<unsigned> epoll_pwait(epoll_d epoll_descriptor, span<capi::epoll_event> events,
+result<unsigned> epoll_pwait(epoll_fd epoll_fdescriptor, span<capi::epoll_event> events,
                              milliseconds timeout, const sigset &sigmask) noexcept {
   // TODO: Assert that events.length() <= std::numeric_literals<int>::max()
 
-  const int res{::epoll_pwait(underlying_value(epoll_descriptor.raw()), events.data(),
-                              events.length(), timeout.count(), sigmask.sigset_ptr())};
+  const int res{::epoll_pwait(epoll_fdescriptor.raw(), events.data(), events.length(),
+                              timeout.count(), sigmask.sigset_ptr())};
   if (res == -1) {
     return current_errno_code();
   } else {
@@ -98,5 +92,14 @@ result<unsigned> epoll_pwait(epoll_d epoll_descriptor, span<capi::epoll_event> e
 }
 
 }  // namespace capi
+
+result<unique_epoll_fd> epoll_create() noexcept {
+  constexpr static size_t NON_ZERO_SIZE = 1u;
+  return capi::epoll_create(NON_ZERO_SIZE);
+}
+
+result<unique_epoll_fd> epoll_create(decltype(epoll_cloexec)) noexcept {
+  return capi::epoll_create1(epoll_cloexec);
+}
 
 }  // namespace pposix::lnx

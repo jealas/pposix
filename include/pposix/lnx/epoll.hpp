@@ -4,32 +4,27 @@
 
 #include <sys/epoll.h>
 
-#include "pposix/descriptor.hpp"
 #include "pposix/duration.hpp"
 #include "pposix/fd.hpp"
 #include "pposix/result.hpp"
 #include "pposix/signal.hpp"
 #include "pposix/span.hpp"
-#include "pposix/unique_descriptor.hpp"
+#include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix::lnx {
 
-enum class epoll_d_t : int {};
-using epoll_d = descriptor<epoll_d_t, epoll_d_t{-1}>;
+struct epoll_fd_tag {};
+using epoll_fd = fd<epoll_fd_tag>;
 
-struct epoll_close_policy {
-  std::error_code operator()(epoll_d descriptor) const noexcept;
-};
-
-using unique_epoll_d = unique_descriptor<epoll_d, epoll_close_policy>;
+using unique_epoll_fd = unique_fd<epoll_fd>;
 
 namespace capi {
 
 enum class epoll_flag { cloexec = EPOLL_CLOEXEC };
 
-result<unique_epoll_d> epoll_create(size_t) noexcept;
-result<unique_epoll_d> epoll_create1(epoll_flag flags) noexcept;
+result<unique_epoll_fd> epoll_create(size_t) noexcept;
+result<unique_epoll_fd> epoll_create1(epoll_flag flags) noexcept;
 
 enum class epoll_event_flag : uint32_t {
 
@@ -54,11 +49,11 @@ enum class epoll_operation : int {
 // Forward declaration
 class epoll_event;
 
-std::error_code epoll_ctl(epoll_d epoll_descriptor, epoll_operation op, raw_fd fd,
+std::error_code epoll_ctl(epoll_fd epoll_fd, epoll_operation op, raw_fd fd,
                           capi::epoll_event event) noexcept;
-result<unsigned> epoll_wait(epoll_d epoll_descriptor, capi::epoll_event *event, int maxevents,
+result<unsigned> epoll_wait(epoll_fd epoll_fd, capi::epoll_event *event, int maxevents,
                             milliseconds timeout) noexcept;
-result<unsigned> epoll_pwait(int epfd, span<capi::epoll_event>, milliseconds timeout,
+result<unsigned> epoll_pwait(epoll_fd epoll_fd, span<capi::epoll_event>, milliseconds timeout,
                              const sigset &sigmask) noexcept;
 
 class epoll_event final : public ::epoll_event {
@@ -80,5 +75,11 @@ constexpr epoll_event_flag operator|(epoll_event_flag lhs, epoll_event_flag rhs)
 }
 
 }  // namespace capi
+
+result<unique_epoll_fd> epoll_create() noexcept;
+
+inline constexpr enum_constant<capi::epoll_flag, capi::epoll_flag::cloexec> epoll_cloexec{};
+
+result<unique_epoll_fd> epoll_create(decltype(epoll_cloexec)) noexcept;
 
 }  // namespace pposix::lnx
