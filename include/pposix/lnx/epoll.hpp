@@ -51,7 +51,7 @@ enum class epoll_operation : int {
   change_settings = EPOLL_CTL_MOD
 };
 
-// Forward declarations for friend functions
+// Forward declaration
 class epoll_event;
 
 std::error_code epoll_ctl(epoll_d epoll_descriptor, epoll_operation op, raw_fd fd,
@@ -78,15 +78,6 @@ static_assert(alignof(capi::epoll_event) == alignof(::epoll_event));
 constexpr epoll_event_flag operator|(epoll_event_flag lhs, epoll_event_flag rhs) noexcept {
   return epoll_event_flag{underlying_value(lhs) | underlying_value(rhs)};
 }
-
-std::error_code epoll_ctl(epoll_d epoll_descriptor, epoll_operation op, raw_fd fd,
-                          capi::epoll_event event) noexcept;
-
-result<unsigned> epoll_wait(epoll_d epoll_descriptor, span<capi::epoll_event> events,
-                            milliseconds timeout) noexcept;
-
-result<unsigned> epoll_pwait(epoll_d epoll_descriptor, span<capi::epoll_event> events,
-                             milliseconds timeout, const sigset &sigmask) noexcept;
 
 }  // namespace capi
 
