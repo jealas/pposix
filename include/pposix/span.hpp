@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <vector>
 
 namespace pposix {
 
@@ -26,6 +27,10 @@ class cspan {
   constexpr cspan(  // NOLINT implicit constructor
       const std::array<T, Length> &buffer) noexcept
       : buffer_{buffer.data()}, length_{Length} {}
+
+  constexpr cspan(  // NOLINT implicit constructor
+      const std::vector<T> &vector) noexcept
+      : buffer_{vector.data()}, length_{vector.size()} {}
 
   constexpr bool empty() const noexcept { return length_ == 0u; }
 
@@ -74,6 +79,10 @@ class span {
   constexpr span(  // NOLINT implicit constructor
       std::array<T, Length> &buffer) noexcept
       : buffer_{buffer.data()}, length_{Length} {}
+
+  constexpr span(  // NOLINT implicit constructor
+      const std::vector<T> &vector) noexcept
+      : buffer_{vector.data()}, length_{vector.size()} {}
 
   constexpr bool empty() const noexcept { return length_ == 0u; }
 
