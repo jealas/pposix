@@ -2,7 +2,7 @@ add_executable(
         test_pposix_lnx
 
         test_pposix_lnx_main.cpp
-        test_pposix_lnx_epoll.cpp
+        test_epoll.cpp
 )
 
 target_link_libraries(
