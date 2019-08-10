@@ -24,7 +24,18 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+set(GCC_OR_CLANG_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Werror)
+
+target_compile_options(
+        ${CMAKE_PROJECT_NAME}
+
+        PRIVATE
+        $<$<CXX_COMPILER_ID:GNU>:${GCC_OR_CLANG_COMPILE_OPTIONS}>
+        $<$<CXX_COMPILER_ID:Clang>:${GCC_OR_CLANG_COMPILE_OPTIONS}>
+)
+
 add_subdirectory(src/rt)
+add_subdirectory(src/lnx)
 
 # Testing
 add_subdirectory(test)
