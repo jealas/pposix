@@ -71,17 +71,18 @@ class span {
   constexpr span(T *buffer, std::size_t length) noexcept
       : buffer_{buffer}, length_{buffer ? length : 0u} {}
 
-  template <std::size_t Length>
-  constexpr span(T (&buffer)[Length]) noexcept  // NOLINT implicit constructor
+  template <class U, std::size_t Length>
+  constexpr span(U (&buffer)[Length]) noexcept  // NOLINT implicit constructor
       : buffer_{buffer}, length_{Length} {}
 
-  template <std::size_t Length>
+  template <class U, std::size_t Length>
   constexpr span(  // NOLINT implicit constructor
-      std::array<T, Length> &buffer) noexcept
+      std::array<U, Length> &buffer) noexcept
       : buffer_{buffer.data()}, length_{Length} {}
 
+  template <class U>
   constexpr span(  // NOLINT implicit constructor
-      const std::vector<T> &vector) noexcept
+      const std::vector<U> &vector) noexcept
       : buffer_{vector.data()}, length_{vector.size()} {}
 
   constexpr bool empty() const noexcept { return length_ == 0u; }

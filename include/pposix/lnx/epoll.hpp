@@ -27,7 +27,6 @@ result<unique_epoll_fd> epoll_create(size_t) noexcept;
 result<unique_epoll_fd> epoll_create1(epoll_flag flags) noexcept;
 
 enum class epoll_event_flag : uint32_t {
-
   read_available = EPOLLIN,
   write_available = EPOLLOUT,
   socket_closed = EPOLLRDHUP,
@@ -43,16 +42,18 @@ enum class epoll_event_flag : uint32_t {
 enum class epoll_operation : int {
   add = EPOLL_CTL_ADD,
   remove = EPOLL_CTL_DEL,
-  change_settings = EPOLL_CTL_MOD
+  modify = EPOLL_CTL_MOD
 };
 
 // Forward declaration
 class epoll_event;
 
 std::error_code epoll_ctl(epoll_fd epoll_fd, epoll_operation op, raw_fd fd,
-                          capi::epoll_event event) noexcept;
-result<unsigned> epoll_wait(epoll_fd epoll_fd, capi::epoll_event *event, int maxevents,
+                          lnx::capi::epoll_event *event) noexcept;
+
+result<unsigned> epoll_wait(epoll_fd epoll_fd, span<capi::epoll_event>,
                             milliseconds timeout) noexcept;
+
 result<unsigned> epoll_pwait(epoll_fd epoll_fd, span<capi::epoll_event>, milliseconds timeout,
                              const sigset &sigmask) noexcept;
 
@@ -70,16 +71,94 @@ class epoll_event final : public ::epoll_event {
 static_assert(sizeof(capi::epoll_event) == sizeof(::epoll_event));
 static_assert(alignof(capi::epoll_event) == alignof(::epoll_event));
 
-constexpr epoll_event_flag operator|(epoll_event_flag lhs, epoll_event_flag rhs) noexcept {
-  return epoll_event_flag{underlying_value(lhs) | underlying_value(rhs)};
-}
-
 }  // namespace capi
 
 result<unique_epoll_fd> epoll_create() noexcept;
 
-inline constexpr enum_constant<capi::epoll_flag, capi::epoll_flag::cloexec> epoll_cloexec{};
+inline constexpr enum_flag<capi::epoll_flag, capi::epoll_flag::cloexec> epoll_cloexec{};
 
 result<unique_epoll_fd> epoll_create(decltype(epoll_cloexec)) noexcept;
+
+// Epoll flag types
+template <capi::epoll_event_flag Flag>
+using epoll_flag = enum_flag<capi::epoll_event_flag, Flag>;
+
+template <capi::epoll_event_flag Flags>
+using epoll_event_flags = enum_flag_set<capi::epoll_event_flag, Flags>;
+
+inline constexpr epoll_flag<capi::epoll_event_flag::read_available> epoll_read_available{};
+inline constexpr epoll_flag<capi::epoll_event_flag::write_available> epoll_write_available{};
+inline constexpr epoll_flag<capi::epoll_event_flag::socket_closed> epoll_socket_closed{};
+inline constexpr epoll_flag<capi::epoll_event_flag::fd_exception> epoll_fd_exception{};
+inline constexpr epoll_flag<capi::epoll_event_flag::fd_error> epoll_fd_error{};
+inline constexpr epoll_flag<capi::epoll_event_flag::fd_hup> epoll_fd_hup{};
+inline constexpr epoll_flag<capi::epoll_event_flag::edge_triggered> epoll_edge_triggered{};
+inline constexpr epoll_flag<capi::epoll_event_flag::one_shot> epoll_one_shot{};
+inline constexpr epoll_flag<capi::epoll_event_flag::wakeup> epoll_wakeup{};
+inline constexpr epoll_flag<capi::epoll_event_flag::exclusive> epoll_exclusive{};
+
+// Epoll control commands
+struct epoll_add {
+  raw_fd fd;
+  lnx::capi::epoll_event event;
+};
+
+std::error_code epoll_ctl(epoll_fd epoll_fd, epoll_add add) noexcept;
+
+struct epoll_remove {
+  raw_fd fd;
+};
+
+std::error_code epoll_ctl(epoll_fd epoll_fd, epoll_remove remove) noexcept;
+
+class epoll_modify;
+std::error_code epoll_ctl(epoll_fd epoll_fd, epoll_modify mod) noexcept;
+
+class epoll_modify {
+  template <capi::epoll_event_flag Flags>
+  static constexpr void check_epoll_modify_flags() noexcept {
+    static_assert(not epoll_event_flags<Flags>::has(epoll_exclusive),
+                  "epoll_exclusive cannot be used with epoll_modify");
+  }
+
+ public:
+  template <capi::epoll_event_flag Flags>
+  constexpr epoll_modify(raw_fd fd, epoll_event_flags<Flags>) noexcept : fd_{fd}, event_{Flags} {
+    check_epoll_modify_flags<Flags>();
+  }
+
+  template <capi::epoll_event_flag Flags>
+  constexpr epoll_modify(raw_fd fd, epoll_event_flags<Flags>, void *data) noexcept
+      : fd_{fd}, event_{Flags, data} {
+    check_epoll_modify_flags<Flags>();
+  }
+
+  template <capi::epoll_event_flag Flags>
+  constexpr epoll_modify(raw_fd fd, epoll_event_flags<Flags>, raw_fd data) noexcept
+      : fd_{fd}, event_{Flags, data} {
+    check_epoll_modify_flags<Flags>();
+  }
+
+  template <capi::epoll_event_flag Flags>
+  constexpr epoll_modify(raw_fd fd, epoll_event_flags<Flags>, uint32_t data) noexcept
+      : fd_{fd}, event_{Flags, data} {
+    check_epoll_modify_flags<Flags>();
+  }
+
+  template <capi::epoll_event_flag Flags>
+  constexpr epoll_modify(raw_fd fd, epoll_event_flags<Flags>, uint64_t data) noexcept
+      : fd_{fd}, event_{Flags, data} {
+    check_epoll_modify_flags<Flags>();
+  }
+
+  friend std::error_code pposix::lnx::epoll_ctl(epoll_fd, epoll_modify) noexcept;
+
+ private:
+  constexpr raw_fd fd() const noexcept { return fd_; }
+  constexpr lnx::capi::epoll_event *event_ptr() noexcept { return &event_; }
+
+  raw_fd fd_{};
+  lnx::capi::epoll_event event_{};
+};
 
 }  // namespace pposix::lnx
