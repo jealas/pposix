@@ -84,22 +84,20 @@ std::error_code epoll_ctl(epoll_fd epoll_fd, epoll_modify mod) noexcept {
   return capi::epoll_ctl(epoll_fd, capi::epoll_operation::remove, mod.fd(), mod.event_ptr());
 }
 
-result<unsigned> epoll_wait(epoll_fd epoll, span<capi::epoll_event> events,
-                            milliseconds timeout) noexcept {
+result<int> epoll_wait(epoll_fd epoll, span<lnx::epoll_event> events,
+                       milliseconds timeout) noexcept {
   // TODO: Assert that events.length() <= std::numeric_literals<int>::max()
 
   const int res{::epoll_wait(epoll.raw(), events.data(), events.length(), timeout.count())};
   if (res == -1) {
     return current_errno_code();
   } else {
-    static_assert(sizeof(int) <= sizeof(unsigned));
-    // TODO: Assert that res >= 0.
-    return static_cast<unsigned>(res);
+    return res;
   }
 }
 
-result<unsigned> epoll_pwait(epoll_fd epoll, span<capi::epoll_event> events, milliseconds timeout,
-                             const sigset &sigmask) noexcept {
+result<int> epoll_pwait(epoll_fd epoll, span<lnx::epoll_event> events, milliseconds timeout,
+                        const sigset &sigmask) noexcept {
   // TODO: Assert that events.length() <= std::numeric_literals<int>::max()
 
   const int res{::epoll_pwait(epoll.raw(), events.data(), events.length(), timeout.count(),
@@ -107,9 +105,7 @@ result<unsigned> epoll_pwait(epoll_fd epoll, span<capi::epoll_event> events, mil
   if (res == -1) {
     return current_errno_code();
   } else {
-    static_assert(sizeof(int) <= sizeof(unsigned));
-    // TODO: Assert that res >= 0.
-    return static_cast<unsigned>(res);
+    return res;
   }
 }
 

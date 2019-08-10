@@ -51,12 +51,6 @@ class epoll_event;
 std::error_code epoll_ctl(epoll_fd epoll_fd, epoll_operation op, raw_fd fd,
                           lnx::capi::epoll_event *event) noexcept;
 
-result<unsigned> epoll_wait(epoll_fd epoll_fd, span<capi::epoll_event>,
-                            milliseconds timeout) noexcept;
-
-result<unsigned> epoll_pwait(epoll_fd epoll_fd, span<capi::epoll_event>, milliseconds timeout,
-                             const sigset &sigmask) noexcept;
-
 class epoll_event final : public ::epoll_event {
  public:
   epoll_event() noexcept = default;
@@ -155,10 +149,33 @@ class epoll_modify {
 
  private:
   constexpr raw_fd fd() const noexcept { return fd_; }
-  constexpr lnx::capi::epoll_event *event_ptr() noexcept { return &event_; }
+  constexpr capi::epoll_event *event_ptr() noexcept { return &event_; }
 
   raw_fd fd_{};
-  lnx::capi::epoll_event event_{};
+  capi::epoll_event event_{};
 };
+
+class epoll_event final : public ::epoll_event {
+ public:
+  epoll_event() noexcept = default;
+
+  constexpr bool read_available() const noexcept { return has_flag(lnx::epoll_read_available); }
+  constexpr bool write_available() const noexcept { return has_flag(lnx::epoll_write_available); }
+  constexpr bool socket_closed() const noexcept { return has_flag(lnx::epoll_socket_closed); }
+  constexpr bool fd_exception() const noexcept { return has_flag(lnx::epoll_fd_exception); }
+  constexpr bool fd_error() const noexcept { return has_flag(lnx::epoll_fd_error); }
+  constexpr bool fd_hup() const noexcept { return has_flag(lnx::epoll_fd_hup); }
+
+ private:
+  template <capi::epoll_event_flag Flag>
+  constexpr bool has_flag(epoll_flag<Flag>) const noexcept {
+    return this->events & underlying_value(Flag);
+  }
+};
+
+result<int> epoll_wait(epoll_fd epoll, span<lnx::epoll_event>, milliseconds timeout) noexcept;
+
+result<int> epoll_pwait(epoll_fd epoll, span<lnx::epoll_event>, milliseconds timeout,
+                        const sigset &sigmask) noexcept;
 
 }  // namespace pposix::lnx
