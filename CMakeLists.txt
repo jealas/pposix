@@ -40,3 +40,4 @@ add_subdirectory(src/lnx)
 # Testing
 add_subdirectory(test)
 add_subdirectory(test/rt)
+add_subdirectory(test/lnx)
