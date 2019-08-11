@@ -46,7 +46,6 @@ ssize_t  mq_timedreceive(mqd_t, char *restrict, size_t,
              unsigned *restrict, const struct timespec *restrict);
 int      mq_timedsend(mqd_t, const char *, size_t, unsigned,
              const struct timespec *);
-int      mq_unlink(const char *);
  */
 
 class mq_current_attr {
@@ -230,5 +229,8 @@ template <mq_message_priority Priority>
 
   return capi::mq_send(mq, message, Priority);
 }
+
+std::error_code mq_unlink(const char* name) noexcept;
+std::error_code mq_unlink(const std::string& name) noexcept;
 
 }  // namespace pposix::rt
