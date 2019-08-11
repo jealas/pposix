@@ -1,12 +1,13 @@
 add_executable(
         test_pposix
 
-        test_main.cpp
+        test_pposix_main.cpp
         test_unique_fd.cpp
         test_permission.cpp
         test_buffer_span.cpp
         test_result.cpp
         test_any_view.cpp
+        test_unique_descriptor.cpp
 
         test_getsockopt.cpp
         test_permission.cpp
