@@ -2,8 +2,10 @@
 
 #include <system_error>
 
+#include <limits.h>
 #include <mqueue.h>
 
+#include "pposix/byte_span.hpp"
 #include "pposix/descriptor.hpp"
 #include "pposix/result.hpp"
 #include "pposix/stat.hpp"
@@ -40,10 +42,6 @@ The following shall be declared as functions and may also be defined as macros. 
 shall be provided.
 
 int      mq_notify(mqd_t, const struct sigevent *);
-ssize_t  mq_receive(mqd_t, char *, size_t, unsigned *);
-int      mq_send(mqd_t, const char *, size_t, unsigned);
-int      mq_setattr(mqd_t, const struct mq_attr *restrict,
-             struct mq_attr *restrict);
 ssize_t  mq_timedreceive(mqd_t, char *restrict, size_t,
              unsigned *restrict, const struct timespec *restrict);
 int      mq_timedsend(mqd_t, const char *, size_t, unsigned,
@@ -53,20 +51,18 @@ int      mq_unlink(const char *);
 
 class mq_current_attr {
  public:
+  constexpr mq_current_attr(::mq_attr attributes) noexcept : attributes_{attributes} {}
+
   constexpr long current_message_count() const noexcept { return attributes_.mq_curmsgs; }
   constexpr long max_message_count() const noexcept { return attributes_.mq_maxmsg; }
   constexpr long max_message_size() const noexcept { return attributes_.mq_msgsize; }
 
-  friend result<rt::mq_current_attr> rt::mq_getattr(rt::mq_d mq_descriptor) noexcept;
-
  private:
-  constexpr mq_current_attr(::mq_attr attributes) noexcept : attributes_{attributes} {}
-
   ::mq_attr attributes_{};
 };
 
 // Message queue get attributes
-result<rt::mq_current_attr> mq_getattr(rt::mq_d mq_descriptor) noexcept;
+result<rt::mq_current_attr> mq_getattr(mq_d mq_descriptor) noexcept;
 
 // Message queue open
 template <capi::mq_mode Flag>
@@ -162,6 +158,77 @@ result<unique_mq_d> mq_open(const char* name, mq_mode_flag<Mode>, mq_option_flag
   } else {
     return unique_mq_d{mq_d{res}};
   }
+}
+
+// Message queue set attributes
+template <capi::mq_option Option>
+result<mq_current_attr> mq_setattr(mq_d d, mq_option_flag<Option>) {
+  static_assert(not mq_option_flag_set<Option>::has(mq_excl),
+                "mq_excl cannot be used with mq_setattr, since it's only relevant with mq_open.");
+
+  ::mq_attr new_attributes{};
+  new_attributes.mq_flags = underlying_value(Option);
+
+  ::mq_attr current_attributes{};
+
+  const int res{::mq_setattr(underlying_value(d.raw()), &new_attributes, &current_attributes)};
+  if (res == -1) {
+    return current_errno_code();
+  } else {
+    return mq_current_attr{current_attributes};
+  }
+}
+
+enum class mq_message_priority : unsigned { max = MQ_PRIO_MAX };
+
+class mq_message {
+ public:
+  constexpr mq_message(mq_message_priority priority, byte_span message) noexcept
+      : priority_{priority}, message_{message} {}
+
+  constexpr mq_message_priority priority() const noexcept { return priority_; }
+  constexpr byte_span message_bytes() const noexcept { return message_; }
+
+ private:
+  mq_message_priority priority_{};
+  byte_span message_{};
+};
+
+// Message queue receive
+result<mq_message> mq_receive(mq_d mq, byte_span message_buffer) noexcept;
+
+namespace capi {
+
+[[nodiscard]] std::error_code mq_send(mq_d mq, byte_cspan message,
+                                      mq_message_priority priority) noexcept;
+
+}  // namespace capi
+
+template <mq_message_priority Priority>
+struct mq_static_message_priority {};
+
+template <mq_message_priority Priority>
+constexpr bool operator==(mq_static_message_priority<Priority>, mq_message_priority rhs) noexcept {
+  return Priority == rhs;
+}
+
+template <mq_message_priority Priority>
+constexpr bool operator==(mq_message_priority lhs, mq_static_message_priority<Priority>) noexcept {
+  return Priority == lhs;
+}
+
+template <unsigned Priority>
+inline constexpr mq_static_message_priority<mq_message_priority{Priority}>
+    mq_make_static_message_priority{};
+
+template <mq_message_priority Priority>
+[[nodiscard]] std::error_code mq_send(mq_d mq, byte_cspan message,
+                                      mq_static_message_priority<Priority>) noexcept {
+  static_assert(Priority < mq_message_priority::max,
+                "The message queue send priority cannot be larger than mq_message_priority::max "
+                "(aka MQ_PRIO_MAX)");
+
+  return capi::mq_send(mq, message, Priority);
 }
 
 }  // namespace pposix::rt
