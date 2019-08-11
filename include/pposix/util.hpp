@@ -13,6 +13,14 @@ constexpr decltype(auto) underlying_value(const Enum e) {
 }
 
 template <class Enum, Enum Value>
+struct exclusive_enum_flag {
+  using enum_t = std::decay_t<Enum>;
+  static_assert(std::is_enum_v<enum_t>);
+
+  constexpr operator Enum() const noexcept { return Value; }
+};
+
+template <class Enum, Enum Value>
 struct enum_flag {
   using enum_t = std::decay_t<Enum>;
   static_assert(std::is_enum_v<enum_t>);
