@@ -41,14 +41,14 @@ class result {
   };
 
   struct get_immutable_value_visitor {
-    const T &operator()(const std::error_code &ec) const noexcept(false) {
+    const T &operator()(const std::error_code &) const noexcept(false) {
       throw bad_result_access{"pposix::result value was accessed when it contained an error."};
     }
     const T &operator()(const T &value) const noexcept { return value; }
   };
 
   struct get_mutable_value_visitor {
-    T &operator()(const std::error_code &ec) const noexcept(false) {
+    T &operator()(const std::error_code &) const noexcept(false) {
       throw bad_result_access{"pposix::result value was accessed when it contained an error."};
     }
     T &operator()(T &value) const noexcept { return value; }
