@@ -15,6 +15,7 @@ add_library(
         src/dirent.cpp
         src/syslog.cpp
         src/confstr.cpp
+        src/signal.cpp
 )
 
 target_include_directories(

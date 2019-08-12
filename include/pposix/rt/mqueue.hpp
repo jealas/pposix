@@ -41,7 +41,6 @@ result<unique_mq_d> mq_open(const char* name, mq_mode mode, mq_option option) no
 The following shall be declared as functions and may also be defined as macros. Function prototypes
 shall be provided.
 
-int      mq_notify(mqd_t, const struct sigevent *);
 ssize_t  mq_timedreceive(mqd_t, char *restrict, size_t,
              unsigned *restrict, const struct timespec *restrict);
 int      mq_timedsend(mqd_t, const char *, size_t, unsigned,
@@ -232,5 +231,7 @@ template <mq_message_priority Priority>
 
 std::error_code mq_unlink(const char* name) noexcept;
 std::error_code mq_unlink(const std::string& name) noexcept;
+
+std::error_code mq_notify(mq_d mq, const struct sigevent*);
 
 }  // namespace pposix::rt
