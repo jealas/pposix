@@ -1,3 +1,3 @@
-#include <catch2/catch.hpp>
+#include "pposix_test.hpp"
 
 #include "pposix/sysconf.hpp"

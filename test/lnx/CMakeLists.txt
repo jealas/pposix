@@ -16,5 +16,6 @@ target_include_directories(
         test_pposix_lnx
 
         PRIVATE
-        ${CMAKE_SOURCE_DIR}/lib/catch2/single_include
+        ${CMAKE_SOURCE_DIR}/lib/doctest/doctest
+        ${CMAKE_SOURCE_DIR}/test
 )
