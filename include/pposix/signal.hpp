@@ -1,6 +1,8 @@
 #pragma once
 
-#include <signal.h>
+#include <sys/signal.h>
+
+#include "pposix/util.hpp"
 
 namespace pposix {
 
@@ -8,7 +10,7 @@ class sigset {
  public:
   sigset() noexcept = default;
 
-  [[nodiscard]] inline const ::sigset_t *sigset_ptr() const noexcept { return &signals_; };
+  [[nodiscard]] inline const ::sigset_t* sigset_ptr() const noexcept { return &signals_; };
 
  private:
   ::sigset_t signals_{};
@@ -43,9 +45,32 @@ enum class sig_number : int {
   file_size_limit_exceeded = SIGXFSZ
 };
 
-class sigevent : public ::sigevent {
- public:
- private:
+using sig_event_notify_handler = void (*)(union ::sigval);
+
+struct sigevent : public ::sigevent {
+  inline sigevent() noexcept : ::sigevent{} {}
+
+  inline sigevent(sig_notify notify, sig_number number, sig_event_notify_handler callback,
+                  int value) noexcept
+      : ::sigevent{} {
+    this->sigev_notify = underlying_value(notify);
+    this->sigev_signo = underlying_value(number);
+    this->sigev_value.sival_int = value;
+
+    this->sigev_notify_function = callback;
+    this->sigev_notify_attributes = nullptr;
+  }
+
+  inline sigevent(sig_notify notify, sig_number number, sig_event_notify_handler callback,
+                  void* value) noexcept
+      : ::sigevent{} {
+    this->sigev_notify = underlying_value(notify);
+    this->sigev_signo = underlying_value(number);
+    this->sigev_value.sival_ptr = value;
+
+    this->sigev_notify_function = callback;
+    this->sigev_notify_attributes = nullptr;
+  }
 };
 
 }  // namespace pposix

@@ -79,8 +79,21 @@ std::error_code mq_notify(mq_d mq, decltype(mq_deregister_notification)) noexcep
   return ::mq_notify(mq.raw(), null_sigevent) == -1 ? current_errno_code() : std::error_code{};
 }
 
+namespace capi {
+
 std::error_code mq_notify(mq_d mq, const pposix::sigevent& sigevent) noexcept {
   return ::mq_notify(mq.raw(), &sigevent) == -1 ? current_errno_code() : std::error_code{};
+}
+
+}  // namespace capi
+
+std::error_code mq_notify(mq_d mq, decltype(mq_notify_none)) noexcept {
+  const pposix::sigevent event{sig_notify::none, sig_number{}, nullptr, nullptr};
+  return capi::mq_notify(mq, event);
+}
+
+std::error_code mq_notify(mq_d mq, mq_notify_signal notify_signal) noexcept {
+  return capi::mq_notify(mq, notify_signal.event());
 }
 
 }

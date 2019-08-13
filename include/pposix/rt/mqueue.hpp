@@ -9,10 +9,10 @@
 #include "pposix/byte_span.hpp"
 #include "pposix/descriptor.hpp"
 #include "pposix/result.hpp"
+#include "pposix/signal.hpp"
 #include "pposix/stat.hpp"
 #include "pposix/unique_descriptor.hpp"
 #include "pposix/util.hpp"
-#include "pposix/signal.hpp"
 
 namespace pposix::rt {
 
@@ -234,13 +234,39 @@ template <mq_message_priority Priority>
 std::error_code mq_unlink(const char* name) noexcept;
 std::error_code mq_unlink(const std::string& name) noexcept;
 
-struct {} mq_deregister_notification;
+struct {
+} mq_deregister_notification;
 
 std::error_code mq_notify(mq_d mq, decltype(mq_deregister_notification)) noexcept;
 
-struct mq_register_notification {
-};
+namespace capi {
 
 std::error_code mq_notify(mq_d mq, const pposix::sigevent&) noexcept;
+
+}
+
+struct {
+} mq_notify_none;
+
+std::error_code mq_notify(mq_d mq, decltype(mq_notify_none)) noexcept;
+
+class mq_notify_signal {
+ public:
+  inline mq_notify_signal(sig_number number, sig_event_notify_handler handler, int value) noexcept
+      : event_{sig_notify::signal, number, handler, value} {}
+
+  inline mq_notify_signal(sig_number number, sig_event_notify_handler handler,
+                          void* value) noexcept
+      : event_{sig_notify::signal, number, handler, value} {}
+
+  const pposix::sigevent& event() const noexcept { return event_; }
+
+ private:
+  pposix::sigevent event_{};
+};
+
+std::error_code mq_notify(mq_d mq, mq_notify_signal notify_signal) noexcept;
+
+// TODO: Implement thread-notify mq_notify when POSIX threads extension is implemented.
 
 }  // namespace pposix::rt
