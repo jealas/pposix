@@ -2,9 +2,9 @@
 
 #include <system_error>
 
+#include <fcntl.h>
 #include <limits.h>
 #include <mqueue.h>
-#include <fcntl.h>
 
 #include "pposix/byte_span.hpp"
 #include "pposix/descriptor.hpp"
@@ -12,6 +12,7 @@
 #include "pposix/stat.hpp"
 #include "pposix/unique_descriptor.hpp"
 #include "pposix/util.hpp"
+#include "pposix/signal.hpp"
 
 namespace pposix::rt {
 
@@ -224,8 +225,8 @@ template <mq_message_priority Priority>
 [[nodiscard]] std::error_code mq_send(mq_d mq, byte_cspan message,
                                       mq_static_message_priority<Priority>) noexcept {
   static_assert(Priority < mq_message_priority::max,
-                "The message queue send priority cannot be larger than mq_message_priority::max "
-                "(aka _POSIX_MQ_PRIO_MAX)");
+                "The message queue send priority cannot be greater than or equal to "
+                "mq_message_priority::max (aka _POSIX_MQ_PRIO_MAX)");
 
   return capi::mq_send(mq, message, Priority);
 }
@@ -233,6 +234,13 @@ template <mq_message_priority Priority>
 std::error_code mq_unlink(const char* name) noexcept;
 std::error_code mq_unlink(const std::string& name) noexcept;
 
-std::error_code mq_notify(mq_d mq, const struct sigevent*);
+struct {} mq_deregister_notification;
+
+std::error_code mq_notify(mq_d mq, decltype(mq_deregister_notification)) noexcept;
+
+struct mq_register_notification {
+};
+
+std::error_code mq_notify(mq_d mq, const pposix::sigevent&) noexcept;
 
 }  // namespace pposix::rt

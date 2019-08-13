@@ -74,4 +74,13 @@ std::error_code mq_unlink(const char* name) noexcept {
 
 std::error_code mq_unlink(const std::string& name) noexcept { return rt::mq_unlink(name.c_str()); }
 
+std::error_code mq_notify(mq_d mq, decltype(mq_deregister_notification)) noexcept {
+  const ::sigevent* null_sigevent{nullptr};
+  return ::mq_notify(mq.raw(), null_sigevent) == -1 ? current_errno_code() : std::error_code{};
+}
+
+std::error_code mq_notify(mq_d mq, const pposix::sigevent& sigevent) noexcept {
+  return ::mq_notify(mq.raw(), &sigevent) == -1 ? current_errno_code() : std::error_code{};
+}
+
 }
