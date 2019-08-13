@@ -1,18 +1,14 @@
-if (${PPOSIX_REALTIME_EXTENSION_ENABLED})
-    set(
-            PPOSIX_REALTIME_EXTENSION_TEST_SRC
+set(
+        PPOSIX_REALTIME_EXTENSION_TEST_SRC
 
-            rt/test_mqueue.cpp
-    )
-endif ()
+        rt/test_mqueue.cpp
+)
 
-if (${PPOSIX_LINUX_EXTENSION_ENABLED})
-    set(
-            PPOSIX_LINUX_EXTENSION_TEST_SRC
+set(
+        PPOSIX_LINUX_EXTENSION_TEST_SRC
 
-            lnx/test_epoll.cpp
-    )
-endif ()
+        lnx/test_epoll.cpp
+)
 
 add_executable(
         test_pposix
@@ -30,16 +26,18 @@ add_executable(
         test_sysconf.cpp
 
         # POSIX Realtime Extension
-        ${PPOSIX_REALTIME_EXTENSION_TEST_SRC}
+        $<$<BOOL:${PPOSIX_REALTIME_EXTENSION_ENABLED}>:${PPOSIX_REALTIME_EXTENSION_TEST_SRC}>
 
         # POSIX Linux Extension
-        ${PPOSIX_REALTIME_EXTENSION_TEST_SRC}
+        $<$<BOOL:${PPOSIX_LINUX_EXTENSION_ENABLED}>:${PPOSIX_LINUX_EXTENSION_TEST_SRC}>
 )
 
 target_link_libraries(
         test_pposix
 
         pposix
+        $<$<BOOL:${PPOSIX_REALTIME_EXTENSION_ENABLED}>:pposix_rt>
+        $<$<BOOL:${PPOSIX_LINUX_EXTENSION_ENABLED}>:pposix_lnx>
 )
 
 target_include_directories(
