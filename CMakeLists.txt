@@ -39,13 +39,13 @@ target_compile_options(
 add_subdirectory(test)
 
 # POSIX Realtime Extension Testing
-if (DEFINED ${PPOSIX_REALTIME_EXTENSION_ENABLED})
+if (${PPOSIX_REALTIME_EXTENSION_ENABLED})
     add_subdirectory(src/rt)
     add_subdirectory(test/rt)
 endif ()
 
 # POSIX Linux Extension Testing
-if (DEFINED ${PPOSIX_LINUX_EXTENSION_ENABLED})
+if (${PPOSIX_LINUX_EXTENSION_ENABLED})
     add_subdirectory(src/lnx)
     add_subdirectory(test/lnx)
 endif ()
