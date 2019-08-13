@@ -178,7 +178,7 @@ result<mq_current_attr> mq_setattr(mq_d d, mq_option_flag<Option>) {
   }
 }
 
-enum class mq_message_priority : unsigned { max = MQ_PRIO_MAX };
+enum class mq_message_priority : unsigned { max = _POSIX_MQ_PRIO_MAX };
 
 class mq_message {
  public:
@@ -225,7 +225,7 @@ template <mq_message_priority Priority>
                                       mq_static_message_priority<Priority>) noexcept {
   static_assert(Priority < mq_message_priority::max,
                 "The message queue send priority cannot be larger than mq_message_priority::max "
-                "(aka MQ_PRIO_MAX)");
+                "(aka _POSIX_MQ_PRIO_MAX)");
 
   return capi::mq_send(mq, message, Priority);
 }
