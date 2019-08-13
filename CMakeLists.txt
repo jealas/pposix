@@ -3,6 +3,9 @@ project(pposix)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Global library options
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 add_library(
         ${CMAKE_PROJECT_NAME}
 
