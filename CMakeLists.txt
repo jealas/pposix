@@ -34,18 +34,15 @@ target_compile_options(
         $<$<CXX_COMPILER_ID:Clang>:${GCC_OR_CLANG_COMPILE_OPTIONS}>
 )
 
-
-# POSIX Testing
-add_subdirectory(test)
-
 # POSIX Realtime Extension Testing
 if (${PPOSIX_REALTIME_EXTENSION_ENABLED})
     add_subdirectory(src/rt)
-    add_subdirectory(test/rt)
 endif ()
 
 # POSIX Linux Extension Testing
 if (${PPOSIX_LINUX_EXTENSION_ENABLED})
     add_subdirectory(src/lnx)
-    add_subdirectory(test/lnx)
 endif ()
+
+# POSIX Testing
+add_subdirectory(test)
