@@ -9,7 +9,7 @@
 
 test_case_template("Results can be constructed", TestType, PPOSIX_RESULT_TYPES) {
   given("a result constructed with a std::error_code") {
-    std::errc errc{};
+    std::errc errc;
     const std::initializer_list<std::errc> error_codes{std::errc{}, std::errc::io_error,
                                                        std::errc::resource_unavailable_try_again,
                                                        std::errc::value_too_large};
@@ -41,7 +41,7 @@ test_case_template("Results can be constructed", TestType, PPOSIX_RESULT_TYPES) 
   }
 
   given("a result constructed with a value type") {
-    TestType value{};
+    TestType value;
     const std::initializer_list<TestType> values{TestType{}, TestType{} + 1, TestType{} + 42};
     generate(value, values);
 
