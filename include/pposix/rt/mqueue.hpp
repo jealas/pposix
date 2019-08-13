@@ -169,7 +169,7 @@ result<mq_current_attr> mq_setattr(mq_d d, mq_option_flag<Option>) {
 
   ::mq_attr current_attributes{};
 
-  const int res{::mq_setattr(underlying_value(d.raw()), &new_attributes, &current_attributes)};
+  const int res{::mq_setattr(d.raw(), &new_attributes, &current_attributes)};
   if (res == -1) {
     return current_errno_code();
   } else {

@@ -41,9 +41,9 @@ result<rt::mq_current_attr> mq_getattr(rt::mq_d mq_descriptor) noexcept {
 result<mq_message> mq_receive(mq_d mq, byte_span message_buffer) noexcept {
   unsigned priority{};
 
-  const ssize_t num_message_bytes{::mq_receive(
-      underlying_value(mq.raw()), static_cast<char*>(static_cast<void*>(message_buffer.data())),
-      message_buffer.length(), &priority)};
+  const ssize_t num_message_bytes{
+      ::mq_receive(mq.raw(), static_cast<char*>(static_cast<void*>(message_buffer.data())),
+                   message_buffer.length(), &priority)};
   if (num_message_bytes == -1) {
     return current_errno_code();
   } else {
@@ -56,7 +56,7 @@ namespace capi {
 
 [[nodiscard]] std::error_code mq_send(mq_d mq, byte_cspan message,
                                       mq_message_priority priority) noexcept {
-  const int res{::mq_send(underlying_value(mq.raw()),
+  const int res{::mq_send(mq.raw(),
                           static_cast<const char*>(static_cast<const void*>(message.data())),
                           message.length(), underlying_value(priority))};
   if (res == -1) {
