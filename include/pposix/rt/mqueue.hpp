@@ -11,8 +11,9 @@
 
 namespace pposix::rt {
 
-enum class mqd_t : ::mqd_t { null = -1 };
-using mq_d = descriptor<rt::mqd_t, rt::mqd_t::null>;
+struct mq_tag {};
+
+using mq_d = descriptor<mq_tag, ::mqd_t, ::mqd_t(-1)>;
 
 struct mq_close_policy {
   std::error_code operator()(mq_d mq_descriptor) const noexcept;
