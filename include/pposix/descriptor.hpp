@@ -39,7 +39,7 @@ constexpr bool operator==(descriptor<Tag, T, Null> lhs, descriptor<Tag, T, Null>
 
 template <class Tag, class T, auto Null>
 constexpr bool operator==(descriptor<Tag, T, Null> lhs, null_descriptor_t) noexcept {
-  return lhs.raw() == Null;
+  return lhs.raw() == T(Null);
 }
 
 template <class>

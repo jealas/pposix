@@ -4,6 +4,7 @@
 
 #include <limits.h>
 #include <mqueue.h>
+#include <fcntl.h>
 
 #include "pposix/byte_span.hpp"
 #include "pposix/descriptor.hpp"
