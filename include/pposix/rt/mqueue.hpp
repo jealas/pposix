@@ -16,7 +16,7 @@ namespace pposix::rt {
 
 struct mq_tag {};
 
-using mq_d = descriptor<mq_tag, ::mqd_t, ::mqd_t(-1)>;
+using mq_d = descriptor<mq_tag, ::mqd_t, -1>;
 
 struct mq_close_policy {
   std::error_code operator()(mq_d mq_descriptor) const noexcept;
@@ -150,7 +150,7 @@ template <capi::mq_mode Mode, capi::mq_option Flags>
 result<unique_mq_d> mq_open(const char* name, mq_mode_flag<Mode>, mq_option_flag_set<Flags>,
                             rt::mq_create_queue create_queue) noexcept {
   const mq_d res{::mq_open(name, underlying_value(Mode) | underlying_value(Flags),
-                                create_queue.mq_attr_ptr())};
+                           create_queue.mq_attr_ptr())};
   if (res == null_descriptor) {
     return current_errno_code();
   } else {
