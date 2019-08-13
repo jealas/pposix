@@ -19,6 +19,7 @@ add_executable(
         test_buffer_span.cpp
         test_result.cpp
         test_any_view.cpp
+        test_descriptor.cpp
         test_unique_descriptor.cpp
 
         test_getsockopt.cpp

@@ -42,6 +42,16 @@ constexpr bool operator==(descriptor<Tag, T, Null> lhs, null_descriptor_t) noexc
   return lhs.raw() == T(Null);
 }
 
+template <class Tag, class T, auto Null>
+constexpr bool operator!=(descriptor<Tag, T, Null> lhs, descriptor<Tag, T, Null> rhs) noexcept {
+  return !(lhs == rhs);
+}
+
+template <class Tag, class T, auto Null>
+constexpr bool operator!=(descriptor<Tag, T, Null> lhs, null_descriptor_t) noexcept {
+  return !(lhs == null_descriptor);
+}
+
 template <class>
 struct is_descriptor : std::false_type {};
 

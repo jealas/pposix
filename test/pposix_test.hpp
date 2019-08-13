@@ -24,7 +24,7 @@
 #define require DOCTEST_REQUIRE_UNARY
 #define require_not DOCTEST_REQUIRE_UNARY_FALSE
 #define require_eq DOCTEST_REQUIRE_EQ
-#define require_ne DOCTEST_CHEC_NE
+#define require_ne DOCTEST_REQUIRE_NE
 #define require_gt DOCTEST_REQUIRE_GT
 #define require_lt DOCTEST_REQUIRE_LT
 
