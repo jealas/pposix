@@ -1,3 +1,19 @@
+if (${PPOSIX_REALTIME_EXTENSION_ENABLED})
+    set(
+            PPOSIX_REALTIME_EXTENSION_TEST_SRC
+
+            rt/test_mqueue.cpp
+    )
+endif ()
+
+if (${PPOSIX_LINUX_EXTENSION_ENABLED})
+    set(
+            PPOSIX_LINUX_EXTENSION_TEST_SRC
+
+            lnx/test_epoll.cpp
+    )
+endif ()
+
 add_executable(
         test_pposix
 
@@ -12,6 +28,12 @@ add_executable(
         test_getsockopt.cpp
         test_permission.cpp
         test_sysconf.cpp
+
+        # POSIX Realtime Extension
+        ${PPOSIX_REALTIME_EXTENSION_TEST_SRC}
+
+        # POSIX Linux Extension
+        ${PPOSIX_REALTIME_EXTENSION_TEST_SRC}
 )
 
 target_link_libraries(
@@ -27,3 +49,4 @@ target_include_directories(
         ${CMAKE_SOURCE_DIR}/lib/doctest/doctest
         ${CMAKE_SOURCE_DIR}/test
 )
+
