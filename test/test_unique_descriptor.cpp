@@ -10,9 +10,11 @@ struct null_close {
   std::error_code operator()(Descriptor) const noexcept { return {}; }
 };
 
+struct descriptor_tag {};
+
 test_case_template("Unique int descriptors can be default constructed", TestType, int, short, long,
                    long long) {
-  using fd_t = pposix::descriptor<TestType, -1>;
+  using fd_t = pposix::descriptor<descriptor_tag, TestType, -1>;
   pposix::unique_descriptor<fd_t, null_close<fd_t>> descriptor{};
 
   require(descriptor.empty());
@@ -20,7 +22,7 @@ test_case_template("Unique int descriptors can be default constructed", TestType
 }
 test_case_template("Unique ptr descriptors can be default constructed", TestType, int*, short*,
                    long*, long long*) {
-  using fd_t = pposix::descriptor<TestType, nullptr>;
+  using fd_t = pposix::descriptor<descriptor_tag, TestType, nullptr>;
   pposix::unique_descriptor<fd_t, null_close<fd_t>> descriptor{};
 
   require(descriptor.empty());

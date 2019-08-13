@@ -5,7 +5,7 @@
 namespace pposix::rt {
 
 std::error_code mq_close_policy::operator()(mq_d mq_descriptor) const noexcept {
-  if (const int res{::mq_close(underlying_value(mq_descriptor.raw()))}; res == -1) {
+  if (const int res{::mq_close(mq_descriptor.raw())}; res == -1) {
     return current_errno_code();
   } else {
     return {};
@@ -16,8 +16,8 @@ namespace capi {
 
 result<unique_descriptor<mq_d, mq_close_policy>> mq_open(const char* name, mq_mode mode,
                                                          mq_option option) noexcept {
-  rt::mqd_t mq_descriptor{::mq_open(name, underlying_value(mode) | underlying_value(option))};
-  if (mq_descriptor == rt::mqd_t::null) {
+  mq_d mq_descriptor{::mq_open(name, underlying_value(mode) | underlying_value(option))};
+  if (mq_descriptor == null_descriptor) {
     return current_errno_code();
   } else {
     return unique_descriptor<mq_d, mq_close_policy>{mq_d{mq_descriptor}};
@@ -29,7 +29,7 @@ result<unique_descriptor<mq_d, mq_close_policy>> mq_open(const char* name, mq_mo
 result<rt::mq_attr> mq_getattr(rt::mq_d mq_descriptor) noexcept {
   ::mq_attr attributes{};
 
-  const int result{::mq_getattr(underlying_value(mq_descriptor.raw()), &attributes)};
+  const int result{::mq_getattr(mq_descriptor.raw(), &attributes)};
   if (result == -1) {
     return current_errno_code();
   } else {
