@@ -3,6 +3,9 @@ project(pposix)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Global library options
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 add_library(
         ${CMAKE_PROJECT_NAME}
 
@@ -15,6 +18,7 @@ add_library(
         src/dirent.cpp
         src/syslog.cpp
         src/confstr.cpp
+        src/signal.cpp
 )
 
 target_include_directories(

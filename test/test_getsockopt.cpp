@@ -8,13 +8,13 @@
 using namespace pposix;
 
 scenario("Can get default socket options") {
+  socket_type type;
+  const std::initializer_list<socket_type> socket_types{socket_type::seqpacket,
+                                                        socket_type::stream, socket_type::dgram};
+
+  generate(type, socket_types);
+
   given("a valid unix/local socket") {
-    socket_type type{};
-    const std::initializer_list<socket_type> socket_types{socket_type::seqpacket,
-                                                          socket_type::stream, socket_type::dgram};
-
-    generate(type, socket_types);
-
     auto socket_result{socket(socket_domain::unix_, type, socket_flag::none, socket_protocol{0})};
 
     require(socket_result);
