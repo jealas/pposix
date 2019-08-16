@@ -11,6 +11,7 @@
 #include "pposix/result.hpp"
 #include "pposix/signal.hpp"
 #include "pposix/stat.hpp"
+#include "pposix/time.hpp"
 #include "pposix/unique_descriptor.hpp"
 #include "pposix/util.hpp"
 
@@ -38,16 +39,6 @@ enum class mq_option : int { create = O_CREAT, excl = O_EXCL, non_blocking = O_N
 result<unique_mq_d> mq_open(const char* name, mq_mode mode, mq_option option) noexcept;
 
 }  // namespace capi
-
-/*
-The following shall be declared as functions and may also be defined as macros. Function prototypes
-shall be provided.
-
-ssize_t  mq_timedreceive(mqd_t, char *restrict, size_t,
-             unsigned *restrict, const struct timespec *restrict);
-int      mq_timedsend(mqd_t, const char *, size_t, unsigned,
-             const struct timespec *);
- */
 
 class mq_current_attr {
  public:
@@ -268,5 +259,27 @@ class mq_notify_signal {
 std::error_code mq_notify(mq_d mq, mq_notify_signal notify_signal) noexcept;
 
 // TODO: Implement thread-notify mq_notify when POSIX threads extension is implemented.
+
+result<mq_message> mq_timed_receive(mq_d mq, byte_span data,
+                                    const pposix::timespec& absolute_time) noexcept;
+
+namespace capi {
+
+[[nodiscard]] std::error_code mq_timed_send(mq_d mq, byte_cspan message,
+                                            mq_message_priority priority,
+                                            const pposix::timespec& absolute_time) noexcept;
+
+}
+
+template <mq_message_priority Priority>
+[[nodiscard]] std::error_code mq_timed_send(mq_d mq, byte_cspan message,
+                                            mq_static_message_priority<Priority>,
+                                            const pposix::timespec& absolute_time) noexcept {
+  static_assert(Priority < mq_message_priority::max,
+                "The message queue send priority cannot be greater than or equal to "
+                "mq_message_priority::max (aka _POSIX_MQ_PRIO_MAX)");
+
+  return capi::mq_timed_send(mq, message, Priority, absolute_time);
+}
 
 }  // namespace pposix::rt

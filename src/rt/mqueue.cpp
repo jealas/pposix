@@ -96,4 +96,32 @@ std::error_code mq_notify(mq_d mq, mq_notify_signal notify_signal) noexcept {
   return capi::mq_notify(mq, notify_signal.event());
 }
 
+result<mq_message> mq_timed_receive(mq_d mq, byte_span message,
+                                    const pposix::timespec& absolute_time) noexcept {
+  unsigned priority{};
+  const auto res{::mq_timedreceive(mq.raw(),
+                                   static_cast<char*>(static_cast<void*>(message.data())),
+                                   message.length(), &priority, &absolute_time)};
+  if (res == -1) {
+    return current_errno_code();
+  } else {
+    return mq_message{mq_message_priority{priority},
+                      byte_span{message.data(), static_cast<size_t>(res)}};
+  }
+}
+
+namespace capi {
+
+[[nodiscard]] std::error_code mq_timed_send(mq_d mq, byte_cspan message,
+                                            mq_message_priority priority,
+                                            const pposix::timespec& absolute_time) noexcept {
+  return ::mq_timedsend(mq.raw(),
+                        static_cast<const char*>(static_cast<const void*>(message.data())),
+                        message.length(), underlying_value(priority), &absolute_time) == -1
+             ? current_errno_code()
+             : std::error_code{};
+}
+
+}  // namespace capi
+
 }
