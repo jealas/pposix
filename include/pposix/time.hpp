@@ -21,4 +21,19 @@ class timespec : public ::timespec {
   }
 };
 
+class timeval : public ::timeval {
+ public:
+  inline timeval() noexcept = default;
+
+  inline timeval(seconds s) noexcept : ::timeval{} {
+    this->tv_sec = s.count();
+    this->tv_usec = 0;
+  }
+
+  inline timeval(seconds s, microseconds ms) noexcept : ::timeval{} {
+    this->tv_sec = s.count();
+    this->tv_usec = ms.count();
+  }
+};
+
 }

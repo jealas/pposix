@@ -19,6 +19,7 @@ add_library(
         src/syslog.cpp
         src/confstr.cpp
         src/signal.cpp
+        src/select.cpp
 )
 
 target_include_directories(
@@ -28,7 +29,11 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+# Turn on strict warnings and errors
 set(GCC_OR_CLANG_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Werror)
+
+# Turn off unecessary warnings
+set(GCC_OR_CLANG_COMPILE_OPTIONS ${GCC_OR_CLANG_COMPILE_OPTIONS} -Wno-unused-function)
 
 target_compile_options(
         ${CMAKE_PROJECT_NAME}

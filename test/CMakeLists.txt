@@ -25,6 +25,7 @@ add_executable(
         test_getsockopt.cpp
         test_permission.cpp
         test_sysconf.cpp
+        test_select.cpp
 
         # POSIX Realtime Extension
         $<$<BOOL:${PPOSIX_REALTIME_EXTENSION_ENABLED}>:${PPOSIX_REALTIME_EXTENSION_TEST_SRC}>
