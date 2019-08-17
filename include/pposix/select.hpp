@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string.h>
 #include <sys/select.h>
 
 #include "pposix/fd.hpp"
