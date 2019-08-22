@@ -62,7 +62,7 @@ enum class file_mode : unsigned {
   read = O_RDONLY,
   read_write = O_RDWR,
 
-#if !PPOSIX_PLATFORM_LINUX
+#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD
   search = O_SEARCH,
 #endif
 
