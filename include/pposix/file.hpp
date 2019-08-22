@@ -39,7 +39,7 @@ enum class file_flags : unsigned {
   sync = O_SYNC,
   truncate = O_TRUNC,
 
-#if !PPOSIX_PLATFORM_LINUX
+#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD
   tty_init = O_TTY_INIT
 #endif
 };
@@ -55,14 +55,14 @@ constexpr file_flags &operator|=(file_flags &lhs, file_flags rhs) noexcept {
 
 // File mode
 enum class file_mode : unsigned {
-#if !PPOSIX_PLATFORM_LINUX
+#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD
   exec = O_EXEC,
 #endif
 
   read = O_RDONLY,
   read_write = O_RDWR,
 
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD
+#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD && !PPOSIX_PLATFORM_OPENBSD
   search = O_SEARCH,
 #endif
 
