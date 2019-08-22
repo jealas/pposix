@@ -13,7 +13,7 @@ namespace pposix {
 enum class confstr_name : int {
   path = _CS_PATH,
 
-#if !PPOSIX_PLATFORM_MAC_OS && !PPOSIX_PLATFORM_FREE_BSD
+#if !PPOSIX_PLATFORM_MACOS && !PPOSIX_PLATFORM_FREEBSD
   v7_ilp32_off32_cflags = _CS_POSIX_V7_ILP32_OFF32_CFLAGS,
   v7_ilp32_off32_ldflags = _CS_POSIX_V7_ILP32_OFF32_LDFLAGS,
   v7_ilp32_off32_libs = _CS_POSIX_V7_ILP32_OFF32_LIBS,
@@ -28,12 +28,12 @@ enum class confstr_name : int {
   v7_lpbig_offbig_libs = _CS_POSIX_V7_LPBIG_OFFBIG_LIBS,
 #endif
 
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_MAC_OS && !PPOSIX_PLATFORM_FREE_BSD
+#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_MACOS && !PPOSIX_PLATFORM_FREEBSD
   v7_threads_cflags = _CS_POSIX_V7_THREADS_CFLAGS,
   v7_threads_ldflags = _CS_POSIX_V7_THREADS_LDFLAGS,
 #endif
 
-#if !PPOSIX_PLATFORM_MAC_OS && !PPOSIX_PLATFORM_FREE_BSD
+#if !PPOSIX_PLATFORM_MACOS && !PPOSIX_PLATFORM_FREEBSD
   v7_width_restricted_envs = _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS,
   v7_env = _CS_V7_ENV,
 #endif
@@ -52,7 +52,7 @@ enum class confstr_name : int {
   v6_lpbig_offbig_libs = _CS_POSIX_V6_LPBIG_OFFBIG_LIBS,
   v6_width_restricted_envs = _CS_POSIX_V6_WIDTH_RESTRICTED_ENVS,
 
-#if !PPOSIX_PLATFORM_MAC_OS && !PPOSIX_PLATFORM_FREE_BSD
+#if !PPOSIX_PLATFORM_MACOS && !PPOSIX_PLATFORM_FREEBSD
   v6_env = _CS_V6_ENV
 #endif
 };

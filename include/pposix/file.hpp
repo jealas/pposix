@@ -24,7 +24,7 @@ enum class file_flags : unsigned {
 
   directory = O_DIRECTORY,
 
-#if !PPOSIX_PLATFORM_FREE_BSD
+#if !PPOSIX_PLATFORM_FREEBSD
   dsync = O_DSYNC,
 #endif
 
@@ -33,7 +33,7 @@ enum class file_flags : unsigned {
   nofollow = O_NOFOLLOW,
   nonblock = O_NONBLOCK,
 
-#if !PPOSIX_PLATFORM_MAC_OS && !PPOSIX_PLATFORM_FREE_BSD
+#if !PPOSIX_PLATFORM_MACOS && !PPOSIX_PLATFORM_FREEBSD
   rsync = O_RSYNC,
 #endif
 
