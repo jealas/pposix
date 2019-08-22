@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sys/signal.h>
+#include <signal.h>
 
 #include "pposix/util.hpp"
 
