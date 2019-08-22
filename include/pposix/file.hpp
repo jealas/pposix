@@ -1,6 +1,5 @@
 #pragma once
 
-#include <filesystem>
 #include <string_view>
 #include <system_error>
 
@@ -161,8 +160,6 @@ constexpr file_permission operator"" _other(char const *c_str, size_t len) {
 
 // File open: file
 result<unique_fd<raw_fd>> open(const char *path, file_mode mode, file_flags flags) noexcept;
-result<unique_fd<raw_fd>> open(const std::filesystem::path &path, file_mode mode,
-                               file_flags flags) noexcept;
 
 // File close
 std::error_code close(raw_fd fd) noexcept;

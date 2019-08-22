@@ -12,11 +12,6 @@ result<unique_fd<raw_fd>> open(const char *path, file_mode mode, file_flags flag
   }
 }
 
-result<unique_fd<raw_fd>> open(const std::filesystem::path &path, file_mode mode,
-                               file_flags flags) noexcept {
-  return pposix::open(path.c_str(), mode, flags);
-}
-
 // File close
 std::error_code close(raw_fd fd) noexcept {
   return ::close(fd.raw()) == -1 ? current_errno_code() : std::error_code{};
