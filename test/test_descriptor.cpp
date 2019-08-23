@@ -5,8 +5,13 @@
 template <class T>
 struct descriptor_tag {};
 
+template <class T>
+struct null_value {
+  T operator()() const noexcept { return T(-1); }
+};
+
 scenario_template("Descriptors can be used with pointer types", T, void*, int*, char*) {
-  using descriptor_t = pposix::descriptor<descriptor_tag<T>, T, -1>;
+  using descriptor_t = pposix::descriptor<descriptor_tag<T>, T, null_value<T>>;
 
   given("a default-constructed descriptor") {
     descriptor_t descriptor{};

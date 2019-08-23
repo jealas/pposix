@@ -19,6 +19,7 @@ add_library(
         src/syslog.cpp
         src/confstr.cpp
         src/signal.cpp
+        src/mman.cpp
 )
 
 target_include_directories(
