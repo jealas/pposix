@@ -123,24 +123,25 @@ result<unique_fd<socket_fd>> socket(socket_domain dom, socket_type typ, socket_f
                                     socket_protocol prot) noexcept;
 
 // Socket options
-enum class debug : bool { off = false, on = true };
-enum class broadcast : bool { off = false, on = true };
-enum class reuseaddr : bool { off = false, on = true };
-enum class keepalive : bool { off = false, on = true };
+enum class socket_debug : bool { off = false, on = true };
+enum class socket_broadcast : bool { off = false, on = true };
+enum class socket_reuseaddr : bool { off = false, on = true };
+enum class socket_keepalive : bool { off = false, on = true };
 
-class linger {
+class socket_linger {
  public:
-  constexpr linger() noexcept = default;
-  constexpr linger(::linger l) noexcept : linger_{l} {}  // NOLINT implicit constructor
-  constexpr explicit linger(pposix::seconds duration) noexcept : linger_{true, duration.count()} {}
-  constexpr linger(bool enabled, pposix::seconds duration) noexcept
+  constexpr socket_linger() noexcept = default;
+  constexpr socket_linger(::linger l) noexcept : linger_{l} {}  // NOLINT implicit constructor
+  constexpr explicit socket_linger(pposix::seconds duration) noexcept
+      : linger_{true, duration.count()} {}
+  constexpr socket_linger(bool enabled, pposix::seconds duration) noexcept
       : linger_{enabled, duration.count()} {}
 
-  constexpr linger(const linger &) noexcept = default;
-  constexpr linger(linger &&) noexcept = default;
+  constexpr socket_linger(const socket_linger &) noexcept = default;
+  constexpr socket_linger(socket_linger &&) noexcept = default;
 
-  constexpr linger &operator=(const linger &) noexcept = default;
-  constexpr linger &operator=(linger &&) noexcept = default;
+  constexpr socket_linger &operator=(const socket_linger &) noexcept = default;
+  constexpr socket_linger &operator=(socket_linger &&) noexcept = default;
 
   constexpr const ::linger &get() const noexcept { return linger_; }
 
@@ -151,25 +152,25 @@ class linger {
   ::linger linger_{};
 };
 
-enum class oobinline : bool { off = false, on = true };
-enum class sndbuf : int {};
-enum class rcvbuf : int {};
-enum class dontroute : bool { off = false, on = true };
-enum class rcvlowat : int {};
+enum class socket_oobinline : bool { off = false, on = true };
+enum class socket_sndbuf : int {};
+enum class socket_rcvbuf : int {};
+enum class socket_dontroute : bool { off = false, on = true };
+enum class socket_rcvlowat : int {};
 
-class rcvtimeo {
+class socket_rcvtimeo {
  public:
-  constexpr rcvtimeo() noexcept = default;
+  constexpr socket_rcvtimeo() noexcept = default;
 
-  constexpr explicit rcvtimeo(pposix::seconds s) noexcept : timeout_{s.count(), 0u} {}
-  constexpr rcvtimeo(pposix::seconds s, pposix::microseconds us) noexcept
+  constexpr explicit socket_rcvtimeo(pposix::seconds s) noexcept : timeout_{s.count(), 0u} {}
+  constexpr socket_rcvtimeo(pposix::seconds s, pposix::microseconds us) noexcept
       : timeout_{s.count(), us.count()} {}
 
-  constexpr rcvtimeo(const rcvtimeo &) noexcept = default;
-  constexpr rcvtimeo(rcvtimeo &&) noexcept = default;
+  constexpr socket_rcvtimeo(const socket_rcvtimeo &) noexcept = default;
+  constexpr socket_rcvtimeo(socket_rcvtimeo &&) noexcept = default;
 
-  constexpr rcvtimeo &operator=(const rcvtimeo &) noexcept = default;
-  constexpr rcvtimeo &operator=(rcvtimeo &&) noexcept = default;
+  constexpr socket_rcvtimeo &operator=(const socket_rcvtimeo &) noexcept = default;
+  constexpr socket_rcvtimeo &operator=(socket_rcvtimeo &&) noexcept = default;
 
   constexpr const ::timeval &get() const noexcept { return timeout_; }
 
@@ -183,21 +184,21 @@ class rcvtimeo {
   ::timeval timeout_{};
 };
 
-enum class sndlowat : int {};
+enum class socket_sndlowat : int {};
 
-class sndtimeo {
+class socket_sndtimeo {
  public:
-  constexpr sndtimeo() noexcept = default;
+  constexpr socket_sndtimeo() noexcept = default;
 
-  constexpr explicit sndtimeo(pposix::seconds s) noexcept : timeout_{s.count(), 0u} {}
-  constexpr sndtimeo(pposix::seconds s, pposix::microseconds us) noexcept
+  constexpr explicit socket_sndtimeo(pposix::seconds s) noexcept : timeout_{s.count(), 0u} {}
+  constexpr socket_sndtimeo(pposix::seconds s, pposix::microseconds us) noexcept
       : timeout_{s.count(), us.count()} {}
 
-  constexpr sndtimeo(const sndtimeo &) noexcept = default;
-  constexpr sndtimeo(sndtimeo &&) noexcept = default;
+  constexpr socket_sndtimeo(const socket_sndtimeo &) noexcept = default;
+  constexpr socket_sndtimeo(socket_sndtimeo &&) noexcept = default;
 
-  constexpr sndtimeo &operator=(const sndtimeo &) noexcept = default;
-  constexpr sndtimeo &operator=(sndtimeo &&) noexcept = default;
+  constexpr socket_sndtimeo &operator=(const socket_sndtimeo &) noexcept = default;
+  constexpr socket_sndtimeo &operator=(socket_sndtimeo &&) noexcept = default;
 
   constexpr const ::timeval &get() const noexcept { return timeout_; }
 
@@ -213,23 +214,23 @@ class sndtimeo {
 
 // Set socket option
 std::error_code setsockopt(socket_fd, socket_level, socket_option, any_cview) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, debug) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, broadcast) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, reuseaddr) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, keepalive) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, linger) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, oobinline) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, sndbuf) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, rcvbuf) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, dontroute) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, rcvlowat) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, rcvtimeo) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, sndlowat) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, sndtimeo) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_debug) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_broadcast) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_reuseaddr) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_keepalive) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_linger) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_oobinline) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_sndbuf) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_rcvbuf) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_dontroute) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_rcvlowat) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_rcvtimeo) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_sndlowat) noexcept;
+std::error_code setsockopt(socket_fd, socket_level, socket_sndtimeo) noexcept;
 
 // Get socket option
-enum class acceptconn : bool {};
-enum class error : int {};
+enum class socket_acceptconn : bool {};
+enum class socket_error : int {};
 
 result<socklen_t> getsockopt(socket_fd, socket_level, socket_option, any_view) noexcept;
 

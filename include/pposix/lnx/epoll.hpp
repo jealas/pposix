@@ -159,16 +159,16 @@ class epoll_event final : public ::epoll_event {
  public:
   epoll_event() noexcept = default;
 
-  constexpr bool read_available() const noexcept { return has_flag(lnx::epoll_read_available); }
-  constexpr bool write_available() const noexcept { return has_flag(lnx::epoll_write_available); }
-  constexpr bool socket_closed() const noexcept { return has_flag(lnx::epoll_socket_closed); }
-  constexpr bool fd_exception() const noexcept { return has_flag(lnx::epoll_fd_exception); }
-  constexpr bool fd_error() const noexcept { return has_flag(lnx::epoll_fd_error); }
-  constexpr bool fd_hup() const noexcept { return has_flag(lnx::epoll_fd_hup); }
+  inline bool read_available() const noexcept { return has_flag(lnx::epoll_read_available); }
+  inline bool write_available() const noexcept { return has_flag(lnx::epoll_write_available); }
+  inline bool socket_closed() const noexcept { return has_flag(lnx::epoll_socket_closed); }
+  inline bool fd_exception() const noexcept { return has_flag(lnx::epoll_fd_exception); }
+  inline bool fd_error() const noexcept { return has_flag(lnx::epoll_fd_error); }
+  inline bool fd_hup() const noexcept { return has_flag(lnx::epoll_fd_hup); }
 
  private:
   template <capi::epoll_event_flag Flag>
-  constexpr bool has_flag(epoll_flag<Flag>) const noexcept {
+  inline bool has_flag(epoll_flag<Flag>) const noexcept {
     return this->events & underlying_value(Flag);
   }
 };

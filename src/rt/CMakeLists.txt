@@ -10,5 +10,6 @@ target_link_libraries(
 
         PUBLIC
         $<$<PLATFORM_ID:Linux>:rt>
+        $<$<PLATFORM_ID:FreeBSD>:rt>
         pposix
 )

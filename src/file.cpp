@@ -2,6 +2,16 @@
 
 namespace pposix {
 
+// File open: file
+result<unique_fd<raw_fd>> open(const char *path, file_mode mode, file_flags flags) noexcept {
+  const raw_fd new_fd{::open(path, underlying_value(mode) | underlying_value(flags))};
+  if (new_fd == nullfd) {
+    return current_errno_code();
+  } else {
+    return unique_fd<raw_fd>{new_fd};
+  }
+}
+
 // File close
 std::error_code close(raw_fd fd) noexcept {
   return ::close(fd.raw()) == -1 ? current_errno_code() : std::error_code{};

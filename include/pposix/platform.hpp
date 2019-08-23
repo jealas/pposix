@@ -3,23 +3,29 @@
 namespace pposix {
 
 // Base defines for all platforms (should be 0)
-#define PPOSIX_PLATFORM_MAC_OS 0
-#define PPOSIX_PLATFORM_FREE_BSD 0
+#define PPOSIX_PLATFORM_MACOS 0
+#define PPOSIX_PLATFORM_FREEBSD 0
+#define PPOSIX_PLATFORM_OPENBSD 0
 #define PPOSIX_PLATFORM_SOLARIS 0
 #define PPOSIX_PLATFORM_LINUX 0
 
-enum class platform { mac_os, free_bsd, solaris, linux_ };
+enum class platform { macos, freebsd, openbsd, solaris, linux_ };
 
 #if defined(__APPLE__) && __APPLE__ && defined(__MACH__) && __MACH__
-inline constexpr platform compilation_platform{platform::mac_os};
+inline constexpr platform compilation_platform{platform::macos};
 
-#undef PPOSIX_PLATFORM_MAC_OS
-#define PPOSIX_PLATFORM_MAC_OS 1
+#undef PPOSIX_PLATFORM_MACOS
+#define PPOSIX_PLATFORM_MACOS 1
 
 #elif defined(__FreeBSD__) && __FreeBSD__
-inline constexpr platform compilation_platform{platform::free_bsd};
-#undef PPOSIX_PLATFORM_FREE_BSD
-#define PPOSIX_PLATFORM_FREE_BSD 1
+inline constexpr platform compilation_platform{platform::freebsd};
+#undef PPOSIX_PLATFORM_FREEBSD
+#define PPOSIX_PLATFORM_FREEBSD 1
+
+#elif defined(__OpenBSD__) && __OpenBSD__
+inline constexpr platform compilation_platform{platform::openbsd};
+#undef PPOSIX_PLATFORM_OPENBSD
+#define PPOSIX_PLATFORM_OPENBSD 1
 
 #elif defined(__sun) && __sun
 inline constexpr platform compilation_platform{platform::solaris};

@@ -1,7 +1,9 @@
 #pragma once
 
+#include <signal.h>
 #include <sys/signal.h>
 
+#include "pposix/platform.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix {
@@ -16,7 +18,9 @@ class sigset {
   ::sigset_t signals_{};
 };
 
+#if !PPOSIX_PLATFORM_OPENBSD
 enum class sig_notify : int { none = SIGEV_NONE, signal = SIGEV_SIGNAL, thread = SIGEV_THREAD };
+#endif
 
 enum class sig_number : int {
   abort = SIGABRT,
@@ -47,6 +51,7 @@ enum class sig_number : int {
 
 using sig_event_notify_handler = void (*)(union ::sigval);
 
+#if !PPOSIX_PLATFORM_OPENBSD
 struct sigevent : public ::sigevent {
   inline sigevent() noexcept : ::sigevent{} {}
 
@@ -72,5 +77,6 @@ struct sigevent : public ::sigevent {
     this->sigev_notify_attributes = nullptr;
   }
 };
+#endif
 
 }  // namespace pposix
