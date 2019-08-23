@@ -17,7 +17,7 @@ namespace pposix {
 
 class mmap_descriptor {
  public:
-  constexpr mmap_descriptor() noexcept = default;
+  inline mmap_descriptor() noexcept = default;
   constexpr mmap_descriptor(void *address, size_t length) : address_{address}, length_{length} {}
 
   constexpr void *address() noexcept { return address_; }
