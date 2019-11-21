@@ -17,9 +17,17 @@
 
 namespace pposix::rt {
 
+namespace detail {
+
+struct mq_null_descriptor {
+  ::mqd_t operator()() const noexcept { return ::mqd_t{-1}; }
+};
+
+}  // namespace detail
+
 struct mq_tag {};
 
-using mq_d = descriptor<mq_tag, ::mqd_t, -1>;
+using mq_d = descriptor<mq_tag, ::mqd_t, detail::mq_null_descriptor>;
 
 struct mq_close_policy {
   std::error_code operator()(mq_d mq_descriptor) const noexcept;
