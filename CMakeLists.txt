@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_library(
-        ${CMAKE_PROJECT_NAME}
+        pposix
 
         src/errno.cpp
         src/unique_fd.cpp
@@ -22,7 +22,7 @@ add_library(
 )
 
 target_include_directories(
-        ${CMAKE_PROJECT_NAME}
+        pposix
 
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -31,7 +31,7 @@ target_include_directories(
 set(GCC_OR_CLANG_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Werror)
 
 target_compile_options(
-        ${CMAKE_PROJECT_NAME}
+        pposix
 
         PRIVATE
         $<$<CXX_COMPILER_ID:GNU>:${GCC_OR_CLANG_COMPILE_OPTIONS}>
