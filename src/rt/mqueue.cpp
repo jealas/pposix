@@ -4,45 +4,45 @@
 
 namespace pposix::rt {
 
-std::error_code mq_close_policy::operator()(mq_d mq_descriptor) const noexcept {
-  if (const int res{::mq_close(mq_descriptor.raw())}; res == -1) {
+namespace detail {
+
+std::error_code mq_close_policy::operator()(::mqd_t mq_descriptor) const noexcept {
+  if (const int res{::mq_close(mq_descriptor)}; res == -1) {
     return current_errno_code();
   } else {
     return {};
   }
 }
 
-using unique_mq_descriptor = unique_descriptor<mq_d, mq_close_policy>;
+}  // namespace detail
 
-namespace capi {
+mq::mq(::mqd_t mq_d) noexcept : mq_d_{mq_d} {}
 
-result<unique_mq_descriptor> mq_open(const char* name, mq_mode mode, mq_option option) noexcept {
-  mq_d mq_descriptor{::mq_open(name, underlying_value(mode) | underlying_value(option))};
-  if (mq_descriptor == null_descriptor) {
+result<mq> mq::unsafe_open(const char* name, capi::mq_mode mode, capi::mq_option option) noexcept {
+  const mqd_t mq_descriptor{::mq_open(name, underlying_value(mode) | underlying_value(option))};
+  if (mq_descriptor == NULL_MQD_T) {
     return current_errno_code();
   } else {
-    return unique_mq_descriptor{mq_d{mq_descriptor}};
+    return mq{mq_descriptor};
   }
 }
 
-}  // namespace capi
-
-result<rt::mq_current_attr> mq_getattr(rt::mq_d mq_descriptor) noexcept {
+result<mq_current_attr> mq::getattr() noexcept {
   ::mq_attr attributes{};
 
-  const int result{::mq_getattr(mq_descriptor.raw(), &attributes)};
+  const int result{::mq_getattr(*mq_d_, &attributes)};
   if (result == -1) {
     return current_errno_code();
   } else {
-    return rt::mq_current_attr{attributes};
+    return mq_current_attr{attributes};
   }
 }
 
-result<mq_message> mq_receive(mq_d mq, byte_span message_buffer) noexcept {
+result<mq_message> mq::receive(byte_span message_buffer) noexcept {
   unsigned priority{};
 
   const ssize_t num_message_bytes{
-      ::mq_receive(mq.raw(), static_cast<char*>(static_cast<void*>(message_buffer.data())),
+      ::mq_receive(*mq_d_, static_cast<char*>(static_cast<void*>(message_buffer.data())),
                    message_buffer.length(), &priority)};
   if (num_message_bytes == -1) {
     return current_errno_code();
@@ -52,11 +52,9 @@ result<mq_message> mq_receive(mq_d mq, byte_span message_buffer) noexcept {
   }
 }
 
-namespace capi {
-
-[[nodiscard]] std::error_code mq_send(mq_d mq, byte_cspan message,
-                                      mq_message_priority priority) noexcept {
-  const int res{::mq_send(mq.raw(),
+[[nodiscard]] std::error_code mq::unsafe_send(byte_cspan message,
+                                              mq_message_priority priority) noexcept {
+  const int res{::mq_send(*mq_d_,
                           static_cast<const char*>(static_cast<const void*>(message.data())),
                           message.length(), underlying_value(priority))};
   if (res == -1) {
@@ -66,41 +64,32 @@ namespace capi {
   }
 }
 
-}  // namespace capi
-
-std::error_code mq_unlink(const char* name) noexcept {
+std::error_code mq::unlink(const char* name) noexcept {
   return ::mq_unlink(name) == -1 ? current_errno_code() : std::error_code{};
 }
 
-std::error_code mq_unlink(const std::string& name) noexcept { return rt::mq_unlink(name.c_str()); }
-
-std::error_code mq_notify(mq_d mq, decltype(mq_deregister_notification)) noexcept {
+std::error_code mq::notify(decltype(mq_deregister_notification)) noexcept {
   const ::sigevent* null_sigevent{nullptr};
-  return ::mq_notify(mq.raw(), null_sigevent) == -1 ? current_errno_code() : std::error_code{};
+  return ::mq_notify(*mq_d_, null_sigevent) == -1 ? current_errno_code() : std::error_code{};
 }
 
-namespace capi {
-
-std::error_code mq_notify(mq_d mq, const pposix::sigevent& sigevent) noexcept {
-  return ::mq_notify(mq.raw(), &sigevent) == -1 ? current_errno_code() : std::error_code{};
+std::error_code mq::unsafe_notify(const pposix::sigevent& sigevent) noexcept {
+  return ::mq_notify(*mq_d_, &sigevent) == -1 ? current_errno_code() : std::error_code{};
 }
 
-}  // namespace capi
-
-std::error_code mq_notify(mq_d mq, decltype(mq_notify_none)) noexcept {
+std::error_code mq::notify(decltype(mq_notify_none)) noexcept {
   const pposix::sigevent event{sig_notify::none, sig_number{}, nullptr, nullptr};
-  return capi::mq_notify(mq, event);
+  return unsafe_notify(event);
 }
 
-std::error_code mq_notify(mq_d mq, mq_notify_signal notify_signal) noexcept {
-  return capi::mq_notify(mq, notify_signal.event());
+std::error_code mq::notify(mq_notify_signal notify_signal) noexcept {
+  return unsafe_notify(notify_signal.event());
 }
 
-result<mq_message> mq_timed_receive(mq_d mq, byte_span message,
-                                    const pposix::timespec& absolute_time) noexcept {
+result<mq_message> mq::timed_receive(byte_span message,
+                                     const pposix::timespec& absolute_time) noexcept {
   unsigned priority{};
-  const auto res{::mq_timedreceive(mq.raw(),
-                                   static_cast<char*>(static_cast<void*>(message.data())),
+  const auto res{::mq_timedreceive(*mq_d_, static_cast<char*>(static_cast<void*>(message.data())),
                                    message.length(), &priority, &absolute_time)};
   if (res == -1) {
     return current_errno_code();
@@ -110,18 +99,13 @@ result<mq_message> mq_timed_receive(mq_d mq, byte_span message,
   }
 }
 
-namespace capi {
-
-[[nodiscard]] std::error_code mq_timed_send(mq_d mq, byte_cspan message,
-                                            mq_message_priority priority,
-                                            const pposix::timespec& absolute_time) noexcept {
-  return ::mq_timedsend(mq.raw(),
-                        static_cast<const char*>(static_cast<const void*>(message.data())),
+[[nodiscard]] std::error_code mq::unsafe_timed_send(
+    byte_cspan message, mq_message_priority priority,
+    const pposix::timespec& absolute_time) noexcept {
+  return ::mq_timedsend(*mq_d_, static_cast<const char*>(static_cast<const void*>(message.data())),
                         message.length(), underlying_value(priority), &absolute_time) == -1
              ? current_errno_code()
              : std::error_code{};
 }
-
-}  // namespace capi
 
 }

@@ -12,7 +12,7 @@
 namespace pposix {
 
 result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, int i) noexcept {
-  if (const int res{::ioctl(fd.raw(), underlying_value(r), i)}; res == -1) {
+  if (const int res{::ioctl(fd, underlying_value(r), i)}; res == -1) {
     return current_errno_code();
   } else {
     return res;
@@ -20,7 +20,7 @@ result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, int i) noexcept {
 }
 
 result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, void *ptr) noexcept {
-  if (const int res{::ioctl(fd.raw(), underlying_value(r), ptr)}; res == -1) {
+  if (const int res{::ioctl(fd, underlying_value(r), ptr)}; res == -1) {
     return current_errno_code();
   } else {
     return res;
@@ -28,7 +28,7 @@ result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, void *ptr) noexcept {
 }
 
 result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, const void *ptr) noexcept {
-  if (const int res{::ioctl(fd.raw(), underlying_value(r), ptr)}; res == -1) {
+  if (const int res{::ioctl(fd, underlying_value(r), ptr)}; res == -1) {
     return current_errno_code();
   } else {
     return res;

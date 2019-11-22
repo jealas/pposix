@@ -48,6 +48,3 @@ endif ()
 if (${PPOSIX_LINUX_EXTENSION_ENABLED})
     add_subdirectory(src/lnx)
 endif ()
-
-# POSIX Testing
-add_subdirectory(test)
