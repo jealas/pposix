@@ -132,7 +132,7 @@ class socket_linger {
 
   constexpr const ::linger &get() const noexcept { return linger_; }
 
-  constexpr bool enabled() const noexcept { return linger_.l_onoff; }
+  constexpr bool enabled() const noexcept { return linger_.l_onoff == 1; }
   constexpr pposix::seconds duration() const noexcept { return pposix::seconds{linger_.l_linger}; }
 
  private:

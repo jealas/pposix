@@ -69,7 +69,7 @@ template <capi::mmap_protection Flag>
 using mmap_protection = enum_flag<capi::mmap_protection, Flag>;
 
 template <capi::mmap_protection Flags>
-using mmap_protection_set = enum_flag<capi::mmap_protection, Flags>;
+using mmap_protection_set = enum_flag_set<capi::mmap_protection, Flags>;
 
 inline constexpr mmap_protection<capi::mmap_protection::none> mmap_no_access{};
 inline constexpr mmap_protection<capi::mmap_protection::read> mmap_read{};

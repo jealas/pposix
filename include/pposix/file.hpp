@@ -106,7 +106,7 @@ namespace permission_literals {
 namespace detail {
 
 constexpr file_permission str_to_permission(char const *const c_str, size_t len,
-                                            file_permission (*char_to_permission)(char)) {
+                                            file_permission (*char_to_permission)(const char)) {
   file_permission p{};
 
   for (const auto c : std::string_view{c_str, len}) {
@@ -164,11 +164,11 @@ class file {
 
   explicit file(raw_fd fd) noexcept;
 
-  file(const file&) = delete;
-  file(file&&) = default;
+  file(const file &) = delete;
+  file(file &&) = default;
 
-  file &operator=(const file&) = delete;
-  file &operator=(file&&) = default;
+  file &operator=(const file &) = delete;
+  file &operator=(file &&) = default;
 
   static result<unique_fd> open(const char *path, file_mode mode, file_flags flags) noexcept;
 
@@ -179,7 +179,6 @@ class file {
   result<ssize_t> read(byte_span buffer) noexcept;
 
   result<ssize_t> write(byte_cspan buffer) noexcept;
-
 
  private:
   unique_fd fd_{};

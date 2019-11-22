@@ -35,8 +35,8 @@ result<ssize_t> file::read(byte_span buffer) noexcept {
   }
 }
 
-result<ssize_t> write(raw_fd fd, byte_cspan buffer) noexcept {
-  const auto bytes_written{::write(fd, buffer.data(), buffer.length())};
+result<ssize_t> file::write(byte_cspan buffer) noexcept {
+  const auto bytes_written{::write(*fd_, buffer.data(), buffer.length())};
   if (bytes_written == -1) {
     return current_errno_code();
   } else {

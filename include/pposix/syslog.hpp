@@ -100,7 +100,8 @@ void syslog(syslog_priority priority, const char *format, Args &&... args) noexc
 template <class... Args>
 void syslog(syslog_priority priority, syslog_facility facility, const char *format,
             Args &&... args) noexcept {
-  ::syslog(underlying_value(priority) | underlying_value(facility), format, std::forward<Args>(args)...);
+  ::syslog(underlying_value(priority) | underlying_value(facility), format,
+           std::forward<Args>(args)...);
 }
 
 }  // namespace pposix
