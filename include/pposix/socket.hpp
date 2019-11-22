@@ -7,18 +7,12 @@
 #include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
 #include "pposix/extension.hpp"
-#include "pposix/fd.hpp"
 #include "pposix/result.hpp"
 #include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix {
 
-// Socket file descriptor
-struct socket_fd_tag {};
-using socket_fd = fd<socket_fd_tag>;
-
-// Socket domain
 enum class socket_domain : unsigned {
   // POSIX-defined socket domains
   inet = AF_INET,
@@ -53,7 +47,6 @@ enum class socket_domain : unsigned {
 #endif
 };
 
-// Socket type
 enum class socket_type : int {
   stream = SOCK_STREAM,
   dgram = SOCK_DGRAM,
@@ -61,7 +54,6 @@ enum class socket_type : int {
   raw = SOCK_RAW,
 };
 
-// Socket protocol
 enum class socket_protocol : int {
   ip = IPPROTO_IP,
   icmp = IPPROTO_ICMP,
@@ -73,7 +65,6 @@ enum class socket_protocol : int {
   raw = IPPROTO_RAW,
 };
 
-// Socket option
 enum class socket_option : int {
   acceptconn = SO_ACCEPTCONN,
   broadcast = SO_BROADCAST,
@@ -93,7 +84,6 @@ enum class socket_option : int {
   type = SO_TYPE
 };
 
-// Socket flag
 enum class socket_flag : unsigned {
   none = 0u,
 
@@ -107,7 +97,6 @@ constexpr socket_flag operator|(socket_flag lhs, socket_flag rhs) noexcept {
   return socket_flag{underlying_value(lhs) | underlying_value(rhs)};
 }
 
-// Socket level
 enum class socket_level : int {
   socket = SOL_SOCKET,
   ip = IPPROTO_IP,
@@ -118,9 +107,7 @@ enum class socket_level : int {
   udp = IPPROTO_UDP,
 };
 
-// Socket
-result<unique_fd<socket_fd>> socket(socket_domain dom, socket_type typ, socket_flag flags,
-                                    socket_protocol prot) noexcept;
+using unique_socket_fd = unique_fd;
 
 // Socket options
 enum class socket_debug : bool { off = false, on = true };
@@ -145,7 +132,7 @@ class socket_linger {
 
   constexpr const ::linger &get() const noexcept { return linger_; }
 
-  constexpr bool enabled() const noexcept { return linger_.l_onoff; }
+  constexpr bool enabled() const noexcept { return linger_.l_onoff == 1; }
   constexpr pposix::seconds duration() const noexcept { return pposix::seconds{linger_.l_linger}; }
 
  private:
@@ -212,29 +199,114 @@ class socket_sndtimeo {
   ::timeval timeout_{};
 };
 
-// Set socket option
-std::error_code setsockopt(socket_fd, socket_level, socket_option, any_cview) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_debug) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_broadcast) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_reuseaddr) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_keepalive) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_linger) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_oobinline) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_sndbuf) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_rcvbuf) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_dontroute) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_rcvlowat) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_rcvtimeo) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_sndlowat) noexcept;
-std::error_code setsockopt(socket_fd, socket_level, socket_sndtimeo) noexcept;
-
 // Get socket option
 enum class socket_acceptconn : bool {};
 enum class socket_error : int {};
 
-result<socklen_t> getsockopt(socket_fd, socket_level, socket_option, any_view) noexcept;
+// Set socket option
+class socket {
+ public:
+  socket() noexcept = default;
 
-template <class T>
-result<T> getsockopt(socket_fd, socket_level) noexcept;
+  explicit socket(raw_fd fd) noexcept;
 
+  socket(const socket &) = delete;
+  socket(socket &&) = default;
+
+  socket &operator=(const socket &) = delete;
+  socket &operator=(socket &&) = default;
+
+  static pposix::result<socket> make(socket_domain dom, socket_type typ, socket_flag flags,
+                                     socket_protocol prot) noexcept;
+
+  std::error_code unsafe_setsockopt(socket_level, socket_option, any_cview) noexcept;
+
+  std::error_code setsockopt(socket_level, socket_debug) noexcept;
+  std::error_code setsockopt(socket_level, socket_broadcast) noexcept;
+  std::error_code setsockopt(socket_level, socket_reuseaddr) noexcept;
+  std::error_code setsockopt(socket_level, socket_keepalive) noexcept;
+  std::error_code setsockopt(socket_level, socket_linger) noexcept;
+  std::error_code setsockopt(socket_level, socket_oobinline) noexcept;
+  std::error_code setsockopt(socket_level, socket_sndbuf) noexcept;
+  std::error_code setsockopt(socket_level, socket_rcvbuf) noexcept;
+  std::error_code setsockopt(socket_level, socket_dontroute) noexcept;
+  std::error_code setsockopt(socket_level, socket_rcvlowat) noexcept;
+  std::error_code setsockopt(socket_level, socket_rcvtimeo) noexcept;
+  std::error_code setsockopt(socket_level, socket_sndlowat) noexcept;
+  std::error_code setsockopt(socket_level, socket_sndtimeo) noexcept;
+
+  result<socklen_t> unsafe_getsockopt(socket_level, socket_option, any_view) noexcept;
+
+  template <class T>
+  result<T> getsockopt(const socket_level l) noexcept {
+    if constexpr (std::is_same_v<T, socket_debug>) {
+      return getsockopt_bool<socket_debug>(l, socket_option::debug);
+    } else if (std::is_same_v<T, socket_broadcast>) {
+      return getsockopt_bool<socket_broadcast>(l, socket_option::broadcast);
+    } else if (std::is_same_v<T, socket_reuseaddr>) {
+      return getsockopt_bool<socket_reuseaddr>(l, socket_option::reuseaddr);
+    } else if (std::is_same_v<T, socket_acceptconn>) {
+      return getsockopt_bool<socket_acceptconn>(l, socket_option::acceptconn);
+    } else if (std::is_same_v<T, socket_keepalive>) {
+      return getsockopt_bool<socket_keepalive>(l, socket_option::keepalive);
+    } else if (std::is_same_v<T, socket_linger>) {
+      return getsockopt_struct<socket_linger>(l, socket_option::linger);
+    } else if (std::is_same_v<T, socket_oobinline>) {
+      return getsockopt_bool<socket_oobinline>(l, socket_option::oobinline);
+    } else if (std::is_same_v<T, socket_sndbuf>) {
+      return getsockopt_int<socket_sndbuf>(l, socket_option::sndbuf);
+    } else if (std::is_same_v<T, socket_rcvbuf>) {
+      return getsockopt_int<socket_rcvbuf>(l, socket_option::rcvbuf);
+    } else if (std::is_same_v<T, socket_error>) {
+      return getsockopt_int<socket_error>(l, socket_option::error);
+    } else if (std::is_same_v<T, socket_type>) {
+      return getsockopt_int<socket_type>(l, socket_option::type);
+    } else if (std::is_same_v<T, socket_dontroute>) {
+      return getsockopt_bool<socket_dontroute>(l, socket_option::dontroute);
+    } else if (std::is_same_v<T, socket_rcvlowat>) {
+      return getsockopt_int<socket_rcvlowat>(l, socket_option::rcvlowat);
+    } else if (std::is_same_v<T, socket_rcvtimeo>) {
+      return getsockopt_struct<socket_rcvtimeo>(l, socket_option::rcvtimeo);
+    } else if (std::is_same_v<T, socket_sndlowat>) {
+      return getsockopt_int<socket_sndlowat>(l, socket_option::sndlowat);
+    } else if (std::is_same_v<T, socket_sndtimeo>) {
+      return getsockopt_struct<socket_sndtimeo>(l, socket_option::sndtimeo);
+    } else {
+      static_assert(always_false<T>, "Unsupported socket option type.");
+    }
+  }
+
+ private:
+  std::error_code setsockopt_int(socket_level l, socket_option o, int i) noexcept;
+  std::error_code setsockopt_bool(socket_level l, socket_option o, bool b) noexcept;
+
+  template <class Result>
+  result<Result> getsockopt_int(socket_level l, socket_option o) noexcept {
+    int val{};
+
+    const auto result = unsafe_getsockopt(l, o, any_view{&val});
+    return result_map<Result>(result, [&](int /*ignored*/) { return Result{val}; });
+  }
+
+  template <class Result>
+  result<bool> getsockopt_bool(socket_level l, socket_option o) noexcept {
+    int val{};
+
+    const auto result = unsafe_getsockopt(l, o, any_view{&val});
+    return result_map<Result>(result, [&](int /*ignored*/) { return Result{val != 0}; });
+  }
+
+  template <class Result>
+  result<Result> getsockopt_struct(socket_level l, socket_option o) noexcept {
+    static_assert(std::is_class_v<Result>);
+
+    Result val{};
+
+    const auto result = unsafe_getsockopt(l, o, any_view{&val});
+    return result_map<Result>(result, [&](int /*ignored*/) { return val; });
+  }
+
+ private:
+  unique_socket_fd socket_fd_{};
+};
 }

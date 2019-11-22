@@ -17,7 +17,7 @@ struct exclusive_enum_flag {
   using enum_t = std::decay_t<Enum>;
   static_assert(std::is_enum_v<enum_t>);
 
-  constexpr operator Enum() const noexcept { return Value; }
+  constexpr explicit operator Enum() const noexcept { return Value; }
 };
 
 template <class Enum, Enum Value>
@@ -25,7 +25,7 @@ struct enum_flag {
   using enum_t = std::decay_t<Enum>;
   static_assert(std::is_enum_v<enum_t>);
 
-  constexpr operator Enum() const noexcept { return Value; }
+  constexpr explicit operator Enum() const noexcept { return Value; }
 };
 
 template <class Enum, Enum Flags>

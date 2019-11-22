@@ -4,37 +4,27 @@
 
 namespace pposix {
 
-// Dirent close dir
-std::error_code closedir(DIR *dir) noexcept {
-  return ::closedir(dir) == -1 ? current_errno_code() : std::error_code{};
-}
+dir_fd::dir_fd(int fd) noexcept : dir_fd_{fd} {}
 
-// Dirent close policy
-std::error_code dirent_close_policy::operator()(DIR *dir) const noexcept {
-  return pposix::closedir(dir);
-}
+raw_fd dir_fd::get() const noexcept { return *dir_fd_; }
+raw_fd dir_fd::release() noexcept { return dir_fd_.release(); }
 
-// Dirent open directory
-result<resource<DIR, dirent_close_policy>> opendir(char const *dirname) noexcept {
+dirent::dirent(DIR *dir) noexcept : dirent_d_{dir} {}
+
+DIR *dirent::get() noexcept { return *dirent_d_; }
+
+DIR *dirent::release() noexcept { return dirent_d_.release(); }
+
+result<dirent> dirent::opendir(char const *dirname) noexcept {
   if (DIR *dir = ::opendir(dirname); dir == nullptr) {
     return current_errno_code();
   } else {
-    return resource<DIR, dirent_close_policy>{dir};
+    return dirent{dir};
   }
 }
 
-result<resource<DIR, dirent_close_policy>> opendir(const std::string &dirname) noexcept {
-  return pposix::opendir(dirname.c_str());
-}
-
-// Dirent get directory file descriptor
-result<unique_fd<dir_fd>> dirfd(DIR *dir) noexcept {
-  const dir_fd fd{::dirfd(dir)};
-  if (fd == nullfd) {
-    return current_errno_code();
-  } else {
-    return unique_fd<dir_fd>{fd};
-  }
+std::error_code dirent_close_policy::operator()(DIR *dir) const noexcept {
+  return ::closedir(dir) == -1 ? current_errno_code() : std::error_code{};
 }
 
 }  // namespace pposix

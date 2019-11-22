@@ -5,42 +5,62 @@
 
 #include <dirent.h>
 
-#include "pposix/fd.hpp"
-#include "pposix/resource.hpp"
 #include "pposix/result.hpp"
+#include "pposix/unique_d.hpp"
 #include "pposix/unique_fd.hpp"
 
 namespace pposix {
 
-// Direct file descriptor
-struct dir_fd_tag {};
-using dir_fd = fd<dir_fd_tag>;
-
-// Dirent close directory
-std::error_code closedir(DIR *dir) noexcept;
-
-// Dirent close policy
 struct dirent_close_policy {
   std::error_code operator()(DIR *dir) const noexcept;
 };
 
-// Dirent open directory
-result<resource<DIR, dirent_close_policy>> opendir(char const *dirname) noexcept;
-result<resource<DIR, dirent_close_policy>> opendir(const std::string &dirname) noexcept;
+class dirent;
 
-// Dirent open directory from file descriptor
-template <class ClosePolicy>
-result<resource<DIR, dirent_close_policy>> fdopendir(unique_fd<dir_fd, ClosePolicy> fd) noexcept {
-  const auto dirfd = fd.release();
+class dir_fd {
+ public:
+  dir_fd() = default;
 
-  if (DIR *dir = ::fdopendir(dirfd.raw()); dir == nullptr) {
+  explicit dir_fd(raw_fd fd) noexcept;
+
+  dir_fd(const dir_fd &) = delete;
+  dir_fd(dir_fd &&) = default;
+
+  dir_fd &operator=(const dir_fd &) = delete;
+  dir_fd &operator=(dir_fd &&) = default;
+
+  raw_fd get() const noexcept;
+  [[nodiscard]] raw_fd release() noexcept;
+
+ private:
+  unique_fd dir_fd_{};
+};
+
+class dirent {
+ public:
+  dirent() = default;
+
+  explicit dirent(DIR *dir) noexcept;
+
+  DIR *get() noexcept;
+  [[nodiscard]] DIR *release() noexcept;
+
+  static result<dirent> opendir(char const *dirname) noexcept;
+
+ private:
+  struct tag {};
+  unique_d<tag, DIR *, std::integral_constant<DIR *, nullptr>, dirent_close_policy> dirent_d_{};
+};
+
+result<dirent> fdopendir(dir_fd fd) noexcept {
+  const auto dirfd = fd.get();
+
+  if (DIR *dir = ::fdopendir(dirfd); dir == nullptr) {
     return current_errno_code();
   } else {
-    return resource<DIR, dirent_close_policy>{dir};
+    (void)fd.release();
+    return dirent{dir};
   }
 }
-
-// Dirent get directory file descriptor
-result<unique_fd<dir_fd>> dirfd(DIR *dir) noexcept;
 
 }  // namespace pposix
