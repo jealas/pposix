@@ -7,10 +7,10 @@
 namespace pposix {
 
 std::errc get_errno() noexcept { return std::errc{errno}; }
-void set_errno(std::errc err) noexcept { errno = underlying_value(err); }
+void set_errno(std::errc err) noexcept { errno = underlying_v(err); }
 
 std::error_code make_errno_code(std::errc err) noexcept {
-  return {underlying_value(err), std::system_category()};
+  return {underlying_v(err), std::system_category()};
 }
 
 std::error_code current_errno_code() noexcept { return make_errno_code(get_errno()); }

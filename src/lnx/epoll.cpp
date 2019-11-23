@@ -10,7 +10,7 @@ namespace pposix::lnx {
 namespace capi {
 
 epoll_event::epoll_event(epoll_event_flag event_flags) noexcept : ::epoll_event{} {
-  this->events = underlying_value(event_flags);
+  this->events = underlying_v(event_flags);
 }
 
 // NOTE: This constructor must call the epoll_event{epoll_event_flag} constructor to correctly
@@ -41,20 +41,10 @@ epoll_event::epoll_event(epoll_event_flag event_flags, uint64_t data) noexcept
 epoll::epoll(raw_fd epoll_fd) noexcept : epoll_fd_{epoll_fd} {}
 
 result<epoll> epoll::unsafe_create(size_t size) noexcept {
-  if (const int res{::epoll_create(size)}; res < 0) {
-    return current_errno_code();
-  } else {
-    return epoll{res};
-  }
-}
+    PPOSIX_COMMON_RESULT_MAP_IMPL(epoll, ::epoll_create, size)}
 
 result<epoll> epoll::unsafe_create1(capi::epoll_flag flags) noexcept {
-  if (const int res{::epoll_create1(underlying_value(flags))}; res < 0) {
-    return current_errno_code();
-  } else {
-    return epoll{res};
-  }
-}
+    PPOSIX_COMMON_RESULT_MAP_IMPL(epoll, ::epoll_create1, underlying_v(flags))}
 
 result<epoll> epoll::create() noexcept {
   constexpr static size_t NON_ZERO_SIZE = 1u;
@@ -67,12 +57,7 @@ result<epoll> epoll::create(decltype(epoll_cloexec)) noexcept {
 
 std::error_code epoll::unsafe_ctl(capi::epoll_operation op, raw_fd fd,
                                   capi::epoll_event *event) noexcept {
-  const int res{::epoll_ctl(*epoll_fd_, underlying_value(op), fd, event)};
-  if (res == -1) {
-    return current_errno_code();
-  } else {
-    return {};
-  }
+  return PPOSIX_COMMON_CALL(::epoll_ctl, *epoll_fd_, underlying_v(op), fd, event);
 }
 
 std::error_code epoll::ctl(epoll_add add) noexcept {
@@ -90,25 +75,16 @@ std::error_code epoll::ctl(epoll_modify mod) noexcept {
 result<int> epoll::wait(span<lnx::epoll_event> events, milliseconds timeout) noexcept {
   // TODO: Assert that events.length() <= std::numeric_literals<int>::max()
 
-  const int res{::epoll_wait(*epoll_fd_, events.data(), events.length(), timeout.count())};
-  if (res == -1) {
-    return current_errno_code();
-  } else {
-    return res;
-  }
+  return PPOSIX_COMMON_CALL(::epoll_wait, *epoll_fd_, events.data(), events.length(),
+                            timeout.count());
 }
 
 result<int> epoll::pwait(span<lnx::epoll_event> events, milliseconds timeout,
                          const sigset &sigmask) noexcept {
   // TODO: Assert that events.length() <= std::numeric_literals<int>::max()
 
-  const int res{::epoll_pwait(*epoll_fd_, events.data(), events.length(), timeout.count(),
-                              sigmask.sigset_ptr())};
-  if (res == -1) {
-    return current_errno_code();
-  } else {
-    return res;
-  }
+  return PPOSIX_COMMON_CALL(::epoll_pwait, *epoll_fd_, events.data(), events.length(),
+                            timeout.count(), sigmask.sigset_ptr());
 }
 
 }  // namespace pposix::lnx

@@ -38,9 +38,8 @@ struct get_mmap_null_d {
 };
 
 struct mmap_default_close_policy {
-  std::error_code operator()(mmap_d raw_descriptor) const noexcept {
-    return ::munmap(raw_descriptor.address(), raw_descriptor.length()) == -1 ? current_errno_code()
-                                                                             : std::error_code{};
+  inline std::error_code operator()(mmap_d raw_descriptor) const noexcept {
+    return PPOSIX_COMMON_CALL(::munmap, raw_descriptor.address(), raw_descriptor.length());
   }
 };
 

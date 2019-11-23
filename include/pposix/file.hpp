@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "pposix/byte_span.hpp"
+#include "pposix/fcntl.hpp"
 #include "pposix/platform.hpp"
 #include "pposix/result.hpp"
 #include "pposix/unique_fd.hpp"
@@ -45,7 +46,7 @@ enum class file_flags : unsigned {
 };
 
 constexpr file_flags operator|(file_flags lhs, file_flags rhs) noexcept {
-  return file_flags{underlying_value(lhs) | underlying_value(rhs)};
+  return file_flags{underlying_v(lhs) | underlying_v(rhs)};
 }
 
 constexpr file_flags &operator|=(file_flags &lhs, file_flags rhs) noexcept {
@@ -93,7 +94,7 @@ enum class file_permission : unsigned {
 };
 
 constexpr file_permission operator|(file_permission lhs, file_permission rhs) noexcept {
-  return file_permission{underlying_value(lhs) | underlying_value(rhs)};
+  return file_permission{underlying_v(lhs) | underlying_v(rhs)};
 }
 
 constexpr file_permission &operator|=(file_permission &lhs, file_permission rhs) noexcept {
@@ -170,15 +171,19 @@ class file {
   file &operator=(const file &) = delete;
   file &operator=(file &&) = default;
 
-  static result<unique_fd> open(const char *path, file_mode mode, file_flags flags) noexcept;
+  static result<raw_fd> unsafe_open(const char *path, file_mode mode, file_flags flags) noexcept;
 
+  static result<file> open(const char *path, file_mode mode, file_flags flags) noexcept;
   std::error_code close() noexcept;
 
   result<off_t> lseek(off_t offset, file_seek wh) noexcept;
 
   result<ssize_t> read(byte_span buffer) noexcept;
-
   result<ssize_t> write(byte_cspan buffer) noexcept;
+
+  std::error_code unsafe_fcntl(capi::fcntl_cmd cmd) const noexcept;
+  std::error_code unsafe_fcntl(capi::fcntl_cmd cmd, int arg) const noexcept;
+  std::error_code unsafe_fcntl(capi::fcntl_cmd cmd, void *arg) const noexcept;
 
  private:
   unique_fd fd_{};

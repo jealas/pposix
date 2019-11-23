@@ -1,6 +1,7 @@
 #include "pposix/dirent.hpp"
 
 #include "pposix/errno.hpp"
+#include "pposix/util.hpp"
 
 namespace pposix {
 
@@ -24,7 +25,7 @@ result<dirent> dirent::opendir(char const *dirname) noexcept {
 }
 
 std::error_code dirent_close_policy::operator()(DIR *dir) const noexcept {
-  return ::closedir(dir) == -1 ? current_errno_code() : std::error_code{};
+  return PPOSIX_COMMON_CALL(::closedir, dir);
 }
 
 }  // namespace pposix

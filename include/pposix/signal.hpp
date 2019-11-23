@@ -58,8 +58,8 @@ struct sigevent : public ::sigevent {
   inline sigevent(sig_notify notify, sig_number number, sig_event_notify_handler callback,
                   int value) noexcept
       : ::sigevent{} {
-    this->sigev_notify = underlying_value(notify);
-    this->sigev_signo = underlying_value(number);
+    this->sigev_notify = underlying_v(notify);
+    this->sigev_signo = underlying_v(number);
     this->sigev_value.sival_int = value;
 
     this->sigev_notify_function = callback;
@@ -69,8 +69,8 @@ struct sigevent : public ::sigevent {
   inline sigevent(sig_notify notify, sig_number number, sig_event_notify_handler callback,
                   void* value) noexcept
       : ::sigevent{} {
-    this->sigev_notify = underlying_value(notify);
-    this->sigev_signo = underlying_value(number);
+    this->sigev_notify = underlying_v(notify);
+    this->sigev_signo = underlying_v(number);
     this->sigev_value.sival_ptr = value;
 
     this->sigev_notify_function = callback;

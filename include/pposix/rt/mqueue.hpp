@@ -153,7 +153,7 @@ class mq {
 
   template <capi::mq_mode Mode>
   static result<mq> open(const char* name, mq_mode_flag<Mode>) noexcept {
-    const mqd_t res{::mq_open(name, underlying_value(Mode))};
+    const mqd_t res{::mq_open(name, underlying_v(Mode))};
     if (res == NULL_MQD_T) {
       return current_errno_code();
     } else {
@@ -167,7 +167,7 @@ class mq {
                   "The mq_excl flag can only be used with the mq_open(name, mode, flags, "
                   "mq_create_queue) overload.");
 
-    const ::mqd_t res{::mq_open(name, underlying_value(Mode) | underlying_value(Flag))};
+    const ::mqd_t res{::mq_open(name, underlying_v(Mode) | underlying_v(Flag))};
     if (res == NULL_MQD_T) {
       return current_errno_code();
     } else {
@@ -177,7 +177,7 @@ class mq {
 
   template <capi::mq_mode Mode>
   result<mq> open(const char* name, mq_mode_flag<Mode>, mq_create_queue attributes) noexcept {
-    const ::mqd_t res{::mq_open(name, underlying_value(Mode), attributes.mq_attr_ptr())};
+    const ::mqd_t res{::mq_open(name, underlying_v(Mode), attributes.mq_attr_ptr())};
     if (res == NULL_MQD_T) {
       return current_errno_code();
     } else {
@@ -188,8 +188,8 @@ class mq {
   template <capi::mq_mode Mode, capi::mq_option Flags>
   result<mq> open(const char* name, mq_mode_flag<Mode>, mq_option_flag_set<Flags>,
                   mq_create_queue create_queue) noexcept {
-    const ::mqd_t res{::mq_open(name, underlying_value(Mode) | underlying_value(Flags),
-                                create_queue.mq_attr_ptr())};
+    const ::mqd_t res{
+        ::mq_open(name, underlying_v(Mode) | underlying_v(Flags), create_queue.mq_attr_ptr())};
     if (res == NULL_MQD_T) {
       return current_errno_code();
     } else {
@@ -208,7 +208,7 @@ class mq {
         "mq_excl cannot be used with mq_setattr, since it's only relevant with mq_open.");
 
     ::mq_attr new_attributes{};
-    new_attributes.mq_flags = underlying_value(Option);
+    new_attributes.mq_flags = underlying_v(Option);
 
     ::mq_attr current_attributes{};
 

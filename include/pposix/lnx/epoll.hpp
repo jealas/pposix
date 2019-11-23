@@ -148,7 +148,7 @@ class epoll_event final : public ::epoll_event {
  private:
   template <capi::epoll_event_flag Flag>
   inline bool has_flag(epoll_flag<Flag>) const noexcept {
-    return this->events & underlying_value(Flag);
+    return this->events & underlying_v(Flag);
   }
 };
 

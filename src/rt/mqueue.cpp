@@ -7,11 +7,7 @@ namespace pposix::rt {
 namespace detail {
 
 std::error_code mq_close_policy::operator()(::mqd_t mq_descriptor) const noexcept {
-  if (const int res{::mq_close(mq_descriptor)}; res == -1) {
-    return current_errno_code();
-  } else {
-    return {};
-  }
+  return PPOSIX_COMMON_CALL(::mq_close, mq_descriptor);
 }
 
 }  // namespace detail
@@ -19,7 +15,7 @@ std::error_code mq_close_policy::operator()(::mqd_t mq_descriptor) const noexcep
 mq::mq(::mqd_t mq_d) noexcept : mq_d_{mq_d} {}
 
 result<mq> mq::unsafe_open(const char* name, capi::mq_mode mode, capi::mq_option option) noexcept {
-  const mqd_t mq_descriptor{::mq_open(name, underlying_value(mode) | underlying_value(option))};
+  const mqd_t mq_descriptor{::mq_open(name, underlying_v(mode) | underlying_v(option))};
   if (mq_descriptor == NULL_MQD_T) {
     return current_errno_code();
   } else {
@@ -54,27 +50,22 @@ result<mq_message> mq::receive(byte_span message_buffer) noexcept {
 
 [[nodiscard]] std::error_code mq::unsafe_send(byte_cspan message,
                                               mq_message_priority priority) noexcept {
-  const int res{::mq_send(*mq_d_,
-                          static_cast<const char*>(static_cast<const void*>(message.data())),
-                          message.length(), underlying_value(priority))};
-  if (res == -1) {
-    return current_errno_code();
-  } else {
-    return {};
-  }
+  return PPOSIX_COMMON_CALL(::mq_send, *mq_d_,
+                            static_cast<const char*>(static_cast<const void*>(message.data())),
+                            message.length(), underlying_v(priority));
 }
 
 std::error_code mq::unlink(const char* name) noexcept {
-  return ::mq_unlink(name) == -1 ? current_errno_code() : std::error_code{};
+  return PPOSIX_COMMON_CALL(::mq_unlink, name);
 }
 
 std::error_code mq::notify(decltype(mq_deregister_notification)) noexcept {
   const ::sigevent* null_sigevent{nullptr};
-  return ::mq_notify(*mq_d_, null_sigevent) == -1 ? current_errno_code() : std::error_code{};
+  return PPOSIX_COMMON_CALL(::mq_notify, *mq_d_, null_sigevent);
 }
 
 std::error_code mq::unsafe_notify(const pposix::sigevent& sigevent) noexcept {
-  return ::mq_notify(*mq_d_, &sigevent) == -1 ? current_errno_code() : std::error_code{};
+  return PPOSIX_COMMON_CALL(::mq_notify, *mq_d_, &sigevent);
 }
 
 std::error_code mq::notify(decltype(mq_notify_none)) noexcept {
@@ -102,10 +93,9 @@ result<mq_message> mq::timed_receive(byte_span message,
 [[nodiscard]] std::error_code mq::unsafe_timed_send(
     byte_cspan message, mq_message_priority priority,
     const pposix::timespec& absolute_time) noexcept {
-  return ::mq_timedsend(*mq_d_, static_cast<const char*>(static_cast<const void*>(message.data())),
-                        message.length(), underlying_value(priority), &absolute_time) == -1
-             ? current_errno_code()
-             : std::error_code{};
+  return PPOSIX_COMMON_CALL(::mq_timedsend, *mq_d_,
+                            static_cast<const char*>(static_cast<const void*>(message.data())),
+                            message.length(), underlying_v(priority), &absolute_time);
 }
 
 }

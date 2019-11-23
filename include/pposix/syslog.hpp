@@ -36,11 +36,11 @@ class syslog_priority_set {
   }
 
   constexpr void set(syslog_priority priority) noexcept {
-    priority_mask_ |= LOG_MASK(underlying_value(priority));
+    priority_mask_ |= LOG_MASK(underlying_v(priority));
   }
 
   constexpr bool test(syslog_priority priority) const noexcept {
-    return priority_mask_ & LOG_MASK(underlying_value(priority));
+    return priority_mask_ & LOG_MASK(underlying_v(priority));
   }
 
   friend syslog_priority_set pposix::setlogmask(syslog_priority_set priorities) noexcept;
@@ -81,7 +81,7 @@ enum class syslog_option : int {
 };
 
 constexpr syslog_option operator|(syslog_option lhs, syslog_option rhs) noexcept {
-  return syslog_option{underlying_value(lhs) | underlying_value(rhs)};
+  return syslog_option{underlying_v(lhs) | underlying_v(rhs)};
 }
 
 void openlog(const char *identifier, syslog_option options, syslog_facility facility) noexcept;
@@ -100,7 +100,7 @@ void syslog(syslog_priority priority, const char *format, Args &&... args) noexc
 template <class... Args>
 void syslog(syslog_priority priority, syslog_facility facility, const char *format,
             Args &&... args) noexcept {
-  ::syslog(underlying_value(priority) | underlying_value(facility), format,
+  ::syslog(underlying_v(priority) | underlying_v(facility), format,
            std::forward<Args>(args)...);
 }
 

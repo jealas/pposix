@@ -94,7 +94,7 @@ enum class socket_flag : unsigned {
 };
 
 constexpr socket_flag operator|(socket_flag lhs, socket_flag rhs) noexcept {
-  return socket_flag{underlying_value(lhs) | underlying_value(rhs)};
+  return socket_flag{underlying_v(lhs) | underlying_v(rhs)};
 }
 
 enum class socket_level : int {
@@ -216,8 +216,8 @@ class socket {
   socket &operator=(const socket &) = delete;
   socket &operator=(socket &&) = default;
 
-  static pposix::result<socket> make(socket_domain dom, socket_type typ, socket_flag flags,
-                                     socket_protocol prot) noexcept;
+  static pposix::result<socket> unsafe_make(socket_domain dom, socket_type typ, socket_flag flags,
+                                            socket_protocol prot) noexcept;
 
   std::error_code unsafe_setsockopt(socket_level, socket_option, any_cview) noexcept;
 
