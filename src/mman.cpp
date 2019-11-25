@@ -25,4 +25,9 @@ std::error_code mmap::unmap() noexcept {
   return PPOSIX_COMMON_CALL(::munmap, mmap_d_->address(), mmap_d_->length());
 }
 
+result<shm> shm::unsafe_open(char const * const) noexcept {
+//  return PPOSIX_COMMON_CALL(::shm_open, name);
+  return std::error_code{};
+}
+
 }

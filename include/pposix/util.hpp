@@ -23,20 +23,14 @@ struct exclusive_enum_flag {
   constexpr operator Enum() const noexcept { return Value; }
 };
 
-template <class Enum, Enum Value>
-struct enum_flag {
-  using enum_t = std::decay_t<Enum>;
-  static_assert(std::is_enum_v<enum_t>);
-
-  constexpr operator Enum() const noexcept { return Value; }
-};
-
 template <class Enum, Enum Flags>
-class enum_flag_set {
+class enum_flag {
   using enum_t = std::decay_t<Enum>;
   static_assert(std::is_enum_v<enum_t>);
 
  public:
+  constexpr operator Enum() const noexcept { return Flags; }
+
   static constexpr bool has(Enum value) noexcept {
     return underlying_v(Flags) & underlying_v(value);
   }
@@ -48,17 +42,8 @@ class enum_flag_set {
 };
 
 template <class Enum, Enum Lhs, Enum Rhs>
-constexpr enum_flag_set<Enum, Enum{underlying_v(Lhs) | underlying_v(Rhs)}> operator|(
+constexpr enum_flag<Enum, Enum{underlying_v(Lhs) | underlying_v(Rhs)}> operator|(
     enum_flag<Enum, Lhs>, enum_flag<Enum, Rhs>) noexcept {
-  using enum_t = std::decay_t<Enum>;
-  static_assert(std::is_enum_v<enum_t>);
-
-  return {};
-}
-
-template <class Enum, Enum LhsFlags, Enum RhsFlag>
-constexpr enum_flag_set<Enum, Enum{underlying_v(LhsFlags) | underlying_v(RhsFlag)}> operator|(
-    enum_flag_set<Enum, LhsFlags>, enum_flag<Enum, RhsFlag>) noexcept {
   using enum_t = std::decay_t<Enum>;
   static_assert(std::is_enum_v<enum_t>);
 
@@ -86,3 +71,5 @@ constexpr bool always_false = false;
   } else {                                                                  \
     return T{_pposix_result_};                                              \
   }
+
+#define PPOSIX_CONSTEXPR_FLAG_VAR(flag, name) constexpr ::pposix::enum_flav_v<flag> name{};

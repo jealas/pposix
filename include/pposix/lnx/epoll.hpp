@@ -59,21 +59,18 @@ inline constexpr enum_flag<capi::epoll_flag, capi::epoll_flag::cloexec> epoll_cl
 
 // Epoll flag types
 template <capi::epoll_event_flag Flag>
-using epoll_flag = enum_flag<capi::epoll_event_flag, Flag>;
+using epoll_event_flag = enum_flag<capi::epoll_event_flag, Flag>;
 
-template <capi::epoll_event_flag Flags>
-using epoll_event_flags = enum_flag_set<capi::epoll_event_flag, Flags>;
-
-inline constexpr epoll_flag<capi::epoll_event_flag::read_available> epoll_read_available{};
-inline constexpr epoll_flag<capi::epoll_event_flag::write_available> epoll_write_available{};
-inline constexpr epoll_flag<capi::epoll_event_flag::socket_closed> epoll_socket_closed{};
-inline constexpr epoll_flag<capi::epoll_event_flag::fd_exception> epoll_fd_exception{};
-inline constexpr epoll_flag<capi::epoll_event_flag::fd_error> epoll_fd_error{};
-inline constexpr epoll_flag<capi::epoll_event_flag::fd_hup> epoll_fd_hup{};
-inline constexpr epoll_flag<capi::epoll_event_flag::edge_triggered> epoll_edge_triggered{};
-inline constexpr epoll_flag<capi::epoll_event_flag::one_shot> epoll_one_shot{};
-inline constexpr epoll_flag<capi::epoll_event_flag::wakeup> epoll_wakeup{};
-inline constexpr epoll_flag<capi::epoll_event_flag::exclusive> epoll_exclusive{};
+inline constexpr epoll_event_flag<capi::epoll_event_flag::read_available> epoll_read_available{};
+inline constexpr epoll_event_flag<capi::epoll_event_flag::write_available> epoll_write_available{};
+inline constexpr epoll_event_flag<capi::epoll_event_flag::socket_closed> epoll_socket_closed{};
+inline constexpr epoll_event_flag<capi::epoll_event_flag::fd_exception> epoll_fd_exception{};
+inline constexpr epoll_event_flag<capi::epoll_event_flag::fd_error> epoll_fd_error{};
+inline constexpr epoll_event_flag<capi::epoll_event_flag::fd_hup> epoll_fd_hup{};
+inline constexpr epoll_event_flag<capi::epoll_event_flag::edge_triggered> epoll_edge_triggered{};
+inline constexpr epoll_event_flag<capi::epoll_event_flag::one_shot> epoll_one_shot{};
+inline constexpr epoll_event_flag<capi::epoll_event_flag::wakeup> epoll_wakeup{};
+inline constexpr epoll_event_flag<capi::epoll_event_flag::exclusive> epoll_exclusive{};
 
 // Epoll control commands
 struct epoll_add {
@@ -90,36 +87,36 @@ class epoll;
 class epoll_modify {
   template <capi::epoll_event_flag Flags>
   static constexpr void check_epoll_modify_flags() noexcept {
-    static_assert(not epoll_event_flags<Flags>::has(epoll_exclusive),
+    static_assert(not epoll_event_flag<Flags>::has(epoll_exclusive),
                   "epoll_exclusive cannot be used with epoll_modify");
   }
 
  public:
   template <capi::epoll_event_flag Flags>
-  constexpr epoll_modify(raw_fd fd, epoll_event_flags<Flags>) noexcept : fd_{fd}, event_{Flags} {
+  constexpr epoll_modify(raw_fd fd, epoll_event_flag<Flags>) noexcept : fd_{fd}, event_{Flags} {
     check_epoll_modify_flags<Flags>();
   }
 
   template <capi::epoll_event_flag Flags>
-  constexpr epoll_modify(raw_fd fd, epoll_event_flags<Flags>, void *data) noexcept
+  constexpr epoll_modify(raw_fd fd, epoll_event_flag<Flags>, void *data) noexcept
       : fd_{fd}, event_{Flags, data} {
     check_epoll_modify_flags<Flags>();
   }
 
   template <capi::epoll_event_flag Flags>
-  constexpr epoll_modify(raw_fd fd, epoll_event_flags<Flags>, raw_fd data) noexcept
+  constexpr epoll_modify(raw_fd fd, epoll_event_flag<Flags>, raw_fd data) noexcept
       : fd_{fd}, event_{Flags, data} {
     check_epoll_modify_flags<Flags>();
   }
 
   template <capi::epoll_event_flag Flags>
-  constexpr epoll_modify(raw_fd fd, epoll_event_flags<Flags>, uint32_t data) noexcept
+  constexpr epoll_modify(raw_fd fd, epoll_event_flag<Flags>, uint32_t data) noexcept
       : fd_{fd}, event_{Flags, data} {
     check_epoll_modify_flags<Flags>();
   }
 
   template <capi::epoll_event_flag Flags>
-  constexpr epoll_modify(raw_fd fd, epoll_event_flags<Flags>, uint64_t data) noexcept
+  constexpr epoll_modify(raw_fd fd, epoll_event_flag<Flags>, uint64_t data) noexcept
       : fd_{fd}, event_{Flags, data} {
     check_epoll_modify_flags<Flags>();
   }
@@ -147,7 +144,7 @@ class epoll_event final : public ::epoll_event {
 
  private:
   template <capi::epoll_event_flag Flag>
-  inline bool has_flag(epoll_flag<Flag>) const noexcept {
+  inline bool has_flag(epoll_event_flag<Flag>) const noexcept {
     return this->events & underlying_v(Flag);
   }
 };

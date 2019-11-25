@@ -61,14 +61,8 @@ enum class mmap_flag : int { fixed = MAP_FIXED, private_ = MAP_PRIVATE, shared =
 template <capi::mmap_flag Flag>
 using mmap_flag = enum_flag<capi::mmap_flag, Flag>;
 
-template <capi::mmap_flag Flags>
-using mmap_flag_set = enum_flag_set<capi::mmap_flag, Flags>;
-
 template <capi::mmap_protection Flag>
 using mmap_protection = enum_flag<capi::mmap_protection, Flag>;
-
-template <capi::mmap_protection Flags>
-using mmap_protection_set = enum_flag_set<capi::mmap_protection, Flags>;
 
 inline constexpr mmap_protection<capi::mmap_protection::none> mmap_no_access{};
 inline constexpr mmap_protection<capi::mmap_protection::read> mmap_read{};
@@ -97,18 +91,18 @@ class mmap {
   std::error_code unsafe_protect(capi::mmap_protection prot) noexcept;
 
   template <capi::mmap_protection ProtectionFlags, capi::mmap_flag Flags>
-  static result<mmap> map(void *addr, size_t len, mmap_protection_set<ProtectionFlags>,
-                          mmap_flag_set<Flags>, raw_fd fildes, off_t off) noexcept {
+  static result<mmap> map(void *addr, size_t len, mmap_protection<ProtectionFlags>,
+                          mmap_flag<Flags>, raw_fd fildes, off_t off) noexcept {
     static_assert(
-        not(mmap_protection_set<ProtectionFlags>::has(mmap_no_access) and
-            (mmap_protection_set<ProtectionFlags>::has(mmap_read) or
-             mmap_protection_set<ProtectionFlags>::has(mmap_write) or
-             mmap_protection_set<ProtectionFlags>::has(mmap_execute))),
+        not(mmap_protection<ProtectionFlags>::has(mmap_no_access) and
+            (mmap_protection<ProtectionFlags>::has(mmap_read) or
+             mmap_protection<ProtectionFlags>::has(mmap_write) or
+             mmap_protection<ProtectionFlags>::has(mmap_execute))),
         "pposix::mmap_no_access cannot be set with pposix::mmap_read, pposix::mmap_write "
         "or pposix::mmap_execute.");
 
     static_assert(
-        not(mmap_flag_set<Flags>::has(mmap_private) and mmap_flag_set<Flags>::has(mmap_shared)),
+        not(mmap_flag<Flags>::has(mmap_private) and mmap_flag<Flags>::has(mmap_shared)),
         "You can only specify one of pposix::mmap_private or pposix::mmap_shared, not both.");
 
     return unsafe_map(addr, len, ProtectionFlags, Flags, fildes, off);
@@ -117,10 +111,10 @@ class mmap {
   std::error_code unmap() noexcept;
 
   template <capi::mmap_protection ProtectionFlags>
-  std::error_code protect(mmap_protection_set<ProtectionFlags>) noexcept {
-    static_assert(not(mmap_protection_set<ProtectionFlags>::has(mmap_no_access) and
-                      (mmap_protection_set<ProtectionFlags>::has(mmap_read) or
-                       mmap_protection_set<ProtectionFlags>::has(mmap_write))),
+  std::error_code protect(mmap_protection<ProtectionFlags>) noexcept {
+    static_assert(not(mmap_protection<ProtectionFlags>::has(mmap_no_access) and
+                      (mmap_protection<ProtectionFlags>::has(mmap_read) or
+                       mmap_protection<ProtectionFlags>::has(mmap_write))),
                   "pposix::mmap_no_access cannot be set with pposix::mmap_read or "
                   "pposix::mmap_write.");
 
@@ -134,6 +128,23 @@ class mmap {
       unique_d<mmap_d_tag, mmap_d, detail::get_mmap_null_d, detail::mmap_default_close_policy>;
 
   unique_mmap_d mmap_d_{};
+};
+
+class shm {
+ public:
+  shm() noexcept = default;
+
+  shm(const shm &) noexcept = delete;
+  shm(shm &&) noexcept = default;
+
+  shm &operator=(const shm &) noexcept = delete;
+  shm &operator=(shm &&) noexcept = default;
+
+  static result<shm> unsafe_open(const char *name) noexcept;
+
+ private:
+  struct tag {};
+  unique_fd shm_fd_{};
 };
 
 }  // namespace pposix

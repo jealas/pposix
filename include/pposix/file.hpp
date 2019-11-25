@@ -3,7 +3,6 @@
 #include <string_view>
 #include <system_error>
 
-#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -16,64 +15,8 @@
 
 namespace pposix {
 
-// File flags
-enum class file_flags : unsigned {
-  append = O_APPEND,
-  cloexec = O_CLOEXEC,
-  create = O_CREAT,
-
-  directory = O_DIRECTORY,
-
-#if !PPOSIX_PLATFORM_FREEBSD
-  dsync = O_DSYNC,
-#endif
-
-  exclusive = O_EXCL,
-  noctty = O_NOCTTY,
-  nofollow = O_NOFOLLOW,
-  nonblock = O_NONBLOCK,
-
-#if !PPOSIX_PLATFORM_MACOS && !PPOSIX_PLATFORM_FREEBSD
-  rsync = O_RSYNC,
-#endif
-
-  sync = O_SYNC,
-  truncate = O_TRUNC,
-
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD
-  tty_init = O_TTY_INIT
-#endif
-};
-
-constexpr file_flags operator|(file_flags lhs, file_flags rhs) noexcept {
-  return file_flags{underlying_v(lhs) | underlying_v(rhs)};
-}
-
-constexpr file_flags &operator|=(file_flags &lhs, file_flags rhs) noexcept {
-  lhs = lhs | rhs;
-  return lhs;
-}
-
-// File mode
-enum class file_mode : unsigned {
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD
-  exec = O_EXEC,
-#endif
-
-  read = O_RDONLY,
-  read_write = O_RDWR,
-
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD && !PPOSIX_PLATFORM_OPENBSD
-  search = O_SEARCH,
-#endif
-
-  write = O_WRONLY
-};
-
-// File seek whence
 enum class file_seek { set = SEEK_SET, current = SEEK_CUR, end = SEEK_END };
 
-// File permission
 enum class file_permission : unsigned {
   none = 0u,
 
@@ -171,9 +114,18 @@ class file {
   file &operator=(const file &) = delete;
   file &operator=(file &&) = default;
 
-  static result<raw_fd> unsafe_open(const char *path, file_mode mode, file_flags flags) noexcept;
+  static result<raw_fd> unsafe_open(const char *path, capi::access_mode mode,
+                                    capi::open_flag flags) noexcept;
 
-  static result<file> open(const char *path, file_mode mode, file_flags flags) noexcept;
+  template <capi::access_mode AccessMode, capi::open_flag OpenFlags>
+  result<file> open(const char *path, access_mode<AccessMode> mode,
+                    open_flag<OpenFlags> flags) noexcept {
+    static_assert(open_flag<OpenFlags>::has(excl) ? open_flag<OpenFlags>::has(creat) : true);
+
+    return result_map<file>(unsafe_open(path, mode, flags),
+                            [](const raw_fd &fd) { return file{fd}; });
+  }
+
   std::error_code close() noexcept;
 
   result<off_t> lseek(off_t offset, file_seek wh) noexcept;
