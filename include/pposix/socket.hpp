@@ -82,6 +82,10 @@ enum class socket_option : int {
   sndlowat = SO_SNDLOWAT,
   sndtimeo = SO_SNDTIMEO,
   type = SO_TYPE
+
+#if PPOSIX_LINUX_EXTENSION_ENABLED
+      zerocpy = SO_ZEROCOPY
+#endif
 };
 
 enum class socket_flag : unsigned {

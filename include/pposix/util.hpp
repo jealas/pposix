@@ -71,5 +71,3 @@ constexpr bool always_false = false;
   } else {                                                                  \
     return T{_pposix_result_};                                              \
   }
-
-#define PPOSIX_CONSTEXPR_FLAG_VAR(flag, name) constexpr ::pposix::enum_flav_v<flag> name{};

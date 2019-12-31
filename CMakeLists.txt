@@ -20,6 +20,7 @@ add_library(
         src/confstr.cpp
         src/signal.cpp
         src/mman.cpp
+        src/fcntl.cpp
 )
 
 target_include_directories(
