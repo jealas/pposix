@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cstddef>
-
 #include <unistd.h>
+
+#include <cstddef>
 
 #include "pposix/char_span.hpp"
 #include "pposix/platform.hpp"

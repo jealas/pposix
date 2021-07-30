@@ -21,4 +21,4 @@ class timespec : public ::timespec {
   }
 };
 
-}
+}  // namespace pposix

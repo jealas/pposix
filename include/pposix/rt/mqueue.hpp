@@ -1,10 +1,10 @@
 #pragma once
 
-#include <system_error>
-
 #include <fcntl.h>
 #include <limits.h>
 #include <mqueue.h>
+
+#include <system_error>
 
 #include "pposix/byte_span.hpp"
 #include "pposix/result.hpp"

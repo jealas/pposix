@@ -17,4 +17,4 @@ result<system_config_value> sysconf(system_config_name config_name) noexcept {
   }
 }
 
-}
+}  // namespace pposix

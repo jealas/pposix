@@ -1,10 +1,10 @@
 #pragma once
 
+#include <syslog.h>
+
 #include <algorithm>
 #include <initializer_list>
 #include <string>
-
-#include <syslog.h>
 
 #include "pposix/util.hpp"
 
@@ -93,15 +93,14 @@ syslog_priority_set setlogmask(syslog_priority_set priorities) noexcept;
 void closelog() noexcept;
 
 template <class... Args>
-void syslog(syslog_priority priority, const char *format, Args &&... args) noexcept {
+void syslog(syslog_priority priority, const char *format, Args &&...args) noexcept {
   pposix::syslog(priority, syslog_facility::user, format, std::forward<Args>(args)...);
 }
 
 template <class... Args>
 void syslog(syslog_priority priority, syslog_facility facility, const char *format,
-            Args &&... args) noexcept {
-  ::syslog(underlying_v(priority) | underlying_v(facility), format,
-           std::forward<Args>(args)...);
+            Args &&...args) noexcept {
+  ::syslog(underlying_v(priority) | underlying_v(facility), format, std::forward<Args>(args)...);
 }
 
 }  // namespace pposix

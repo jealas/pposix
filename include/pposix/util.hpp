@@ -56,7 +56,7 @@ constexpr bool always_false = false;
 }  // namespace pposix
 
 #define PPOSIX_COMMON_CALL(fn, ...) \
-  (fn(__VA_ARGS__) == -1 ? ::pposix::current_errno_code() : ::std::error_code{})
+  ((fn)(__VA_ARGS__) == -1 ? ::pposix::current_errno_code() : ::std::error_code{})
 
 #define PPOSIX_COMMON_RESULT_CALL_IMPL(fn, ...)                             \
   if (const auto _pposix_result_{fn(__VA_ARGS__)}; _pposix_result_ == -1) { \

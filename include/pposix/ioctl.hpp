@@ -25,4 +25,4 @@ result<ioctl_int> ioctl(raw_fd, ioctl_request, std::nullptr_t) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, any_view) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, any_cview) noexcept;
 
-}
+}  // namespace pposix

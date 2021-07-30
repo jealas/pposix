@@ -10,24 +10,14 @@ namespace pposix {
 struct null_d_t {};
 inline constexpr null_d_t null_d{};
 
-template <class Tag, class Descriptor, class GetNull, class ClosePolicy>
-class [[nodiscard]] unique_d : private ClosePolicy {
+template <class Descriptor, class GetNull, auto ClosePolicy>
+class [[nodiscard]] unique_d {
  public:
   constexpr unique_d() noexcept = default;
 
-  constexpr unique_d(null_d_t) noexcept(noexcept(ClosePolicy{}))
-      : ClosePolicy{} {}  // NOLINT implicit constructor
+  constexpr explicit unique_d(null_d_t) noexcept {}
 
-  constexpr explicit unique_d(Descriptor descriptor) noexcept(noexcept(ClosePolicy{}))
-      : ClosePolicy{}, raw_descriptor_{descriptor} {}
-
-  constexpr explicit unique_d(Descriptor descriptor, const ClosePolicy &close) noexcept(
-      noexcept(ClosePolicy{std::declval<const ClosePolicy &>()}))
-      : raw_descriptor_{descriptor}, ClosePolicy{close} {}
-
-  constexpr explicit unique_d(Descriptor descriptor, ClosePolicy && close) noexcept(
-      noexcept(ClosePolicy{std::declval<ClosePolicy &&>()}))
-      : ClosePolicy{std::move(close)}, raw_descriptor_{descriptor} {}
+  constexpr explicit unique_d(Descriptor descriptor) : raw_descriptor_{descriptor} {}
 
   ~unique_d() {
     if (const auto error = close()) {
@@ -36,7 +26,7 @@ class [[nodiscard]] unique_d : private ClosePolicy {
   }
 
   unique_d(const unique_d &other) = delete;
-  unique_d(unique_d && other) noexcept { std::swap(raw_descriptor_, other.raw_descriptor_); }
+  unique_d(unique_d &&other) noexcept { std::swap(raw_descriptor_, other.raw_descriptor_); }
 
   unique_d &operator=(const unique_d &) = delete;
 
@@ -55,22 +45,14 @@ class [[nodiscard]] unique_d : private ClosePolicy {
   Descriptor *operator->() noexcept { return &raw_descriptor_; }
   Descriptor const *operator->() const noexcept { return &raw_descriptor_; }
 
-  constexpr ClosePolicy &get_close_policy() noexcept { return *this; }
-  constexpr const ClosePolicy &get_close_policy() const noexcept { return *this; }
-
   [[nodiscard]] Descriptor release() noexcept {
     Descriptor tmp_fd{raw_descriptor_};
     raw_descriptor_ = GetNull{}();
     return tmp_fd;
   }
 
-  [[nodiscard]] std::error_code close() noexcept(
-      noexcept(std::declval<ClosePolicy &>()(std::declval<Descriptor>()))) {
-    if (empty()) {
-      return {};
-    }
-
-    const auto error = ClosePolicy::operator()(raw());
+  [[nodiscard]] std::error_code close() noexcept {
+    const auto error = ClosePolicy(raw());
     if (not error) {
       raw_descriptor_ = GetNull{}();
     }

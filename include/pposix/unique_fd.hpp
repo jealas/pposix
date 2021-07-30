@@ -9,14 +9,13 @@
 
 namespace pposix {
 
-using raw_fd = int;
+using raw_fd_t = int;
 
-struct fd_close_policy {
-  std::error_code operator()(raw_fd fd) const noexcept;
-};
+enum class raw_fd : raw_fd_t {};
 
-struct fd_tag {};
+std::error_code close_fd(raw_fd fd) noexcept;
 
-using unique_fd = unique_d<fd_tag, int, std::integral_constant<int, -1>, fd_close_policy>;
+using unique_fd =
+    unique_d<raw_fd, std::integral_constant<raw_fd, raw_fd{static_cast<raw_fd_t>(-1)}>, close_fd>;
 
 }  // namespace pposix

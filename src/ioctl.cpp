@@ -1,10 +1,10 @@
 #include "pposix/ioctl.hpp"
 
-#include <stdexcept>
-#include <string>
-
 #include <sys/ioctl.h>
 #include <unistd.h>
+
+#include <stdexcept>
+#include <string>
 
 #include "pposix/errno.hpp"
 #include "pposix/util.hpp"
@@ -12,15 +12,15 @@
 namespace pposix {
 
 result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, int i) noexcept {
-  return PPOSIX_COMMON_CALL(::ioctl, fd, underlying_v(r), i);
+  return PPOSIX_COMMON_CALL(::ioctl, static_cast<raw_fd_t>(fd), underlying_v(r), i);
 }
 
 result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, void *ptr) noexcept {
-  return PPOSIX_COMMON_CALL(::ioctl, fd, underlying_v(r), ptr);
+  return PPOSIX_COMMON_CALL(::ioctl, static_cast<raw_fd_t>(fd), underlying_v(r), ptr);
 }
 
 result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, const void *ptr) noexcept {
-  return PPOSIX_COMMON_CALL(::ioctl, fd, underlying_v(r), ptr);
+  return PPOSIX_COMMON_CALL(::ioctl, static_cast<raw_fd_t>(fd), underlying_v(r), ptr);
 }
 
 result<ioctl_int> ioctl(raw_fd fd, ioctl_request r, std::nullptr_t) noexcept {

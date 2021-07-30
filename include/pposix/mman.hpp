@@ -1,9 +1,9 @@
 #pragma once
 
+#include <sys/mman.h>
+
 #include <cstddef>
 #include <system_error>
-
-#include <sys/mman.h>
 
 #include "pposix/result.hpp"
 #include "pposix/unique_d.hpp"
@@ -34,7 +34,7 @@ bool operator==(const mmap_d &lhs, const mmap_d &rhs) noexcept {
 namespace detail {
 
 struct get_mmap_null_d {
-  inline mmap_d operator()() const noexcept { return {MAP_FAILED, 0u}; }
+  inline mmap_d operator()() const noexcept { return {}; }
 };
 
 struct mmap_default_close_policy {
@@ -56,8 +56,8 @@ enum class mmap_protection : int {
 
 enum class mmap_flag : int { fixed = MAP_FIXED, private_ = MAP_PRIVATE, shared = MAP_SHARED };
 
-result<mmap_d> mmap_map(void *addr, size_t len, capi::mmap_protection prot,
-                               capi::mmap_flag flags, raw_fd fildes, off_t off) noexcept;
+result<mmap_d> mmap_map(void *addr, size_t len, capi::mmap_protection prot, capi::mmap_flag flags,
+                        raw_fd fildes, off_t off) noexcept;
 
 std::error_code mmap_protect(capi::mmap_protection prot) noexcept;
 
@@ -77,6 +77,10 @@ inline constexpr mmap_protection<capi::mmap_protection::exec> mmap_execute{};
 inline constexpr mmap_flag<capi::mmap_flag::fixed> mmap_fixed{};
 inline constexpr mmap_flag<capi::mmap_flag::private_> mmap_private{};
 inline constexpr mmap_flag<capi::mmap_flag::shared> mmap_shared{};
+
+std::error_code close_mmap(const mmap_d &) noexcept;
+
+using unique_mmap_d = unique_d<mmap_d, detail::get_mmap_null_d, close_mmap>;
 
 class mmap {
  public:
@@ -122,11 +126,6 @@ class mmap {
   }
 
  private:
-  struct mmap_d_tag {};
-
-  using unique_mmap_d =
-      unique_d<mmap_d_tag, mmap_d, detail::get_mmap_null_d, detail::mmap_default_close_policy>;
-
   unique_mmap_d mmap_d_{};
 };
 

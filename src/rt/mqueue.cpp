@@ -98,4 +98,4 @@ result<mq_message> mq::timed_receive(byte_span message,
                             message.length(), underlying_v(priority), &absolute_time);
 }
 
-}
+}  // namespace pposix::rt

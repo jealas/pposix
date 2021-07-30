@@ -8,15 +8,15 @@
 namespace pposix::capi {
 
 std::error_code fcntl(const raw_fd fd, const capi::fcntl_cmd cmd) noexcept {
-  return PPOSIX_COMMON_CALL(::fcntl, fd, underlying_v(cmd));
+  return PPOSIX_COMMON_CALL(::fcntl, static_cast<raw_fd_t>(fd), underlying_v(cmd));
 }
 
 std::error_code fcntl(const raw_fd fd, const capi::fcntl_cmd cmd, const int arg) noexcept {
-  return PPOSIX_COMMON_CALL(::fcntl, fd, underlying_v(cmd), arg);
+  return PPOSIX_COMMON_CALL(::fcntl, static_cast<raw_fd_t>(fd), underlying_v(cmd), arg);
 }
 
 std::error_code fcntl(const raw_fd fd, const capi::fcntl_cmd cmd, void *arg) noexcept {
-  return PPOSIX_COMMON_CALL(::fcntl, fd, underlying_v(cmd), arg);
+  return PPOSIX_COMMON_CALL(::fcntl, static_cast<raw_fd_t>(fd), underlying_v(cmd), arg);
 }
 
 result<raw_fd> open(const char *path, const capi::access_mode mode,
