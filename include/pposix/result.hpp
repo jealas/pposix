@@ -121,10 +121,11 @@ T *result_get_value_unsafe(result<T> &res) noexcept {
 }  // namespace detail
 
 template <class U, class T, class Func>
-result<U> result_map(const result<T> &result,
-                     Func &&func) noexcept(noexcept(func(std::declval<const T &>()))) {
+result<U> result_map(const result<T> &result, Func func) noexcept {
+  static_assert(noexcept(func(std::declval<const T &>())));
+
   if (const auto *value_ptr = detail::result_get_value_unsafe(result)) {
-    return std::forward<Func>(func)(*value_ptr);
+    return func(*value_ptr);
   } else {
     return *detail::result_get_error_unsafe(result);
   }

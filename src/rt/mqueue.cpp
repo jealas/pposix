@@ -4,13 +4,10 @@
 
 namespace pposix::rt {
 
-namespace detail {
-
-std::error_code mq_close_policy::operator()(::mqd_t mq_descriptor) const noexcept {
+std::error_code close_mq_d(const ::mqd_t mq_descriptor) noexcept
+{
   return PPOSIX_COMMON_CALL(::mq_close, mq_descriptor);
 }
-
-}  // namespace detail
 
 mq::mq(::mqd_t mq_d) noexcept : mq_d_{mq_d} {}
 

@@ -7,8 +7,8 @@
 #include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
 #include "pposix/extension.hpp"
+#include "pposix/file_descriptor.hpp"
 #include "pposix/result.hpp"
-#include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix {
@@ -81,7 +81,7 @@ enum class socket_option : int {
   sndbuf = SO_SNDBUF,
   sndlowat = SO_SNDLOWAT,
   sndtimeo = SO_SNDTIMEO,
-  type = SO_TYPE
+  type = SO_TYPE,
 
 #if PPOSIX_LINUX_EXTENSION_ENABLED
       zerocpy = SO_ZEROCOPY
@@ -118,7 +118,7 @@ enum class socket_fd : socket_fd_t {};
 std::error_code close_socket(socket_fd fd) noexcept;
 
 using unique_socket_fd =
-    unique_d<socket_fd, std::integral_constant<socket_fd, socket_fd{static_cast<socket_fd_t>(-1)}>,
+    unique_descriptor<socket_fd, std::integral_constant<socket_fd, socket_fd{static_cast<socket_fd_t>(-1)}>,
              close_socket>;
 
 // Socket options

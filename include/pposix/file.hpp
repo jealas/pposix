@@ -8,10 +8,10 @@
 
 #include "pposix/byte_span.hpp"
 #include "pposix/fcntl.hpp"
+#include "pposix/file_descriptor.hpp"
 #include "pposix/platform.hpp"
 #include "pposix/result.hpp"
 #include "pposix/stat.hpp"
-#include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix {

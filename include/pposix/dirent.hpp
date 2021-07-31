@@ -5,9 +5,9 @@
 #include <string_view>
 #include <system_error>
 
+#include "pposix/file_descriptor.hpp"
 #include "pposix/result.hpp"
-#include "pposix/unique_d.hpp"
-#include "pposix/unique_fd.hpp"
+#include "pposix/unique_descriptor.hpp"
 
 namespace pposix {
 
@@ -21,8 +21,9 @@ struct unique_dir_fd : unique_fd {
   using unique_fd::unique_fd;
 };
 
-using unique_dirent = unique_d<DIR *, std::integral_constant<DIR *, nullptr>, close_dir>;
+using unique_dirent = unique_descriptor<DIR *, std::integral_constant<DIR *, nullptr>, close_dir>;
 
 result<unique_dirent> opendir(dir_fd fd) noexcept;
+result<unique_dirent> opendir(const char *dir) noexcept;
 
 }  // namespace pposix

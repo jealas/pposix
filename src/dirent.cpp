@@ -8,9 +8,16 @@ namespace pposix {
 std::error_code close_dir(DIR *dir) noexcept { return PPOSIX_COMMON_CALL(::closedir, dir); }
 
 result<unique_dirent> opendir(const dir_fd fd) noexcept {
-  const auto dirfd = dir_fd_t(fd);
+  if (DIR *dir = ::fdopendir(static_cast<dir_fd_t>(fd)); dir == nullptr) {
+    return current_errno_code();
+  } else {
+    return unique_dirent{dir};
+  }
+}
 
-  if (DIR *dir = ::fdopendir(dirfd); dir == nullptr) {
+result<unique_dirent> opendir(const char *path) noexcept
+{
+  if (DIR *dir = ::opendir(path); dir == nullptr) {
     return current_errno_code();
   } else {
     return unique_dirent{dir};

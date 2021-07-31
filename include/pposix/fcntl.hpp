@@ -3,10 +3,10 @@
 
 #include <fcntl.h>
 
+#include "file_descriptor.hpp"
 #include "platform.hpp"
 #include "result.hpp"
 #include "stat.hpp"
-#include "unique_fd.hpp"
 #include "util.hpp"
 
 namespace pposix {
@@ -110,6 +110,7 @@ constexpr open_flag &operator|=(open_flag &lhs, open_flag rhs) noexcept {
 
 enum class access_mode : unsigned {
 #if PPOSIX_PLATFORM_LINUX
+  // O_PATH is equivalent to O_EXEC on Linux
   exec = O_PATH,
 #else
   exec = O_EXEC,

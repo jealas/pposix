@@ -5,10 +5,10 @@
 #include <cstddef>
 
 #include "pposix/duration.hpp"
+#include "pposix/file_descriptor.hpp"
 #include "pposix/result.hpp"
 #include "pposix/signal.hpp"
 #include "pposix/span.hpp"
-#include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix::lnx {
@@ -93,18 +93,18 @@ class epoll_modify {
 
  public:
   template <capi::epoll_event_flag Flags>
-  constexpr epoll_modify(raw_fd fd, epoll_event_flag<Flags>) noexcept : fd_{fd}, event_{Flags} {
+  constexpr epoll_modify(const raw_fd fd, epoll_event_flag<Flags>) noexcept : fd_{fd}, event_{Flags} {
     check_epoll_modify_flags<Flags>();
   }
 
   template <capi::epoll_event_flag Flags>
-  constexpr epoll_modify(raw_fd fd, epoll_event_flag<Flags>, void *data) noexcept
+  constexpr epoll_modify(const raw_fd fd, epoll_event_flag<Flags>, void * const data) noexcept
       : fd_{fd}, event_{Flags, data} {
     check_epoll_modify_flags<Flags>();
   }
 
   template <capi::epoll_event_flag Flags>
-  constexpr epoll_modify(raw_fd fd, epoll_event_flag<Flags>, raw_fd data) noexcept
+  constexpr epoll_modify(const raw_fd fd, epoll_event_flag<Flags>, const raw_fd data) noexcept
       : fd_{fd}, event_{Flags, data} {
     check_epoll_modify_flags<Flags>();
   }
@@ -161,7 +161,7 @@ class epoll {
   epoll &operator=(const epoll &) noexcept = delete;
   epoll &operator=(epoll &&) noexcept = default;
 
-  static result<epoll> unsafe_create(size_t) noexcept;
+  static result<epoll> unsafe_create(int) noexcept;
   static result<epoll> unsafe_create1(capi::epoll_flag flags) noexcept;
 
   static result<epoll> create() noexcept;
@@ -181,8 +181,6 @@ class epoll {
   result<int> pwait(span<lnx::epoll_event>, milliseconds timeout, const sigset &sigmask) noexcept;
 
  private:
-  struct tag {};
-
   unique_fd epoll_fd_{};
 };
 

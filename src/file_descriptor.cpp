@@ -1,4 +1,4 @@
-#include "pposix/unique_fd.hpp"
+#include "pposix/file_descriptor.hpp"
 
 #include <unistd.h>
 

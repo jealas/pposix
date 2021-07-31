@@ -11,7 +11,7 @@
 #include "pposix/signal.hpp"
 #include "pposix/stat.hpp"
 #include "pposix/time.hpp"
-#include "pposix/unique_d.hpp"
+#include "pposix/unique_descriptor.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix::rt {
@@ -22,10 +22,6 @@ namespace detail {
 
 struct mq_null_descriptor {
   ::mqd_t operator()() const noexcept { return NULL_MQD_T; }
-};
-
-struct mq_close_policy {
-  std::error_code operator()(mqd_t mq_descriptor) const noexcept;
 };
 
 }  // namespace detail
@@ -61,7 +57,7 @@ template <capi::mq_option Flag>
 using mq_option_flag = enum_flag<capi::mq_option, Flag>;
 
 template <capi::mq_option Flags>
-using mq_option_flag_set = enum_flag_set<capi::mq_option, Flags>;
+using mq_option_flag_set = enum_flag<capi::mq_option, Flags>;
 
 inline constexpr mq_option_flag<capi::mq_option::excl> mq_excl{};
 inline constexpr mq_option_flag<capi::mq_option::non_blocking> mq_non_blocking{};
@@ -135,6 +131,10 @@ class mq_notify_signal {
  private:
   pposix::sigevent event_{};
 };
+
+std::error_code close_mq_d(::mqd_t) noexcept;
+
+using unique_mq_d = unique_descriptor<::mqd_t, detail::mq_null_descriptor, close_mq_d>;
 
 class mq {
  public:
@@ -262,10 +262,6 @@ class mq {
   }
 
  private:
-  struct mq_tag {};
-  using unique_mq_d =
-      unique_d<mq_tag, ::mqd_t, detail::mq_null_descriptor, detail::mq_close_policy>;
-
   unique_mq_d mq_d_{};
 };
 

@@ -1,8 +1,8 @@
 #include "pposix/fcntl.hpp"
 
+#include "pposix/file_descriptor.hpp"
 #include "pposix/result.hpp"
 #include "pposix/stat.hpp"
-#include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix::capi {
@@ -21,13 +21,12 @@ std::error_code fcntl(const raw_fd fd, const capi::fcntl_cmd cmd, void *arg) noe
 
 result<raw_fd> open(const char *path, const capi::access_mode mode,
                     const capi::open_flag flags) noexcept {
-  return PPOSIX_COMMON_CALL(::open, path, underlying_v(mode) | underlying_v(flags));
+  PPOSIX_COMMON_RESULT_MAP_IMPL(raw_fd, ::open, path, underlying_v(mode) | underlying_v(flags))
 }
 
 result<raw_fd> open(const char *path, capi::access_mode mode, capi::open_flag flags,
                     capi::permission permission) noexcept {
-  return PPOSIX_COMMON_CALL(::open, path, underlying_v(mode) | underlying_v(flags),
-                            underlying_v(permission));
+  PPOSIX_COMMON_RESULT_MAP_IMPL(raw_fd, ::open, path, underlying_v(mode) | underlying_v(flags), underlying_v(permission))
 }
 
 }  // namespace pposix::capi
