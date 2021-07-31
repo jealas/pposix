@@ -1,12 +1,9 @@
 #include "pposix/socket.hpp"
 
-#include <netinet/in.h>
 #include <sys/socket.h>
-#include <unistd.h>
 
 #include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
-#include "pposix/fd.hpp"
 #include "pposix/result.hpp"
 #include "pposix/util.hpp"
 
