@@ -77,11 +77,11 @@ enum class open_flag : unsigned {
   nofollow = O_NOFOLLOW,
   truncate = O_TRUNC,
 
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD
+#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD && !PPOSIX_PLATFORM_MACOS
   tty_init = O_TTY_INIT
 #endif
 
-      append = O_APPEND,
+  append = O_APPEND,
 
 #if !PPOSIX_PLATFORM_FREEBSD
   dsync = O_DSYNC,
@@ -112,14 +112,14 @@ enum class access_mode : unsigned {
 #if PPOSIX_PLATFORM_LINUX
   // O_PATH is equivalent to O_EXEC on Linux
   exec = O_PATH,
-#else
+#elif !PPOSIX_PLATFORM_MACOS
   exec = O_EXEC,
 #endif
 
   read = O_RDONLY,
   read_write = O_RDWR,
 
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD && !PPOSIX_PLATFORM_OPENBSD
+#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD && !PPOSIX_PLATFORM_OPENBSD && !PPOSIX_PLATFORM_MACOS
   search = O_SEARCH,
 #endif
 
