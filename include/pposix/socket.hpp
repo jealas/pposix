@@ -13,6 +13,19 @@
 
 namespace pposix {
 
+namespace capi {
+
+using socket_fd_t = int;
+
+struct raw_socket_fd : raw_fd {
+  using raw_fd::raw_fd;
+};
+
+using socket_fd =
+    descriptor<raw_socket_fd,
+               descriptor_constant<raw_socket_fd, socket_fd_t, static_cast<socket_fd_t>(-1)>,
+               close_raw_fd>;
+
 enum class socket_domain : int {
   // POSIX-defined socket domains
   inet = AF_INET,
@@ -111,17 +124,6 @@ enum class socket_level : int {
   udp = IPPROTO_UDP,
 };
 
-using socket_fd_t = int;
-
-struct socket_fd : raw_fd {
-  using raw_fd::raw_fd;
-};
-
-using socket_descriptor =
-    descriptor<socket_fd,
-               descriptor_constant<socket_fd, socket_fd_t, static_cast<socket_fd_t>(-1)>,
-               close_raw_fd>;
-
 // Socket options
 enum class socket_debug : bool { off = false, on = true };
 enum class socket_broadcast : bool { off = false, on = true };
@@ -216,12 +218,20 @@ class socket_sndtimeo {
 enum class socket_acceptconn : bool {};
 enum class socket_error : int {};
 
+pposix::result<socket_fd> socket(socket_domain dom, socket_type typ, socket_flag flags,
+                                 socket_protocol prot) noexcept;
+
+std::error_code setsockopt(socket_level, socket_option, any_cview) noexcept;
+result<socklen_t> getsockopt(socket_level, socket_option, any_view) noexcept;
+
+}  // namespace capi
+
 // Set socket option
 class socket {
  public:
   socket() noexcept = default;
 
-  explicit socket(socket_descriptor fd) noexcept;
+  explicit socket(capi::socket_fd fd) noexcept;
 
   socket(const socket &) = delete;
   socket(socket &&) = default;
@@ -229,97 +239,7 @@ class socket {
   socket &operator=(const socket &) = delete;
   socket &operator=(socket &&) = default;
 
-  static pposix::result<socket> unsafe_make(socket_domain dom, socket_type typ, socket_flag flags,
-                                            socket_protocol prot) noexcept;
-
-  std::error_code unsafe_setsockopt(socket_level, socket_option, any_cview) noexcept;
-
-  std::error_code setsockopt(socket_level, socket_debug) noexcept;
-  std::error_code setsockopt(socket_level, socket_broadcast) noexcept;
-  std::error_code setsockopt(socket_level, socket_reuseaddr) noexcept;
-  std::error_code setsockopt(socket_level, socket_keepalive) noexcept;
-  std::error_code setsockopt(socket_level, socket_linger) noexcept;
-  std::error_code setsockopt(socket_level, socket_oobinline) noexcept;
-  std::error_code setsockopt(socket_level, socket_sndbuf) noexcept;
-  std::error_code setsockopt(socket_level, socket_rcvbuf) noexcept;
-  std::error_code setsockopt(socket_level, socket_dontroute) noexcept;
-  std::error_code setsockopt(socket_level, socket_rcvlowat) noexcept;
-  std::error_code setsockopt(socket_level, socket_rcvtimeo) noexcept;
-  std::error_code setsockopt(socket_level, socket_sndlowat) noexcept;
-  std::error_code setsockopt(socket_level, socket_sndtimeo) noexcept;
-
-  result<socklen_t> unsafe_getsockopt(socket_level, socket_option, any_view) noexcept;
-
-  template <class T>
-  result<T> getsockopt(const socket_level l) noexcept {
-    if constexpr (std::is_same_v<T, socket_debug>) {
-      return getsockopt_bool<socket_debug>(l, socket_option::debug);
-    } else if (std::is_same_v<T, socket_broadcast>) {
-      return getsockopt_bool<socket_broadcast>(l, socket_option::broadcast);
-    } else if (std::is_same_v<T, socket_reuseaddr>) {
-      return getsockopt_bool<socket_reuseaddr>(l, socket_option::reuseaddr);
-    } else if (std::is_same_v<T, socket_acceptconn>) {
-      return getsockopt_bool<socket_acceptconn>(l, socket_option::acceptconn);
-    } else if (std::is_same_v<T, socket_keepalive>) {
-      return getsockopt_bool<socket_keepalive>(l, socket_option::keepalive);
-    } else if (std::is_same_v<T, socket_linger>) {
-      return getsockopt_struct<socket_linger>(l, socket_option::linger);
-    } else if (std::is_same_v<T, socket_oobinline>) {
-      return getsockopt_bool<socket_oobinline>(l, socket_option::oobinline);
-    } else if (std::is_same_v<T, socket_sndbuf>) {
-      return getsockopt_int<socket_sndbuf>(l, socket_option::sndbuf);
-    } else if (std::is_same_v<T, socket_rcvbuf>) {
-      return getsockopt_int<socket_rcvbuf>(l, socket_option::rcvbuf);
-    } else if (std::is_same_v<T, socket_error>) {
-      return getsockopt_int<socket_error>(l, socket_option::error);
-    } else if (std::is_same_v<T, socket_type>) {
-      return getsockopt_int<socket_type>(l, socket_option::type);
-    } else if (std::is_same_v<T, socket_dontroute>) {
-      return getsockopt_bool<socket_dontroute>(l, socket_option::dontroute);
-    } else if (std::is_same_v<T, socket_rcvlowat>) {
-      return getsockopt_int<socket_rcvlowat>(l, socket_option::rcvlowat);
-    } else if (std::is_same_v<T, socket_rcvtimeo>) {
-      return getsockopt_struct<socket_rcvtimeo>(l, socket_option::rcvtimeo);
-    } else if (std::is_same_v<T, socket_sndlowat>) {
-      return getsockopt_int<socket_sndlowat>(l, socket_option::sndlowat);
-    } else if (std::is_same_v<T, socket_sndtimeo>) {
-      return getsockopt_struct<socket_sndtimeo>(l, socket_option::sndtimeo);
-    } else {
-      static_assert(always_false<T>, "Unsupported socket option type.");
-    }
-  }
-
  private:
-  std::error_code setsockopt_int(socket_level l, socket_option o, int i) noexcept;
-  std::error_code setsockopt_bool(socket_level l, socket_option o, bool b) noexcept;
-
-  template <class Result>
-  result<Result> getsockopt_int(socket_level l, socket_option o) noexcept {
-    int val{};
-
-    const auto result = unsafe_getsockopt(l, o, any_view{&val});
-    return result_map<Result>(result, [&](int /*ignored*/) { return Result{val}; });
-  }
-
-  template <class Result>
-  result<bool> getsockopt_bool(socket_level l, socket_option o) noexcept {
-    int val{};
-
-    const auto result = unsafe_getsockopt(l, o, any_view{&val});
-    return result_map<Result>(result, [&](int /*ignored*/) { return Result{val != 0}; });
-  }
-
-  template <class Result>
-  result<Result> getsockopt_struct(socket_level l, socket_option o) noexcept {
-    static_assert(std::is_class_v<Result>);
-
-    Result val{};
-
-    const auto result = unsafe_getsockopt(l, o, any_view{&val});
-    return result_map<Result>(result, [&](int /*ignored*/) { return val; });
-  }
-
- private:
-  socket_descriptor socket_fd_{};
+  capi::socket_fd socket_fd_{};
 };
 }  // namespace pposix
