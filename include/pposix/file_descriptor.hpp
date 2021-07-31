@@ -11,18 +11,18 @@ namespace pposix {
 
 using raw_fd_t = int;
 
-struct raw_fd {
- raw_fd_t fd{};
+class raw_fd {
+ public:
+  constexpr explicit raw_fd(const raw_fd_t fd) noexcept : fd_{fd} {}
 
- constexpr explicit operator raw_fd_t() const noexcept
- {
-   return fd;
- }
+  constexpr explicit operator raw_fd_t() const noexcept { return fd_; }
+
+ private:
+  raw_fd_t fd_{};
 };
 
 std::error_code close_fd(raw_fd fd) noexcept;
 
-using unique_fd =
-    unique_descriptor<raw_fd, std::integral_constant<raw_fd, raw_fd{static_cast<raw_fd_t>(-1)}>, close_fd>;
+using unique_fd = unique_descriptor<raw_fd, integral_descriptor<raw_fd, raw_fd_t, -1>, close_fd>;
 
 }  // namespace pposix

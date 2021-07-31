@@ -127,7 +127,7 @@ class epoll_modify {
   constexpr raw_fd fd() const noexcept { return fd_; }
   constexpr capi::epoll_event *event_ptr() noexcept { return &event_; }
 
-  raw_fd fd_{};
+  raw_fd fd_{-1};
   capi::epoll_event event_{};
 };
 

@@ -10,6 +10,15 @@ namespace pposix {
 struct null_d_t {};
 inline constexpr null_d_t null_d{};
 
+template <class FdWrapper, class UnderlyingFd, UnderlyingFd Fd>
+struct integral_descriptor
+{
+  constexpr FdWrapper operator()() const noexcept
+  {
+    return FdWrapper{Fd};
+  }
+};
+
 template <class Descriptor, class GetNull, auto ClosePolicy>
 class [[nodiscard]] unique_descriptor {
   static_assert(noexcept(GetNull{}()));
