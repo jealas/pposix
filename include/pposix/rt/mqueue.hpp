@@ -7,11 +7,11 @@
 #include <system_error>
 
 #include "pposix/byte_span.hpp"
+#include "pposix/descriptor.hpp"
 #include "pposix/result.hpp"
 #include "pposix/signal.hpp"
 #include "pposix/stat.hpp"
 #include "pposix/time.hpp"
-#include "pposix/unique_descriptor.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix::rt {
@@ -134,7 +134,7 @@ class mq_notify_signal {
 
 std::error_code close_mq_d(::mqd_t) noexcept;
 
-using unique_mq_d = unique_descriptor<::mqd_t, detail::mq_null_descriptor, close_mq_d>;
+using unique_mq_d = descriptor<::mqd_t, detail::mq_null_descriptor, close_mq_d>;
 
 class mq {
  public:

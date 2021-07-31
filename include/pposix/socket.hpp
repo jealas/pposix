@@ -118,7 +118,7 @@ enum class socket_fd : socket_fd_t {};
 std::error_code close_socket(socket_fd fd) noexcept;
 
 using unique_socket_fd =
-    unique_descriptor<socket_fd, std::integral_constant<socket_fd, socket_fd{static_cast<socket_fd_t>(-1)}>,
+    descriptor<socket_fd, std::integral_constant<socket_fd, socket_fd{static_cast<socket_fd_t>(-1)}>,
              close_socket>;
 
 // Socket options

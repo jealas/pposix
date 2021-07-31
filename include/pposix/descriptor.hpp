@@ -11,8 +11,7 @@ struct null_d_t {};
 inline constexpr null_d_t null_d{};
 
 template <class FdWrapper, class UnderlyingFd, UnderlyingFd Fd>
-struct integral_descriptor
-{
+struct descriptor_constant {
   constexpr FdWrapper operator()() const noexcept
   {
     return FdWrapper{Fd};
@@ -20,33 +19,33 @@ struct integral_descriptor
 };
 
 template <class Descriptor, class GetNull, auto ClosePolicy>
-class [[nodiscard]] unique_descriptor {
+class [[nodiscard]] descriptor {
   static_assert(noexcept(GetNull{}()));
   static_assert(noexcept(Descriptor{GetNull{}()}));
   static_assert(noexcept(Descriptor{std::declval<Descriptor>()}));
   static_assert(noexcept(ClosePolicy(std::declval<Descriptor>())));
 
  public:
-  constexpr unique_descriptor() noexcept = default;
+  constexpr descriptor() noexcept = default;
 
-  constexpr explicit unique_descriptor(null_d_t) noexcept {}
+  constexpr explicit descriptor(null_d_t) noexcept {}
 
-  constexpr explicit unique_descriptor(Descriptor descriptor) : raw_descriptor_{descriptor} {}
+  constexpr explicit descriptor(Descriptor descriptor) : raw_descriptor_{descriptor} {}
 
-  ~unique_descriptor() {
+  ~descriptor() {
     if (const auto error = close()) {
       // TODO: Log this fatal error.
     }
   }
 
-  unique_descriptor(const unique_descriptor &other) = delete;
-  unique_descriptor(unique_descriptor &&other) noexcept {
+  descriptor(const descriptor &other) = delete;
+  descriptor(descriptor &&other) noexcept {
     std::swap(raw_descriptor_, other.raw_descriptor_);
   }
 
-  unique_descriptor &operator=(const unique_descriptor &) = delete;
+  descriptor &operator=(const descriptor &) = delete;
 
-  constexpr unique_descriptor &operator=(unique_descriptor &&other) noexcept {
+  constexpr descriptor &operator=(descriptor &&other) noexcept {
     std::swap(raw_descriptor_, other.raw_descriptor_);
   }
 

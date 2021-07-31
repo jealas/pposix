@@ -64,7 +64,7 @@ class file {
   result<ssize_t> write(byte_cspan buffer) noexcept;
 
  private:
-  unique_fd fd_{};
+  file_descriptor fd_{};
 };
 
 }  // namespace pposix

@@ -5,9 +5,9 @@
 #include <cstddef>
 #include <system_error>
 
+#include "pposix/descriptor.hpp"
 #include "pposix/file_descriptor.hpp"
 #include "pposix/result.hpp"
-#include "pposix/unique_descriptor.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix {
@@ -80,8 +80,8 @@ inline constexpr mmap_flag<capi::mmap_flag::shared> mmap_shared{};
 
 std::error_code close_mmap(const mmap_d &) noexcept;
 
-struct unique_mmap_d : unique_descriptor<mmap_d, detail::get_mmap_null_d, close_mmap> {
-  using unique_descriptor::unique_descriptor;
+struct unique_mmap_d : descriptor<mmap_d, detail::get_mmap_null_d, close_mmap> {
+  using descriptor::descriptor;
 };
 
 class mmap {
@@ -145,7 +145,7 @@ class shm {
 
  private:
   struct tag {};
-  unique_fd shm_fd_{};
+  file_descriptor shm_fd_{};
 };
 
 }  // namespace pposix

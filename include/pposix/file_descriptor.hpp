@@ -4,8 +4,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "pposix/descriptor.hpp"
 #include "pposix/errno.hpp"
-#include "pposix/unique_descriptor.hpp"
 
 namespace pposix {
 
@@ -23,6 +23,6 @@ class raw_fd {
 
 std::error_code close_fd(raw_fd fd) noexcept;
 
-using unique_fd = unique_descriptor<raw_fd, integral_descriptor<raw_fd, raw_fd_t, -1>, close_fd>;
+using file_descriptor = descriptor<raw_fd, descriptor_constant<raw_fd, raw_fd_t, -1>, close_fd>;
 
 }  // namespace pposix
