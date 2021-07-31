@@ -22,7 +22,7 @@ class file {
  public:
   file() = default;
 
-  explicit file(raw_fd fd) noexcept;
+  explicit file(file_descriptor fd) noexcept;
 
   file(const file &) = delete;
   file(file &&) = default;
@@ -42,7 +42,7 @@ class file {
                   "open(path, access_mode, open_flag, permission) overload instead.");
 
     return result_map<file>(capi::open(path, access, flags),
-                            [](const raw_fd &fd) { return file{fd}; });
+                            [](file_descriptor descriptor) { return file{std::move(descriptor)}; });
   }
 
   template <capi::access_mode AccessMode, capi::open_flag OpenFlags, capi::permission Permission>
@@ -53,7 +53,7 @@ class file {
                   "flags to correct.");
 
     return result_map<file>(capi::open(path, access, flags, perm),
-                            [](const raw_fd &fd) { return file{fd}; });
+                            [](file_descriptor fd) { return file{std::move(fd)}; });
   }
 
   std::error_code close() noexcept;
