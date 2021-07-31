@@ -5,9 +5,9 @@
 
 #include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
+#include "pposix/file_descriptor.hpp"
 #include "pposix/result.hpp"
 #include "pposix/types.hpp"
-#include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix {
@@ -25,4 +25,4 @@ result<ioctl_int> ioctl(raw_fd, ioctl_request, std::nullptr_t) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, any_view) noexcept;
 result<ioctl_int> ioctl(raw_fd, ioctl_request, any_cview) noexcept;
 
-}
+}  // namespace pposix

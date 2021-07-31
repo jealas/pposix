@@ -9,7 +9,8 @@ namespace capi {
 
 result<mmap_d> mmap_map(void* addr, size_t len, capi::mmap_protection prot, capi::mmap_flag flags,
                         raw_fd fildes, off_t off) noexcept {
-  if (void* ptr{::mmap(addr, len, underlying_v(prot), underlying_v(flags), fildes, off)};
+  if (void* ptr{::mmap(addr, len, underlying_v(prot), underlying_v(flags),
+                       static_cast<raw_fd_t>(fildes), off)};
       ptr == MAP_FAILED) {
     return current_errno_code();
   } else {
@@ -24,6 +25,10 @@ std::error_code mmap_protect(mmap_d descriptor, capi::mmap_protection prot) noex
 
 }  // namespace capi
 
+std::error_code close_mmap(mmap_d& m) noexcept {
+  return PPOSIX_COMMON_CALL(::munmap, m.address(), m.length());
+}
+
 mmap::mmap(const mmap_d d) noexcept : mmap_d_{d} {}
 
 std::error_code mmap::unmap() noexcept {
@@ -35,4 +40,4 @@ result<shm> shm::unsafe_open(char const* const) noexcept {
   return std::error_code{};
 }
 
-}
+}  // namespace pposix

@@ -16,8 +16,8 @@ struct enum_flag {
   }
 
   template <Enum OtherValue>
-  constexpr enum_flag<Enum, Value | OtherValue> operator|(enum_flag<Enum, OtherValue>) const
-      noexcept {
+  constexpr enum_flag<Enum, Value | OtherValue> operator|(
+      enum_flag<Enum, OtherValue>) const noexcept {
     return {};
   }
 };

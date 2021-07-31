@@ -1,17 +1,17 @@
 #pragma once
 
-#include <string_view>
-#include <system_error>
-
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <string_view>
+#include <system_error>
+
 #include "pposix/byte_span.hpp"
 #include "pposix/fcntl.hpp"
+#include "pposix/file_descriptor.hpp"
 #include "pposix/platform.hpp"
 #include "pposix/result.hpp"
 #include "pposix/stat.hpp"
-#include "pposix/unique_fd.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix {
@@ -64,7 +64,7 @@ class file {
   result<ssize_t> write(byte_cspan buffer) noexcept;
 
  private:
-  unique_fd fd_{};
+  file_descriptor fd_{};
 };
 
 }  // namespace pposix

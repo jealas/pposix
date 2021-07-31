@@ -5,27 +5,23 @@
 
 namespace pposix {
 
-dir_fd::dir_fd(int fd) noexcept : dir_fd_{fd} {}
+std::error_code close_dir(DIR *dir) noexcept { return PPOSIX_COMMON_CALL(::closedir, dir); }
 
-raw_fd dir_fd::get() const noexcept { return *dir_fd_; }
-raw_fd dir_fd::release() noexcept { return dir_fd_.release(); }
-
-dirent::dirent(DIR *dir) noexcept : dirent_d_{dir} {}
-
-DIR *dirent::get() noexcept { return *dirent_d_; }
-
-DIR *dirent::release() noexcept { return dirent_d_.release(); }
-
-result<dirent> dirent::opendir(char const *dirname) noexcept {
-  if (DIR *dir = ::opendir(dirname); dir == nullptr) {
+result<unique_dirent> opendir(const dir_fd fd) noexcept {
+  if (DIR *dir = ::fdopendir(static_cast<dir_fd_t>(fd)); dir == nullptr) {
     return current_errno_code();
   } else {
-    return dirent{dir};
+    return unique_dirent{dir};
   }
 }
 
-std::error_code dirent_close_policy::operator()(DIR *dir) const noexcept {
-  return PPOSIX_COMMON_CALL(::closedir, dir);
+result<unique_dirent> opendir(const char *path) noexcept
+{
+  if (DIR *dir = ::opendir(path); dir == nullptr) {
+    return current_errno_code();
+  } else {
+    return unique_dirent{dir};
+  }
 }
 
 }  // namespace pposix

@@ -22,7 +22,7 @@ epoll_event::epoll_event(epoll_event_flag event_flags, void *data) noexcept
 
 epoll_event::epoll_event(epoll_event_flag event_flags, raw_fd data) noexcept
     : epoll_event{event_flags} {
-  this->data.fd = data;
+  this->data.fd = static_cast<raw_fd_t>(data);
 }
 
 epoll_event::epoll_event(epoll_event_flag event_flags, uint32_t data) noexcept
@@ -38,13 +38,30 @@ epoll_event::epoll_event(epoll_event_flag event_flags, uint64_t data) noexcept
 }  // namespace capi
 
 // Epoll
-epoll::epoll(raw_fd epoll_fd) noexcept : epoll_fd_{epoll_fd} {}
+epoll::epoll(const raw_fd epoll_fd) noexcept : epoll_fd_{epoll_fd} {}
 
-result<epoll> epoll::unsafe_create(size_t size) noexcept {
-    PPOSIX_COMMON_RESULT_MAP_IMPL(epoll, ::epoll_create, size)}
+namespace {
 
-result<epoll> epoll::unsafe_create1(capi::epoll_flag flags) noexcept {
-    PPOSIX_COMMON_RESULT_MAP_IMPL(epoll, ::epoll_create1, underlying_v(flags))}
+epoll unsafe_make_epoll(const raw_fd_t fd) noexcept { return epoll{raw_fd{fd}}; }
+
+}  // namespace
+
+result<epoll> epoll::unsafe_create(const int size) noexcept {
+  if (const auto res{::epoll_create(size)}; res == -1) {
+    return ::pposix::current_errno_code();
+  } else {
+    return unsafe_make_epoll(res);
+  }
+}
+
+result<epoll> epoll::unsafe_create1(const capi::epoll_flag flags) noexcept {
+  if (const auto res
+      {::epoll_create1(underlying_v(flags))}; res == -1) {
+    return ::pposix::current_errno_code();
+  } else {
+    return unsafe_make_epoll(res);
+  }
+}
 
 result<epoll> epoll::create() noexcept {
   constexpr static size_t NON_ZERO_SIZE = 1u;
@@ -57,11 +74,12 @@ result<epoll> epoll::create(decltype(epoll_cloexec)) noexcept {
 
 std::error_code epoll::unsafe_ctl(capi::epoll_operation op, raw_fd fd,
                                   capi::epoll_event *event) noexcept {
-  return PPOSIX_COMMON_CALL(::epoll_ctl, *epoll_fd_, underlying_v(op), fd, event);
+  return PPOSIX_COMMON_CALL(::epoll_ctl, static_cast<raw_fd_t>(*epoll_fd_), underlying_v(op),
+                            static_cast<raw_fd_t>(fd), event);
 }
 
 std::error_code epoll::ctl(epoll_add add) noexcept {
-  return unsafe_ctl(capi::epoll_operation::remove, add.fd, &add.event);
+  return unsafe_ctl(capi::epoll_operation::add, add.fd, &add.event);
 }
 
 std::error_code epoll::ctl(epoll_remove remove) noexcept {
@@ -69,22 +87,22 @@ std::error_code epoll::ctl(epoll_remove remove) noexcept {
 }
 
 std::error_code epoll::ctl(epoll_modify mod) noexcept {
-  return unsafe_ctl(capi::epoll_operation::remove, mod.fd(), mod.event_ptr());
+  return unsafe_ctl(capi::epoll_operation::modify, mod.fd(), mod.event_ptr());
 }
 
 result<int> epoll::wait(span<lnx::epoll_event> events, milliseconds timeout) noexcept {
   // TODO: Assert that events.length() <= std::numeric_literals<int>::max()
 
-  return PPOSIX_COMMON_CALL(::epoll_wait, *epoll_fd_, events.data(), events.length(),
-                            timeout.count());
+  return PPOSIX_COMMON_CALL(::epoll_wait, static_cast<raw_fd_t>(*epoll_fd_), events.data(),
+                            events.length(), timeout.count());
 }
 
 result<int> epoll::pwait(span<lnx::epoll_event> events, milliseconds timeout,
                          const sigset &sigmask) noexcept {
   // TODO: Assert that events.length() <= std::numeric_literals<int>::max()
 
-  return PPOSIX_COMMON_CALL(::epoll_pwait, *epoll_fd_, events.data(), events.length(),
-                            timeout.count(), sigmask.sigset_ptr());
+  return PPOSIX_COMMON_CALL(::epoll_pwait, static_cast<raw_fd_t>(*epoll_fd_), events.data(),
+                            events.length(), timeout.count(), sigmask.sigset_ptr());
 }
 
 }  // namespace pposix::lnx
