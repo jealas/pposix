@@ -200,7 +200,7 @@ constexpr open_flag<capi::open_flag::noctty> noctty{};
 constexpr open_flag<capi::open_flag::nofollow> nofollow{};
 constexpr open_flag<capi::open_flag::truncate> truncate{};
 
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD
+#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD && !PPOSIX_PLATFORM_MACOS
 constexpr open_flag<capi::open_flag::tty_init> tty_init{};
 #endif
 
@@ -224,12 +224,14 @@ constexpr open_flag<capi::open_flag::rdonly> rdonly{};
 template <capi::access_mode AccessMode>
 using access_mode = enum_flag<capi::access_mode, AccessMode>;
 
+#if !PPOSIX_PLATFORM_MACOS
 constexpr access_mode<capi::access_mode::exec> exec{};
+#endif
 
 constexpr access_mode<capi::access_mode::read> read{};
 constexpr access_mode<capi::access_mode::read_write> read_write{};
 
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD && !PPOSIX_PLATFORM_OPENBSD
+#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD && !PPOSIX_PLATFORM_OPENBSD && !PPOSIX_PLATFORM_MACOS
 constexpr access_mode<capi::access_mode::search> search{};
 #endif
 
