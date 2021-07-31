@@ -1,4 +1,4 @@
-name: CMakeMacOsLatestRelease
+name: CMakeMacOs11Release
 
 on:
   push:
