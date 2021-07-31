@@ -112,7 +112,7 @@ enum class access_mode : unsigned {
 #if PPOSIX_PLATFORM_LINUX
   // O_PATH is equivalent to O_EXEC on Linux
   exec = O_PATH,
-#elif !PPOSIX_PLATFORM_MACOS
+#elif !PPOSIX_PLATFORM_MACOS && !PPOSIX_PLATFORM_OPENBSD
   exec = O_EXEC,
 #endif
 
@@ -224,7 +224,7 @@ constexpr open_flag<capi::open_flag::rdonly> rdonly{};
 template <capi::access_mode AccessMode>
 using access_mode = enum_flag<capi::access_mode, AccessMode>;
 
-#if !PPOSIX_PLATFORM_MACOS
+#if !PPOSIX_PLATFORM_MACOS && !PPOSIX_PLATFORM_OPENBSD
 constexpr access_mode<capi::access_mode::exec> exec{};
 #endif
 
