@@ -145,7 +145,7 @@ class shm {
 
  private:
   struct tag {};
-  file_descriptor shm_fd_{};
+  fd shm_fd_{};
 };
 
 }  // namespace pposix

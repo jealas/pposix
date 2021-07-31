@@ -181,7 +181,7 @@ class epoll {
   result<int> pwait(span<lnx::epoll_event>, milliseconds timeout, const sigset &sigmask) noexcept;
 
  private:
-  file_descriptor epoll_fd_{};
+  fd epoll_fd_{};
 };
 
 }  // namespace pposix::lnx

@@ -5,7 +5,7 @@
 
 namespace pposix {
 
-file::file(file_descriptor fd) noexcept : fd_{std::move(fd)} {}
+file::file(fd fd) noexcept : fd_{std::move(fd)} {}
 
 std::error_code file::close() noexcept {
   return PPOSIX_COMMON_CALL(::close, static_cast<raw_fd_t>(*fd_));

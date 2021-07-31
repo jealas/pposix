@@ -137,8 +137,8 @@ constexpr access_mode &operator|=(access_mode &lhs, access_mode rhs) noexcept {
   return lhs;
 }
 
-result<file_descriptor> open(const char *, capi::access_mode, capi::open_flag) noexcept;
-result<file_descriptor> open(const char *, capi::access_mode, capi::open_flag, capi::permission) noexcept;
+result<fd> open(const char *, capi::access_mode, capi::open_flag) noexcept;
+result<fd> open(const char *, capi::access_mode, capi::open_flag, capi::permission) noexcept;
 
 }  // namespace capi
 
