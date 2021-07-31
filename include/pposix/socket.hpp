@@ -221,8 +221,8 @@ enum class socket_error : int {};
 pposix::result<socket_fd> socket(socket_domain dom, socket_type typ, socket_flag flags,
                                  socket_protocol prot) noexcept;
 
-std::error_code setsockopt(socket_level, socket_option, any_cview) noexcept;
-result<socklen_t> getsockopt(socket_level, socket_option, any_view) noexcept;
+std::error_code setsockopt(raw_socket_fd fd, socket_level, socket_option, any_cview) noexcept;
+result<socklen_t> getsockopt(raw_socket_fd fd, socket_level, socket_option, any_view) noexcept;
 
 }  // namespace capi
 

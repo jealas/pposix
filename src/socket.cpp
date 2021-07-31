@@ -22,14 +22,14 @@ result<socket_fd> socket(socket_domain dom, socket_type typ, socket_flag flags,
   if (sock == -1) {
     return current_errno_code();
   } else {
-    return capi::socket_fd{capi::raw_socket_fd{sock}};
+    return socket_fd{raw_socket_fd{sock}};
   }
 }
 
 // Set socket option
 std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_option o,
                            any_cview val) noexcept {
-  return PPOSIX_COMMON_CALL(::setsockopt, static_cast<capi::socket_fd_t>(fd), underlying_v(l),
+  return PPOSIX_COMMON_CALL(::setsockopt, static_cast<socket_fd_t>(fd), underlying_v(l),
                             underlying_v(o), val.data(), val.length());
 }
 
@@ -53,67 +53,68 @@ result<socklen_t> getsockopt(raw_socket_fd fd, socket_level l, socket_option o,
 }
 
 // Get socket option
-std::error_code setsockopt_int(socket_level l, socket_option o, int i) noexcept {
-  return setsockopt(l, o, any_cview{&i});
+std::error_code setsockopt_int(raw_socket_fd fd, socket_level l, socket_option o, int i) noexcept {
+  return setsockopt(fd, l, o, any_cview{&i});
 }
 
-std::error_code setsockopt_bool(socket_level l, socket_option o, bool b) noexcept {
-  return setsockopt_int(l, o, b ? 1 : 0);
+std::error_code setsockopt_bool(raw_socket_fd fd, socket_level l, socket_option o,
+                                bool b) noexcept {
+  return setsockopt_int(fd, l, o, b ? 1 : 0);
 }
 
-std::error_code setsockopt(socket_level l, socket_debug d) noexcept {
-  return setsockopt_bool(l, socket_option::debug, underlying_v(d));
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_debug d) noexcept {
+  return setsockopt_bool(fd, l, socket_option::debug, underlying_v(d));
 }
 
-std::error_code setsockopt(socket_level l, socket_broadcast b) noexcept {
-  return setsockopt_bool(l, socket_option::broadcast, underlying_v(b));
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_broadcast b) noexcept {
+  return setsockopt_bool(fd, l, socket_option::broadcast, underlying_v(b));
 }
 
-std::error_code setsockopt(socket_level l, socket_reuseaddr r) noexcept {
-  return setsockopt_bool(l, socket_option::reuseaddr, underlying_v(r));
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_reuseaddr r) noexcept {
+  return setsockopt_bool(fd, l, socket_option::reuseaddr, underlying_v(r));
 }
 
-std::error_code setsockopt(socket_level l, socket_keepalive k) noexcept {
-  return setsockopt_bool(l, socket_option::keepalive, underlying_v(k));
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_keepalive k) noexcept {
+  return setsockopt_bool(fd, l, socket_option::keepalive, underlying_v(k));
 }
 
-std::error_code setsockopt(socket_level l, socket_linger lin) noexcept {
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_linger lin) noexcept {
   const ::linger &posix_linger = lin.get();
-  return setsockopt(l, socket_option::linger, any_cview{&posix_linger});
+  return setsockopt(fd, l, socket_option::linger, any_cview{&posix_linger});
 }
 
-std::error_code setsockopt(socket_level l, socket_oobinline o) noexcept {
-  return setsockopt_bool(l, socket_option::oobinline, underlying_v(o));
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_oobinline o) noexcept {
+  return setsockopt_bool(fd, l, socket_option::oobinline, underlying_v(o));
 }
 
-std::error_code setsockopt(socket_level l, socket_sndbuf s) noexcept {
-  return setsockopt_int(l, socket_option::sndbuf, underlying_v(s));
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_sndbuf s) noexcept {
+  return setsockopt_int(fd, l, socket_option::sndbuf, underlying_v(s));
 }
 
-std::error_code setsockopt(socket_level l, socket_rcvbuf r) noexcept {
-  return setsockopt_int(l, socket_option::rcvbuf, underlying_v(r));
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_rcvbuf r) noexcept {
+  return setsockopt_int(fd, l, socket_option::rcvbuf, underlying_v(r));
 }
 
-std::error_code setsockopt(socket_level l, socket_dontroute d) noexcept {
-  return setsockopt_bool(l, socket_option::dontroute, underlying_v(d));
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_dontroute d) noexcept {
+  return setsockopt_bool(fd, l, socket_option::dontroute, underlying_v(d));
 }
 
-std::error_code setsockopt(socket_level l, socket_rcvlowat r) noexcept {
-  return setsockopt_int(l, socket_option::rcvlowat, underlying_v(r));
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_rcvlowat r) noexcept {
+  return setsockopt_int(fd, l, socket_option::rcvlowat, underlying_v(r));
 }
 
-std::error_code setsockopt(socket_level l, socket_rcvtimeo r) noexcept {
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_rcvtimeo r) noexcept {
   const ::timeval &val = r.get();
-  return setsockopt(l, socket_option::rcvtimeo, any_cview{&val});
+  return setsockopt(fd, l, socket_option::rcvtimeo, any_cview{&val});
 }
 
-std::error_code setsockopt(socket_level l, socket_sndlowat s) noexcept {
-  return setsockopt_int(l, socket_option::sndlowat, underlying_v(s));
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_sndlowat s) noexcept {
+  return setsockopt_int(fd, l, socket_option::sndlowat, underlying_v(s));
 }
 
-std::error_code setsockopt(socket_level l, socket_sndtimeo r) noexcept {
+std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_sndtimeo r) noexcept {
   const ::timeval &val = r.get();
-  return setsockopt(l, socket_option::sndtimeo, any_cview{&val});
+  return setsockopt(fd, l, socket_option::sndtimeo, any_cview{&val});
 }
 
 }  // namespace capi
