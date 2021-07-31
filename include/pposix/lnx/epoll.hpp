@@ -5,7 +5,7 @@
 #include <cstddef>
 
 #include "pposix/duration.hpp"
-#include "pposix/file_descriptor.hpp"
+#include "pposix/fd.hpp"
 #include "pposix/result.hpp"
 #include "pposix/signal.hpp"
 #include "pposix/span.hpp"
@@ -14,6 +14,15 @@
 namespace pposix::lnx {
 
 namespace capi {
+
+struct raw_epoll_fd : raw_fd {
+  using raw_fd::raw_fd;
+};
+
+using epoll_fd_t = raw_fd_t;
+
+using epoll_fd =
+    descriptor<raw_epoll_fd, descriptor_constant<raw_epoll_fd, epoll_fd_t, -1>, close_raw_fd>;
 
 enum class epoll_flag { cloexec = EPOLL_CLOEXEC };
 
@@ -53,6 +62,11 @@ class epoll_event final : public ::epoll_event {
 static_assert(sizeof(capi::epoll_event) == sizeof(::epoll_event));
 static_assert(alignof(capi::epoll_event) == alignof(::epoll_event));
 
+static result<epoll_fd> create(int) noexcept;
+static result<epoll_fd> create1(capi::epoll_flag flags) noexcept;
+
+std::error_code ctl(raw_epoll_fd, capi::epoll_operation, raw_fd, capi::epoll_event *) noexcept;
+
 }  // namespace capi
 
 inline constexpr enum_flag<capi::epoll_flag, capi::epoll_flag::cloexec> epoll_cloexec{};
@@ -72,6 +86,8 @@ inline constexpr epoll_event_flag<capi::epoll_event_flag::one_shot> epoll_one_sh
 inline constexpr epoll_event_flag<capi::epoll_event_flag::wakeup> epoll_wakeup{};
 inline constexpr epoll_event_flag<capi::epoll_event_flag::exclusive> epoll_exclusive{};
 
+class epoll;
+
 // Epoll control commands
 struct epoll_add {
   raw_fd fd;
@@ -82,8 +98,6 @@ struct epoll_remove {
   raw_fd fd;
 };
 
-class epoll;
-
 class epoll_modify {
   template <capi::epoll_event_flag Flags>
   static constexpr void check_epoll_modify_flags() noexcept {
@@ -93,12 +107,13 @@ class epoll_modify {
 
  public:
   template <capi::epoll_event_flag Flags>
-  constexpr epoll_modify(const raw_fd fd, epoll_event_flag<Flags>) noexcept : fd_{fd}, event_{Flags} {
+  constexpr epoll_modify(const raw_fd fd, epoll_event_flag<Flags>) noexcept
+      : fd_{fd}, event_{Flags} {
     check_epoll_modify_flags<Flags>();
   }
 
   template <capi::epoll_event_flag Flags>
-  constexpr epoll_modify(const raw_fd fd, epoll_event_flag<Flags>, void * const data) noexcept
+  constexpr epoll_modify(const raw_fd fd, epoll_event_flag<Flags>, void *const data) noexcept
       : fd_{fd}, event_{Flags, data} {
     check_epoll_modify_flags<Flags>();
   }
@@ -153,7 +168,7 @@ class epoll {
  public:
   epoll() noexcept = default;
 
-  explicit epoll(raw_fd epoll_fd) noexcept;
+  explicit epoll(capi::epoll_fd fd) noexcept;
 
   epoll(const epoll &) noexcept = delete;
   epoll(epoll &&) noexcept = default;
@@ -161,14 +176,8 @@ class epoll {
   epoll &operator=(const epoll &) noexcept = delete;
   epoll &operator=(epoll &&) noexcept = default;
 
-  static result<epoll> unsafe_create(int) noexcept;
-  static result<epoll> unsafe_create1(capi::epoll_flag flags) noexcept;
-
   static result<epoll> create() noexcept;
   static result<epoll> create(decltype(epoll_cloexec)) noexcept;
-
-  std::error_code unsafe_ctl(capi::epoll_operation op, raw_fd fd,
-                             capi::epoll_event *event) noexcept;
 
   std::error_code ctl(epoll_add add) noexcept;
 
@@ -181,7 +190,7 @@ class epoll {
   result<int> pwait(span<lnx::epoll_event>, milliseconds timeout, const sigset &sigmask) noexcept;
 
  private:
-  fd epoll_fd_{};
+  capi::epoll_fd epoll_fd_{};
 };
 
 }  // namespace pposix::lnx

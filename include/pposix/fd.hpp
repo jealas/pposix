@@ -23,14 +23,13 @@ class raw_fd {
 
 std::error_code close_raw_fd(raw_fd fd) noexcept;
 
-using fd =
-    descriptor<raw_fd, descriptor_constant<raw_fd, raw_fd_t, -1>, close_raw_fd>;
+using fd = descriptor<raw_fd, descriptor_constant<raw_fd, raw_fd_t, -1>, close_raw_fd>;
+
+using raw_dir_fd_t = raw_fd_t;
 
 struct raw_dir_fd : raw_fd {
   using raw_fd::raw_fd;
 };
-
-using raw_dir_fd_t = raw_fd_t;
 
 using dir_fd =
     descriptor<raw_dir_fd, descriptor_constant<raw_dir_fd, raw_dir_fd_t, -1>, close_raw_fd>;

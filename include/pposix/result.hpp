@@ -60,9 +60,9 @@ class result {
   };
 
  public:
-  result(std::error_code ec) : result_{ec} {}                 // NOLINT implicit constructor
-  constexpr result(const T &value) : result_{value} {}        // NOLINT implicit constructor
-  constexpr result(T &&value) : result_{std::move(value)} {}  // NOLINT implicit constructor
+  result(std::error_code ec) noexcept : result_{ec} {}                 // NOLINT implicit constructor
+  constexpr result(const T &value) noexcept : result_{value} {}        // NOLINT implicit constructor
+  constexpr result(T &&value) noexcept : result_{std::move(value)} {}  // NOLINT implicit constructor
 
   [[nodiscard]] std::error_code error() const noexcept(false) {
     return std::visit(get_error_visitor{}, result_);
@@ -121,11 +121,11 @@ T *result_get_value_unsafe(result<T> &res) noexcept {
 }  // namespace detail
 
 template <class U, class T, class Func>
-result<U> result_map(const result<T> &result, Func func) noexcept {
-  static_assert(noexcept(func(std::declval<const T &>())));
+result<U> result_map(result<T> result, Func func) noexcept {
+  static_assert(noexcept(func(std::declval<T&&>())));
 
-  if (const auto *value_ptr = detail::result_get_value_unsafe(result)) {
-    return func(*value_ptr);
+  if (auto * const value_ptr = detail::result_get_value_unsafe(result)) {
+    return func(std::move(*value_ptr));
   } else {
     return *detail::result_get_error_unsafe(result);
   }

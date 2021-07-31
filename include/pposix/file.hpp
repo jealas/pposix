@@ -8,7 +8,7 @@
 
 #include "pposix/byte_span.hpp"
 #include "pposix/fcntl.hpp"
-#include "pposix/file_descriptor.hpp"
+#include "pposix/fd.hpp"
 #include "pposix/platform.hpp"
 #include "pposix/result.hpp"
 #include "pposix/stat.hpp"

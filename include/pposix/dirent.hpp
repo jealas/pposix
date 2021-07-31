@@ -6,7 +6,7 @@
 #include <system_error>
 
 #include "pposix/descriptor.hpp"
-#include "pposix/file_descriptor.hpp"
+#include "pposix/fd.hpp"
 #include "pposix/result.hpp"
 
 namespace pposix {

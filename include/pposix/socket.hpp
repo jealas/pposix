@@ -7,7 +7,7 @@
 #include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
 #include "pposix/extension.hpp"
-#include "pposix/file_descriptor.hpp"
+#include "pposix/fd.hpp"
 #include "pposix/result.hpp"
 #include "pposix/util.hpp"
 
@@ -84,7 +84,7 @@ enum class socket_option : int {
   type = SO_TYPE,
 
 #if PPOSIX_LINUX_EXTENSION_ENABLED
-      zerocpy = SO_ZEROCOPY
+  zerocpy = SO_ZEROCOPY
 #endif
 };
 
@@ -113,13 +113,14 @@ enum class socket_level : int {
 
 using socket_fd_t = int;
 
-enum class socket_fd : socket_fd_t {};
+struct socket_fd : raw_fd {
+  using raw_fd::raw_fd;
+};
 
-std::error_code close_socket(socket_fd fd) noexcept;
-
-using unique_socket_fd =
-    descriptor<socket_fd, std::integral_constant<socket_fd, socket_fd{static_cast<socket_fd_t>(-1)}>,
-             close_socket>;
+using socket_descriptor =
+    descriptor<socket_fd,
+               descriptor_constant<socket_fd, socket_fd_t, static_cast<socket_fd_t>(-1)>,
+               close_raw_fd>;
 
 // Socket options
 enum class socket_debug : bool { off = false, on = true };
@@ -220,7 +221,7 @@ class socket {
  public:
   socket() noexcept = default;
 
-  explicit socket(unique_socket_fd fd) noexcept;
+  explicit socket(socket_descriptor fd) noexcept;
 
   socket(const socket &) = delete;
   socket(socket &&) = default;
@@ -319,6 +320,6 @@ class socket {
   }
 
  private:
-  unique_socket_fd socket_fd_{};
+  socket_descriptor socket_fd_{};
 };
 }  // namespace pposix

@@ -13,7 +13,7 @@ add_library(
         pposix
 
         src/errno.cpp
-        src/file_descriptor.cpp
+        src/fd.cpp
         src/sysconf.cpp
         src/socket.cpp
         src/file.cpp

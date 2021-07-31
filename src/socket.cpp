@@ -6,17 +6,13 @@
 
 #include "pposix/any_view.hpp"
 #include "pposix/duration.hpp"
-#include "pposix/file_descriptor.hpp"
+#include "pposix/fd.hpp"
 #include "pposix/result.hpp"
 #include "pposix/util.hpp"
 
 namespace pposix {
 
-std::error_code close_socket(const socket_fd fd) noexcept {
-  return PPOSIX_COMMON_CALL(::close, static_cast<socket_fd_t>(fd));
-}
-
-socket::socket(unique_socket_fd fd) noexcept : socket_fd_{std::move(fd)} {}
+socket::socket(socket_descriptor fd) noexcept : socket_fd_{std::move(fd)} {}
 
 // Socket
 result<socket> socket::unsafe_make(socket_domain dom, socket_type typ, socket_flag flags,
@@ -26,7 +22,7 @@ result<socket> socket::unsafe_make(socket_domain dom, socket_type typ, socket_fl
   if (sock == -1) {
     return current_errno_code();
   } else {
-    return socket{unique_socket_fd{socket_fd{sock}}};
+    return socket{socket_descriptor{socket_fd{sock}}};
   }
 }
 
