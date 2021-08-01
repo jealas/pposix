@@ -15,41 +15,6 @@ constexpr decltype(auto) underlying_v(const Enum e) {
   return static_cast<std::underlying_type_t<enum_t>>(e);
 }
 
-template <class Enum, Enum Value>
-struct exclusive_enum_flag {
-  using enum_t = std::decay_t<Enum>;
-  static_assert(std::is_enum_v<enum_t>);
-
-  constexpr operator Enum() const noexcept { return Value; }  // NOLINT implicit conversion
-};
-
-template <class Enum, Enum Flags>
-class enum_flag {
-  using enum_t = std::decay_t<Enum>;
-  static_assert(std::is_enum_v<enum_t>);
-
- public:
-  constexpr operator Enum() const noexcept { return Flags; }  // NOLINT implicit conversion
-
-  static constexpr bool has(Enum value) noexcept {
-    return underlying_v(Flags) & underlying_v(value);
-  }
-
-  template <Enum Constant>
-  static constexpr bool has(enum_flag<Enum, Constant>) noexcept {
-    return underlying_v(Flags) & underlying_v(Constant);
-  }
-};
-
-template <class Enum, Enum Lhs, Enum Rhs>
-constexpr enum_flag<Enum, Enum{underlying_v(Lhs) | underlying_v(Rhs)}> operator|(
-    enum_flag<Enum, Lhs>, enum_flag<Enum, Rhs>) noexcept {
-  using enum_t = std::decay_t<Enum>;
-  static_assert(std::is_enum_v<enum_t>);
-
-  return {};
-}
-
 template <class>
 constexpr bool always_false = false;
 
