@@ -51,7 +51,6 @@ class [[nodiscard]] descriptor {
    explicit operator bool() const noexcept { return not empty(); }
 
    Descriptor raw() const noexcept { return raw_descriptor_; }
-   Descriptor operator*() const noexcept { return raw(); }
 
    Descriptor *operator->() noexcept { return &raw_descriptor_; }
    Descriptor const *operator->() const noexcept { return &raw_descriptor_; }

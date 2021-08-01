@@ -65,25 +65,25 @@ result<epoll> epoll::create_cloexec() noexcept {
 }
 
 std::error_code epoll::add(raw_fd fd, capi::epoll_event event) noexcept {
-  return capi::ctl(*epoll_fd_, capi::epoll_operation::add, fd, &event);
+  return capi::ctl(epoll_fd_.raw(), capi::epoll_operation::add, fd, &event);
 }
 
 std::error_code epoll::remove(raw_fd fd) noexcept {
   ::epoll_event event{};
   // TODO: Avoid issues with remove. Set the data ptr if necessary on old Linux versions
 
-  return capi::ctl(*epoll_fd_, capi::epoll_operation::remove, fd, &event);
+  return capi::ctl(epoll_fd_.raw(), capi::epoll_operation::remove, fd, &event);
 }
 
 std::error_code epoll::modify(raw_fd fd, capi::epoll_modify_flag flags) noexcept {
   ::epoll_event event{underlying_v(flags), {}};
-  return capi::ctl(*epoll_fd_, capi::epoll_operation::modify, fd, &event);
+  return capi::ctl(epoll_fd_.raw(), capi::epoll_operation::modify, fd, &event);
 }
 
 result<int> epoll::wait(span<epoll_event> events, milliseconds timeout) noexcept {
   // TODO: Assert that events.length() <= std::numeric_literals<int>::max()
 
-  return PPOSIX_COMMON_CALL(::epoll_wait, static_cast<raw_fd_t>(*epoll_fd_), events.data(),
+  return PPOSIX_COMMON_CALL(::epoll_wait, static_cast<raw_fd_t>(epoll_fd_.raw()), events.data(),
                             events.length(), timeout.count());
 }
 
@@ -91,7 +91,7 @@ result<int> epoll::pwait(span<epoll_event> events, milliseconds timeout,
                          const sigset &sigmask) noexcept {
   // TODO: Assert that events.length() <= std::numeric_literals<int>::max()
 
-  return PPOSIX_COMMON_CALL(::epoll_pwait, static_cast<raw_fd_t>(*epoll_fd_), events.data(),
+  return PPOSIX_COMMON_CALL(::epoll_pwait, static_cast<raw_fd_t>(epoll_fd_.raw()), events.data(),
                             events.length(), timeout.count(), sigmask.sigset_ptr());
 }
 

@@ -10,7 +10,7 @@ file::file(fd fd) noexcept : fd_{std::move(fd)} {}
 std::error_code file::close() noexcept { return fd_.close(); }
 
 result<off_t> file::lseek(const off_t offset, const file_seek wh) noexcept {
-  const auto lseek_count{::lseek(static_cast<raw_fd_t>(*fd_), offset, underlying_v(wh))};
+  const auto lseek_count{::lseek(static_cast<raw_fd_t>(fd_.raw()), offset, underlying_v(wh))};
   if (lseek_count == off_t{-1}) {
     return current_errno_code();
   } else {
@@ -19,11 +19,11 @@ result<off_t> file::lseek(const off_t offset, const file_seek wh) noexcept {
 }
 
 result<ssize_t> file::read(byte_span buffer) noexcept {
-    PPOSIX_COMMON_RESULT_CALL_IMPL(::read, static_cast<raw_fd_t>(*fd_), buffer.data(),
+    PPOSIX_COMMON_RESULT_CALL_IMPL(::read, static_cast<raw_fd_t>(fd_.raw()), buffer.data(),
                                    buffer.length())}
 
 result<ssize_t> file::write(const byte_cspan buffer) noexcept {
-  PPOSIX_COMMON_RESULT_CALL_IMPL(::write, static_cast<raw_fd_t>(*fd_), buffer.data(),
+  PPOSIX_COMMON_RESULT_CALL_IMPL(::write, static_cast<raw_fd_t>(fd_.raw()), buffer.data(),
                                  buffer.length())
 }
 }  // namespace pposix

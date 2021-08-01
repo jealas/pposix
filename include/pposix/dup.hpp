@@ -5,6 +5,7 @@
 
 namespace pposix::capi {
 
-result<fd> dup(raw_fd fd) noexcept;
+result<fd> dup(raw_fd) noexcept;
+result<dir_fd> dup(raw_dir_fd) noexcept;
 
-}
+}  // namespace pposix::capi
