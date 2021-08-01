@@ -7,9 +7,7 @@ namespace pposix {
 
 file::file(fd fd) noexcept : fd_{std::move(fd)} {}
 
-std::error_code file::close() noexcept {
-  return PPOSIX_COMMON_CALL(::close, static_cast<raw_fd_t>(*fd_));
-}
+std::error_code file::close() noexcept { return fd_.close(); }
 
 result<off_t> file::lseek(const off_t offset, const file_seek wh) noexcept {
   const auto lseek_count{::lseek(static_cast<raw_fd_t>(*fd_), offset, underlying_v(wh))};

@@ -1,9 +1,7 @@
 #include "pposix/ioctl.hpp"
 
 #include <sys/ioctl.h>
-#include <unistd.h>
 
-#include <stdexcept>
 #include <string>
 
 #include "pposix/errno.hpp"

@@ -105,36 +105,4 @@ constexpr capi::permission operator"" _other(char const *c_str, size_t len) {
                                  capi::permission::other_execute>);
 }
 
-// File type
-template <capi::file_type FileType>
-using file_type = enum_flag<capi::file_type, FileType>;
-
-constexpr file_type<capi::file_type::blk> blk{};
-constexpr file_type<capi::file_type::chr> chr{};
-constexpr file_type<capi::file_type::fifo> fifo{};
-constexpr file_type<capi::file_type::ifreg> ifreg{};
-constexpr file_type<capi::file_type::iflnk> iflnk{};
-constexpr file_type<capi::file_type::ifsock> ifsock{};
-
-// Permissions
-template <capi::permission Permission>
-using permission = enum_flag<capi::permission, Permission>;
-
-constexpr permission<capi::permission::none> no_permissions{};
-
-constexpr permission<capi::permission::user_read> user_read{};
-constexpr permission<capi::permission::user_write> user_write{};
-constexpr permission<capi::permission::user_execute> user_execute{};
-constexpr permission<capi::permission::user_all> user_all{};
-
-constexpr permission<capi::permission::group_read> group_read{};
-constexpr permission<capi::permission::group_write> group_write{};
-constexpr permission<capi::permission::group_execute> group_execute{};
-constexpr permission<capi::permission::group_all> group_all{};
-
-constexpr permission<capi::permission::other_read> other_read{};
-constexpr permission<capi::permission::other_write> other_write{};
-constexpr permission<capi::permission::other_execute> other_execute{};
-constexpr permission<capi::permission::other_all> other_all{};
-
 }  // namespace pposix
