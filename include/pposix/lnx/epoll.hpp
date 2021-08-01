@@ -135,4 +135,4 @@ class epoll {
   capi::epoll_fd epoll_fd_{};
 };
 
-}  // namespace pposix::lnx
+}  // namespace pposix

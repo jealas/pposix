@@ -17,6 +17,8 @@ class raw_fd {
 
   constexpr explicit operator raw_fd_t() const noexcept { return fd_; }
 
+  constexpr bool operator==(const raw_fd other) const noexcept { return fd_ == other.fd_; }
+
  private:
   raw_fd_t fd_{};
 };

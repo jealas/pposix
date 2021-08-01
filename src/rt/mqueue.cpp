@@ -4,8 +4,7 @@
 
 namespace pposix::rt {
 
-std::error_code close_mq_d(const ::mqd_t mq_descriptor) noexcept
-{
+std::error_code close_mq_d(const ::mqd_t mq_descriptor) noexcept {
   return PPOSIX_COMMON_CALL(::mq_close, mq_descriptor);
 }
 

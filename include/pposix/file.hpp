@@ -20,6 +20,7 @@ enum class file_seek { set = SEEK_SET, current = SEEK_CUR, end = SEEK_END };
 
 class file {
  public:
+  ~file() = default;
   file() = default;
 
   explicit file(fd fd) noexcept;

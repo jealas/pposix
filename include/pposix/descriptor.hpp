@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <system_error>
 #include <utility>
 
@@ -12,10 +13,7 @@ inline constexpr null_d_t null_d{};
 
 template <class FdWrapper, class UnderlyingFd, UnderlyingFd Fd>
 struct descriptor_constant {
-  constexpr FdWrapper operator()() const noexcept
-  {
-    return FdWrapper{Fd};
-  }
+  constexpr FdWrapper operator()() const noexcept { return FdWrapper{Fd}; }
 };
 
 template <class Descriptor, class GetNull, auto ClosePolicy>
@@ -33,15 +31,13 @@ class [[nodiscard]] descriptor {
   constexpr explicit descriptor(Descriptor descriptor) : raw_descriptor_{descriptor} {}
 
   ~descriptor() {
-    if (const auto error = close()) {
-      // TODO: Log this fatal error.
+    if (const auto err{close()}) {
+      assert(!err);
     }
   }
 
   descriptor(const descriptor &other) = delete;
-  descriptor(descriptor &&other) noexcept {
-    std::swap(raw_descriptor_, other.raw_descriptor_);
-  }
+  descriptor(descriptor &&other) noexcept { std::swap(raw_descriptor_, other.raw_descriptor_); }
 
   descriptor &operator=(const descriptor &) = delete;
 
@@ -67,12 +63,16 @@ class [[nodiscard]] descriptor {
   }
 
   [[nodiscard]] std::error_code close() noexcept {
-    const auto error = ClosePolicy(raw());
-    if (not error) {
-      raw_descriptor_ = GetNull{}();
-    }
+    if (!empty()) {
+      const auto error = ClosePolicy(raw());
+      if (not error) {
+        raw_descriptor_ = GetNull{}();
+      }
 
-    return error;
+      return error;
+    } else {
+      return {};
+    }
   }
 
  private:

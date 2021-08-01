@@ -158,7 +158,8 @@ class mq {
   }
 
   template <capi::mq_mode Mode>
-  inline result<mq> open(const char* name, capi::mq_mode mode, mq_create_queue attributes) noexcept {
+  inline result<mq> open(const char* name, capi::mq_mode mode,
+                         mq_create_queue attributes) noexcept {
     const ::mqd_t res{::mq_open(name, underlying_v(mode), attributes.mq_attr_ptr())};
     if (res == NULL_MQD_T) {
       return current_errno_code();
@@ -169,7 +170,7 @@ class mq {
 
   template <capi::mq_mode Mode, capi::mq_option Flags>
   inline result<mq> open(const char* name, capi::mq_mode mode, capi::mq_option options,
-                  mq_create_queue create_queue) noexcept {
+                         mq_create_queue create_queue) noexcept {
     const ::mqd_t res{
         ::mq_open(name, underlying_v(mode) | underlying_v(options), create_queue.mq_attr_ptr())};
     if (res == NULL_MQD_T) {
