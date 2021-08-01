@@ -33,7 +33,7 @@ std::error_code setsockopt(raw_socket_fd fd, socket_level l, socket_option o,
 // Get socket option
 result<socklen_t> getsockopt(raw_socket_fd fd, socket_level l, socket_option o,
                              any_view val) noexcept {
-  if (val.length() > std::numeric_limits<socklen_t>::max()) {
+  if (val.length() > static_cast<size_t>(std::numeric_limits<socklen_t>::max())) {
     return make_errno_code(std::errc::value_too_large);
   }
 

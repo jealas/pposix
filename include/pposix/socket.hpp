@@ -8,6 +8,7 @@
 #include "pposix/duration.hpp"
 #include "pposix/extension.hpp"
 #include "pposix/fd.hpp"
+#include "pposix/platform.hpp"
 #include "pposix/result.hpp"
 #include "pposix/util.hpp"
 
@@ -36,12 +37,14 @@ enum class socket_domain : int {
 // Linux-specific socket domains
 #if PPOSIX_LINUX_EXTENSION_ENABLED
   local = AF_LOCAL,
+  appletalk = AF_APPLETALK,
+  decnet = AF_DECnet,
+
+#if !PPOSIX_PLATFORM_CYGWIN
   file = AF_FILE,
   ax25 = AF_AX25,
   ipx = AF_IPX,
-  appletalk = AF_APPLETALK,
   x25 = AF_X25,
-  decnet = AF_DECnet,
   key = AF_KEY,
   netlink = AF_NETLINK,
   packet = AF_PACKET,
@@ -57,6 +60,8 @@ enum class socket_domain : int {
   vsock = AF_VSOCK,
   kcm = AF_KCM,
   xdp = AF_XDP,
+#endif
+
 #endif
 };
 
@@ -96,7 +101,7 @@ enum class socket_option : int {
   sndtimeo = SO_SNDTIMEO,
   type = SO_TYPE,
 
-#if PPOSIX_LINUX_EXTENSION_ENABLED
+#if PPOSIX_LINUX_EXTENSION_ENABLED && !PPOSIX_PLATFORM_CYGWIN
   zerocpy = SO_ZEROCOPY
 #endif
 };
@@ -130,14 +135,12 @@ enum class socket_broadcast : bool { off = false, on = true };
 enum class socket_reuseaddr : bool { off = false, on = true };
 enum class socket_keepalive : bool { off = false, on = true };
 
+using linger_time_t = decltype(::linger::l_linger);
+
 class socket_linger {
  public:
   constexpr socket_linger() noexcept = default;
   constexpr socket_linger(::linger l) noexcept : linger_{l} {}  // NOLINT implicit constructor
-  constexpr explicit socket_linger(pposix::seconds duration) noexcept
-      : linger_{true, duration.count()} {}
-  constexpr socket_linger(bool enabled, pposix::seconds duration) noexcept
-      : linger_{enabled, duration.count()} {}
 
   constexpr socket_linger(const socket_linger &) noexcept = default;
   constexpr socket_linger(socket_linger &&) noexcept = default;

@@ -25,6 +25,7 @@ add_library(
         src/signal.cpp
         src/mman.cpp
         src/fcntl.cpp
+        src/dup.cpp
 )
 
 target_compile_definitions(

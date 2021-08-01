@@ -75,7 +75,7 @@ enum class open_flag : unsigned {
   truncate = O_TRUNC,
 
 #if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD && !PPOSIX_PLATFORM_MACOS
-  tty_init = O_TTY_INIT
+  tty_init = O_TTY_INIT,
 #endif
 
       append = O_APPEND,
