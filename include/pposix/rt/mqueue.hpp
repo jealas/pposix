@@ -190,7 +190,7 @@ class mq {
 
     ::mq_attr current_attributes{};
 
-    const int res{::mq_setattr(*mq_d_, &new_attributes, &current_attributes)};
+    const int res{::mq_setattr(mq_d_.raw(), &new_attributes, &current_attributes)};
     if (res == -1) {
       return current_errno_code();
     } else {

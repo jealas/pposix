@@ -22,7 +22,7 @@ result<mq> mq::unsafe_open(const char* name, capi::mq_mode mode, capi::mq_option
 result<mq_current_attr> mq::getattr() noexcept {
   ::mq_attr attributes{};
 
-  const int result{::mq_getattr(*mq_d_, &attributes)};
+  const int result{::mq_getattr(mq_d_.raw(), &attributes)};
   if (result == -1) {
     return current_errno_code();
   } else {
@@ -34,7 +34,7 @@ result<mq_message> mq::receive(byte_span message_buffer) noexcept {
   unsigned priority{};
 
   const ssize_t num_message_bytes{
-      ::mq_receive(*mq_d_, static_cast<char*>(static_cast<void*>(message_buffer.data())),
+      ::mq_receive(mq_d_.raw(), static_cast<char*>(static_cast<void*>(message_buffer.data())),
                    message_buffer.length(), &priority)};
   if (num_message_bytes == -1) {
     return current_errno_code();
@@ -46,7 +46,7 @@ result<mq_message> mq::receive(byte_span message_buffer) noexcept {
 
 [[nodiscard]] std::error_code mq::unsafe_send(byte_cspan message,
                                               mq_message_priority priority) noexcept {
-  return PPOSIX_COMMON_CALL(::mq_send, *mq_d_,
+  return PPOSIX_COMMON_CALL(::mq_send, mq_d_.raw(),
                             static_cast<const char*>(static_cast<const void*>(message.data())),
                             message.length(), underlying_v(priority));
 }
@@ -57,11 +57,11 @@ std::error_code mq::unlink(const char* name) noexcept {
 
 std::error_code mq::notify(decltype(mq_deregister_notification)) noexcept {
   const ::sigevent* null_sigevent{nullptr};
-  return PPOSIX_COMMON_CALL(::mq_notify, *mq_d_, null_sigevent);
+  return PPOSIX_COMMON_CALL(::mq_notify, mq_d_.raw(), null_sigevent);
 }
 
 std::error_code mq::unsafe_notify(const pposix::sigevent& sigevent) noexcept {
-  return PPOSIX_COMMON_CALL(::mq_notify, *mq_d_, &sigevent);
+  return PPOSIX_COMMON_CALL(::mq_notify, mq_d_.raw(), &sigevent);
 }
 
 std::error_code mq::notify(decltype(mq_notify_none)) noexcept {
@@ -76,7 +76,8 @@ std::error_code mq::notify(mq_notify_signal notify_signal) noexcept {
 result<mq_message> mq::timed_receive(byte_span message,
                                      const pposix::timespec& absolute_time) noexcept {
   unsigned priority{};
-  const auto res{::mq_timedreceive(*mq_d_, static_cast<char*>(static_cast<void*>(message.data())),
+  const auto res{::mq_timedreceive(mq_d_.raw(),
+                                   static_cast<char*>(static_cast<void*>(message.data())),
                                    message.length(), &priority, &absolute_time)};
   if (res == -1) {
     return current_errno_code();
@@ -89,7 +90,7 @@ result<mq_message> mq::timed_receive(byte_span message,
 [[nodiscard]] std::error_code mq::unsafe_timed_send(
     byte_cspan message, mq_message_priority priority,
     const pposix::timespec& absolute_time) noexcept {
-  return PPOSIX_COMMON_CALL(::mq_timedsend, *mq_d_,
+  return PPOSIX_COMMON_CALL(::mq_timedsend, mq_d_.raw(),
                             static_cast<const char*>(static_cast<const void*>(message.data())),
                             message.length(), underlying_v(priority), &absolute_time);
 }
