@@ -48,7 +48,7 @@ set(GCC_OR_CLANG_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Werror)
 target_compile_options(
         pposix
 
-        PRIVATE
+        PUBLIC
         $<$<CXX_COMPILER_ID:GNU>:${GCC_OR_CLANG_COMPILE_OPTIONS}>
         $<$<CXX_COMPILER_ID:Clang>:${GCC_OR_CLANG_COMPILE_OPTIONS}>
 )
@@ -62,3 +62,5 @@ endif ()
 if (${PPOSIX_LINUX})
     add_subdirectory(src/lnx)
 endif ()
+
+add_subdirectory(tests)
