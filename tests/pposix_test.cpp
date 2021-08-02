@@ -35,7 +35,7 @@ void register_test(char const *const name_space, char const *const name,
 }
 
 void run(const std::vector<std::reference_wrapper<const Info>> &test_matches) {
-  for (const auto test_info_ref : test_matches) {
+  for (const auto &test_info_ref : test_matches) {
     const auto &test_info{test_info_ref.get()};
 
     try {
