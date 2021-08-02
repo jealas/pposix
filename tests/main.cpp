@@ -1,24 +1,25 @@
-#include <iostream>
+#include <regex>
 
 #include "pposix_test.hpp"
 
-PPOSIX_TEST(pposix::tests, test_hello_world1, []() { PPOSIX_ASSERT(20 == 4); })
+int main(const int argc, const char *argv[]) {
+  std::vector<std::regex> patterns{};
 
-PPOSIX_TEST(pposix::tests, test_hello_world2, []() { PPOSIX_ASSERT(20 == 2); })
-
-PPOSIX_TEST(pposix::tests, test_hello_world3, []() {})
-
-int main() {
-  try {
-    pposix::test::main();
-    std::exit(EXIT_SUCCESS);
-  } catch (const std::exception &exception) {
-    std::cerr << "Uncaught exception in main: " << exception.what();
-    std::cerr << std::endl;
-    std::exit(EXIT_FAILURE);
-  } catch (...) {
-    std::cerr << "Unknown exception caught in main";
-    std::cerr << std::endl;
-    std::exit(EXIT_FAILURE);
+  if (argc == 1) {
+    patterns.emplace_back(".*");
   }
+
+  for (auto i{1}; i < argc; ++i) {
+    const auto regex_c_str{argv[i]};
+
+    try {
+      patterns.emplace_back(regex_c_str);
+    } catch (const std::regex_error &error) {
+      std::cerr << "Invalid test name regex: " << '"' << regex_c_str << '"' << '\n'
+                << "std::regex_error" << '-' << error.what() << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+  }
+
+  pposix::test::main(patterns);
 }

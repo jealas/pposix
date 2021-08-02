@@ -17,6 +17,7 @@ if (${PPOSIX_RT})
             PPOSIX_EXTENSION_SRC
 
             ${PPOSIX_EXTENSION_SRC}
+
             src/rt/mqueue.cpp
     )
 endif ()
@@ -27,6 +28,7 @@ if (${PPOSIX_LINUX})
             PPOSIX_EXTENSION_SRC
 
             ${PPOSIX_EXTENSION_SRC}
+
             src/lnx/epoll.cpp
     )
 endif ()

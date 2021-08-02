@@ -1,85 +1,48 @@
 #ifndef PPOSIX_PPOSIX_TEST_HPP
 #define PPOSIX_PPOSIX_TEST_HPP
 
+// Include the iostream header first
+#include <iostream>
+// DO NOT MOVE
+
 #include <functional>
-#include <typeindex>
-#include <typeinfo>
+#include <regex>
+#include <thread>
 #include <unordered_map>
+#include <vector>
 
 namespace pposix::test {
 
-struct TestInfo {
+struct Info {
+  char const *name_space{};
   char const *name{};
-  char const *file{};
-  size_t line{};
   std::function<void()> fn{};
+
+  std::string full_name() const { return std::string{name_space} + "::" + name; }
 };
+
+inline std::ostream &operator<<(std::ostream &out, const Info &info) {
+  return out << info.name_space << "::" << info.name;
+}
 
 struct assertion_error : std::runtime_error {
   using runtime_error::runtime_error;
 };
 
-struct test_error : std::runtime_error {
-  using runtime_error::runtime_error;
-};
+void register_test(char const *name_space, char const *name, std::function<void()> test_fn);
 
-struct {
-  std::unordered_map<std::type_index, TestInfo> tests{};
-} registrar{};
+const std::unordered_map<std::string, Info> &registered_tests();
 
 template <class TestFn>
 struct Registration {
-  Registration(char const *const name, char const *const file, size_t line,
-               const TestFn &fn) noexcept {
-    try {
-      registrar.tests.emplace(
-          std::make_pair(std::type_index(typeid(TestFn)),
-                         TestInfo{name, file, line, std::reference_wrapper(fn)}));
-    } catch (const std::exception &exception) {
-      std::cerr << "Uncaught exception while registering test " << file << ':' << line << " - "
-                << exception.what() << '\n';
-      std::cerr << std::endl;
-      std::exit(EXIT_FAILURE);
-    } catch (...) {
-      std::cerr << "Unknown exception caught while registering test " << file << ':' << line
-                << '\n';
-      std::cerr << std::endl;
-      std::exit(EXIT_FAILURE);
-    }
+  Registration(char const *const name_space, char const *const name, const TestFn &fn) noexcept {
+    ::pposix::test::register_test(name_space, name, std::reference_wrapper(fn));
   }
 };
 
-void main() {
-  for (const auto &elements : pposix::test::registrar.tests) {
-    const auto &test_info{elements.second};
+void run(const std::vector<std::reference_wrapper<const Info>> &test_matches);
 
-    try {
-      std::cout << "Running " << test_info.name << std::endl;
-      test_info.fn();
-
-    } catch (const assertion_error &error) {
-      std::cerr << "FAILED " << test_info.name << " " << test_info.file << ':' << test_info.line
-                << '\n'
-                << error.what();
-      std::cerr << std::endl;
-      continue;
-
-    } catch (const std::exception &exception) {
-      std::cerr << "Uncaught exception while registering test " << test_info.file << ':'
-                << test_info.line << '\n'
-                << exception.what();
-
-      std::cerr << std::endl;
-      std::exit(EXIT_FAILURE);
-    } catch (...) {
-      std::cerr << "Unknown exception caught while registering test " << test_info.file << ':'
-                << test_info.line;
-
-      std::cerr << std::endl;
-      std::exit(EXIT_FAILURE);
-    }
-  }
-}
+[[noreturn]] void main(const std::vector<std::regex> &patterns);
 
 struct assert_line {
   char const *file;
@@ -100,12 +63,12 @@ inline void assert(const Result &result, const assert_line &line) {
 #define PPOSIX_ASSERT(expression) \
   ::pposix::test::assert((expression), {__FILE__, __LINE__, #expression})
 
-#define PPOSIX_TEST(name_space, name, test_fn)                   \
-  namespace name_space {                                         \
-  static constexpr auto name{test_fn};                           \
-  struct : ::pposix::test::Registration<decltype(name)> {        \
-    using Registration::Registration;                            \
-  } static name##_registration{#name, __FILE__, __LINE__, name}; \
+#define PPOSIX_TEST(name_space, name, test_fn)                 \
+  namespace name_space {                                       \
+  static constexpr auto name##_fn{test_fn};                    \
+  struct : ::pposix::test::Registration<decltype(name##_fn)> { \
+    using Registration::Registration;                          \
+  } static name##_registration{#name_space, #name, name##_fn}; \
   }
 
 #endif  // PPOSIX_PPOSIX_TEST_HPP
