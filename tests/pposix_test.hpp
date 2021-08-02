@@ -51,7 +51,7 @@ struct assert_line {
 };
 
 template <class Result>
-inline void assert(const Result &result, const assert_line &line) {
+inline void assert_true(const Result &result, const assert_line &line) {
   if (!result) {
     throw assertion_error{std::string{"Assertion "} + line.expression + " failed @ " +
                           std::string{line.file} + ":" + std::to_string(line.line)};
@@ -61,7 +61,7 @@ inline void assert(const Result &result, const assert_line &line) {
 }  // namespace pposix::test
 
 #define PPOSIX_ASSERT(expression) \
-  ::pposix::test::assert((expression), {__FILE__, __LINE__, #expression})
+  ::pposix::test::assert_true((expression), {__FILE__, __LINE__, #expression})
 
 #define PPOSIX_TEST(name_space, name, test_fn)                 \
   namespace name_space {                                       \
