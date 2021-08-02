@@ -54,7 +54,7 @@ void main() {
     const auto &test_info{elements.second};
 
     try {
-      std::cout << "Running " << test_info.name << '\n';
+      std::cout << "Running " << test_info.name << std::endl;
       test_info.fn();
 
     } catch (const assertion_error &error) {
@@ -102,7 +102,7 @@ inline void assert(const Result &result, const assert_line &line) {
 
 #define PPOSIX_TEST(name_space, name, test_fn)                   \
   namespace name_space {                                         \
-  static const auto name{test_fn};                               \
+  static constexpr auto name{test_fn};                           \
   struct : ::pposix::test::Registration<decltype(name)> {        \
     using Registration::Registration;                            \
   } static name##_registration{#name, __FILE__, __LINE__, name}; \
