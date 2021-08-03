@@ -27,6 +27,10 @@ void register_test(RegistrationEntry &entry) {
   }
 }
 
+void RegistrationEntry::run() const {
+  throw std::logic_error{"Default RegistrationEntry::run should never be called"};
+}
+
 void run(const std::vector<Test> &tests) {
   for (const auto &test : tests) {
     const auto &test_id{test.id()};
@@ -36,7 +40,8 @@ void run(const std::vector<Test> &tests) {
       test.run();
 
     } catch (const test_failed &fail) {
-      std::cerr << "FAILED: " << test.id() << '\n' << '\t' << fail.what() << '\n';
+      std::cerr << "FAILED: " << test.loc() << '[' << test.id() << ']' << '\n'
+                << '\t' << fail.what() << '\n';
       std::cerr << std::endl;
       continue;
 

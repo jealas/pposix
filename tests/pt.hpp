@@ -55,6 +55,11 @@ constexpr auto range(Start start, End end) {
   };
 }
 
+template <class Iterable>
+constexpr auto range(const Iterable &iterable) {
+  return range(std::cbegin(iterable), std::cend(iterable));
+}
+
 struct Id {
   char const *name_space{};
   char const *name{};
@@ -78,11 +83,22 @@ inline std::ostream &operator<<(std::ostream &out, const Location &location) {
 }
 
 struct RegistrationEntry {
+  virtual ~RegistrationEntry() = default;
+
+  RegistrationEntry(const Id &id, const Location &location) : id{id}, location{location} {}
+
+  RegistrationEntry(const RegistrationEntry &) = delete;
+  RegistrationEntry(RegistrationEntry &&) = delete;
+
+  RegistrationEntry &operator=(const RegistrationEntry &) = delete;
+  RegistrationEntry &operator=(RegistrationEntry &&) = delete;
+
   std::reference_wrapper<const Id> id;
   std::reference_wrapper<const Location> location;
-  std::function<void()> fn{};
 
   RegistrationEntry const *next{};
+
+  virtual void run() const;
 };
 
 struct Test {
@@ -94,40 +110,39 @@ struct Test {
 
   inline const Location &loc() const noexcept { return entry_->location; }
 
-  inline void run() const { return entry_->fn(); }
+  inline void run() const { return entry_->run(); }
 
   RegistrationEntry const *entry_{};
 };
 
 template <class Iterator, class Body>
 void subtest(Iterator iter, Body body) {
-  {
-    std::vector<std::string> sub_fails{};
-
-    while (true) {
-      try {
-        body(iter());
-      } catch (const pt::test_skipped &) {
-        continue;
-      } catch (const pt::stop_iteration &) {
-        break;
-      }
-    }
-
-    if (!sub_fails.empty()) {
-      throw "multiple_failures";
+  while (true) {
+    try {
+      body(iter());
+    } catch (const pt::test_skipped &) {
+      continue;
+    } catch (const pt::stop_iteration &) {
+      break;
     }
   }
 }
 
-#define PT_SUBTEST(iterable, body) ::pt::subtest(iterable, body)
+#define PT_SUBTEST2(name, iterable)  for (for )
+
+#define PT_SUBTEST(name, iterable)             \
+  void subtest_##__LINE__();           \
+                                               \
+  ::pt::subtest(iterable, subtest_##__LINE__); \
+                                               \
+  void subtest_##__LINE__()
 
 void register_test(RegistrationEntry &entry);
 
-template <class TestFn>
-struct Registration : RegistrationEntry {
-  Registration(const Id &id, const Location &location, const TestFn &fn) noexcept
-      : RegistrationEntry{id, location, std::ref(fn)} {
+template <class>
+class Registration : public RegistrationEntry {
+ public:
+  Registration(const Id &id, const Location &location) noexcept : RegistrationEntry{id, location} {
     ::pt::register_test(*this);
   }
 };
@@ -151,13 +166,16 @@ inline void assert_true(const Result &result, const assert_line &line) {
 
 #define PT_ASSERT(expression) ::pt::assert_true((expression), {__FILE__, __LINE__, #expression})
 
-#define PT_TEST(name_space, name, body)                                                           \
-  namespace name_space {                                                                          \
-  static constexpr ::pt::Location name##_loc{__FILE__, __LINE__};                                 \
-  static constexpr ::pt::Id name##_id{#name_space, #name};                                        \
-  static constexpr auto name##_fn{[]() { body(); }};                                              \
-  static const ::pt::Registration<decltype(name##_fn)> name##_registration{name##_id, name##_loc, \
-                                                                           name##_fn};            \
-  }
-
+#define PT_TEST(name_space, name)                                 \
+  namespace name_space {                                          \
+  static constexpr ::pt::Location name##_loc{__FILE__, __LINE__}; \
+  static constexpr ::pt::Id name##_id{#name_space, #name};        \
+                                                                  \
+  struct name##_t : ::pt::Registration<name##_t> {                \
+    using ::pt::Registration<name##_t>::Registration;             \
+                                                                  \
+    void run() const override;                                    \
+  } const static name##_registration{name##_id, name##_loc};      \
+  }                                                               \
+  void name_space ::name##_t::run() const
 #endif  // PPOSIX_PT_HPP
