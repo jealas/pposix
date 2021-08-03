@@ -1,12 +1,12 @@
 #include <regex>
 
-#include "pposix_test.hpp"
+#include "pt.hpp"
 
 int main(const int argc, const char *argv[]) {
   std::vector<std::regex> patterns{};
 
   if (argc == 1) {
-    patterns.emplace_back(".*");
+    patterns.emplace_back(".+");
   }
 
   for (auto i{1}; i < argc; ++i) {
@@ -21,5 +21,5 @@ int main(const int argc, const char *argv[]) {
     }
   }
 
-  pposix::test::main(patterns);
+  pt::main(patterns);
 }

@@ -1,7 +1,7 @@
 add_executable(
         pposix_tests
 
-        pposix_test.cpp
+        pt.cpp
         main.cpp
         test_pposix.cpp
 )
