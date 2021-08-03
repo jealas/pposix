@@ -27,8 +27,8 @@ void register_test(RegistrationEntry &entry) {
   }
 }
 
-void RegistrationEntry::run() const {
-  throw std::logic_error{"Default RegistrationEntry::run should never be called"};
+void RegistrationEntry::run_test() const {
+  throw std::logic_error{"Default RegistrationEntry::run_test should never be called"};
 }
 
 void run(const std::vector<Test> &tests) {
@@ -37,7 +37,7 @@ void run(const std::vector<Test> &tests) {
 
     try {
       std::cout << "Running " << test_id << std::endl;
-      test.run();
+      test.run_test();
 
     } catch (const test_failed &fail) {
       std::cerr << "FAILED: " << test.loc() << '[' << test.id() << ']' << '\n'
@@ -67,7 +67,7 @@ void run(const std::vector<Test> &tests) {
     for (auto test_entry{registered_tests()}; test_entry; test_entry = test_entry->next) {
       ++total_tests;
 
-      const auto test_id{test_entry->id.get()};
+      const auto test_id{test_entry->id};
 
       auto full_name{test_id.full_name()};
       for (const auto &pattern : patterns) {

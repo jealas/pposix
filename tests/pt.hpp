@@ -101,12 +101,12 @@ struct RegistrationEntry {
   RegistrationEntry &operator=(RegistrationEntry &&) = delete;
 
   Type type{};
-  std::reference_wrapper<const Id> id;
-  std::reference_wrapper<const Location> location;
+  Id id;
+  Location location;
 
   RegistrationEntry const *next{};
 
-  virtual void run() const;
+  virtual void run_test() const;
 };
 
 void run(const std::vector<std::reference_wrapper<const Id>> &test_matches);
@@ -124,7 +124,7 @@ class Test {
   inline const Id &id() const noexcept { return entry_->id; }
   inline const Location &loc() const noexcept { return entry_->location; }
 
-  inline void run() const { entry_->run(); }
+  inline void run_test() const { entry_->run_test(); }
 
  private:
   RegistrationEntry const *entry_{};
@@ -167,18 +167,14 @@ inline void assert_true(const Result &result, const assert_line &line) {
 
 #define PT_ASSERT(expression) ::pt::assert_true((expression), {__FILE__, __LINE__, #expression})
 
-#define PT_GENERIC_TEST(name_space, name, type)                    \
-  namespace name_space {                                           \
-  static constexpr ::pt::Location name##_loc{__FILE__, __LINE__};  \
-  static constexpr ::pt::Id name##_id{#name_space, #name};         \
-                                                                   \
-  struct name##_t : ::pt::Registration<name##_t> {                 \
-    using ::pt::Registration<name##_t>::Registration;              \
-                                                                   \
-    void run() const override;                                     \
-  } const static name##_registration{type, name##_id, name##_loc}; \
-  }                                                                \
-  void name_space ::name##_t::run() const
+#define PT_GENERIC_TEST(name_space, name, type)                                         \
+  namespace name_space {                                                                \
+  struct name : ::pt::Registration<name> {                                              \
+    using ::pt::Registration<name>::Registration;                                       \
+    void run_test() const override;                                                     \
+  } const static name##_registration{type, {#name_space, #name}, {__FILE__, __LINE__}}; \
+  }                                                                                     \
+  void name_space ::name ::run_test() const
 
 #define PT_TEST(name_space, name) PT_GENERIC_TEST(name_space, name, ::pt::Type::Normal)
 
