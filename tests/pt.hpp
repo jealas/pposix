@@ -112,10 +112,13 @@ struct PtSymbolTable {
   PtTestFile (*pt_test_entry_file)(PtTestEntry) noexcept;
   PtTestLine (*pt_test_entry_line)(PtTestEntry) noexcept;
   PtTestRunResult (*pt_test_entry_run)(PtTestEntry) noexcept;
+
+  void *pt_symbol_table_end;
 };
 
 #ifdef __cplusplus
-static_assert(sizeof(PtSymbolTable) == (sizeof(PtSymbolTableId)) + (9 * sizeof(void(*)())));
+static_assert(sizeof(PtSymbolTable) ==
+              (sizeof(PtSymbolTableId)) + (9 * sizeof(void(*)())) + sizeof(void *));
 #endif
 
 #ifdef __cplusplus
@@ -263,6 +266,8 @@ class LibraryTest : public Test {
   capi::PtSymbolTable syms_{};
   capi::PtTestEntry test_;
 };
+
+struct TestResult {};
 
 void run(const Test &test) noexcept;
 

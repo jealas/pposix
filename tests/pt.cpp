@@ -1,7 +1,6 @@
 #include "pt.hpp"
 
 #include <cassert>
-#include <future>
 
 namespace pt {
 struct {
@@ -81,6 +80,9 @@ PtSymbolTable pt_symbol_table{
     pt_test_entry_file,
     pt_test_entry_line,
     pt_test_entry_run,
+
+    // End
+    nullptr,
 };
 
 }  // extern "C"
@@ -106,90 +108,6 @@ InternalTest const *internal_tests() noexcept { return registrar.tail; }
 
 void InternalTest::run() const {
   throw std::logic_error{"Default InternalTest::run should never be called"};
-}
-
-struct TestResult {};
-
-struct TestCase {
-  virtual ~TestCase() = default;
-
-  TestCase() = default;
-
-  TestCase(const TestCase &) = delete;
-  TestCase(TestCase &&) = delete;
-
-  TestCase &operator=(const TestCase &) = delete;
-  TestCase &operator=(TestCase &&) = delete;
-
-  inline virtual const Test &test() const {
-    throw std::logic_error{"pt::Test::test should never be called."};
-  };
-
-  virtual std::future<TestResult> run() const {
-    throw std::logic_error{"pt::Test::run should never be called."};
-  }
-};
-
-class NormalTest final : public TestCase {
- public:
-  inline explicit NormalTest(const Test &test) : test_{test} {}
-
-  inline const Test &test() const override { return test_; }
-
-  inline std::future<TestResult> run() const override {
-    std::promise<TestResult> p{};
-    p.set_value(TestResult{});
-    return p.get_future();
-  }
-
- private:
-  const Test &test_;
-};
-
-class ThreadTest final : public TestCase {
- public:
-  inline explicit ThreadTest(const Test &test) : test_{test} {}
-
-  inline const Test &test() const override { return test_; }
-
-  inline std::future<TestResult> run() const override {
-    std::promise<TestResult> p{};
-    p.set_value(TestResult{});
-    return p.get_future();
-  }
-
- private:
-  const Test &test_;
-};
-
-class SpawnTest final : public TestCase {
- public:
-  inline explicit SpawnTest(const Test &test) : test_{test} {}
-
-  inline const Test &test() const override { return test_; }
-
-  inline std::future<TestResult> run() const override {
-    std::promise<TestResult> p{};
-    p.set_value(TestResult{});
-    return p.get_future();
-  }
-
- private:
-  const Test &test_;
-};
-
-std::unique_ptr<TestCase> wrap_test(const Test &test) {
-  switch (test.type()) {
-    case Type::Normal:
-      return std::make_unique<NormalTest>(test);
-    case Type::Thread:
-      return std::make_unique<ThreadTest>(test);
-    case Type::Spawn:
-      return std::make_unique<SpawnTest>(test);
-    default:
-      throw std::logic_error{"Unhandled test type: " +
-                             std::to_string(static_cast<capi::pt_test_type_t>(test.type()))};
-  }
 }
 
 void run(const Test &test) noexcept {

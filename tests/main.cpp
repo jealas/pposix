@@ -1,9 +1,93 @@
+#include <future>
 #include <regex>
+#include <string>
 
 #include "pposix/dlfcn.hpp"
 #include "pt.hpp"
 
 PT_TEST(pt::tests, test_hello_main) { PT_ASSERT(false); }
+
+struct TestCase {
+  virtual ~TestCase() = default;
+
+  TestCase() = default;
+
+  TestCase(const TestCase &) = delete;
+  TestCase(TestCase &&) = delete;
+
+  TestCase &operator=(const TestCase &) = delete;
+  TestCase &operator=(TestCase &&) = delete;
+
+  inline virtual const pt::Test &test() const {
+    throw std::logic_error{"pt::Test::test should never be called."};
+  };
+
+  virtual std::future<pt::TestResult> run() const {
+    throw std::logic_error{"pt::Test::run should never be called."};
+  }
+};
+
+class NormalTest final : public TestCase {
+ public:
+  inline explicit NormalTest(const pt::Test &test) : test_{test} {}
+
+  inline const pt::Test &test() const override { return test_; }
+
+  inline std::future<pt::TestResult> run() const override {
+    std::promise<pt::TestResult> p{};
+    p.set_value(pt::TestResult{});
+    return p.get_future();
+  }
+
+ private:
+  const pt::Test &test_;
+};
+
+class ThreadTest final : public TestCase {
+ public:
+  inline explicit ThreadTest(const pt::Test &test) : test_{test} {}
+
+  inline const pt::Test &test() const override { return test_; }
+
+  inline std::future<pt::TestResult> run() const override {
+    std::promise<pt::TestResult> p{};
+    p.set_value(pt::TestResult{});
+    return p.get_future();
+  }
+
+ private:
+  const pt::Test &test_;
+};
+
+class SpawnTest final : public TestCase {
+ public:
+  inline explicit SpawnTest(const pt::Test &test) : test_{test} {}
+
+  inline const pt::Test &test() const override { return test_; }
+
+  inline std::future<pt::TestResult> run() const override {
+    std::promise<pt::TestResult> p{};
+    p.set_value(pt::TestResult{});
+    return p.get_future();
+  }
+
+ private:
+  const pt::Test &test_;
+};
+
+std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
+  switch (test.type()) {
+    case pt::Type::Normal:
+      return std::make_unique<NormalTest>(test);
+    case pt::Type::Thread:
+      return std::make_unique<ThreadTest>(test);
+    case pt::Type::Spawn:
+      return std::make_unique<SpawnTest>(test);
+    default:
+      throw std::logic_error{"Unhandled test type: " +
+                             std::to_string(static_cast<pt::capi::pt_test_type_t>(test.type()))};
+  }
+}
 
 [[noreturn]] void run_one(const std::string &name) {
   for (auto test_entry{pt::private_detail::internal_tests()}; test_entry;
