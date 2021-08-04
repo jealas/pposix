@@ -25,18 +25,29 @@ namespace pt::capi {
 extern "C" {
 #endif  // __cplusplus
 
+#ifdef __cplusplus
+#define PT_CAPI_NOEXCEPT noexcept
+#else
+#define PT_CAPI_NOEXCEPT
+#endif
+
 struct PtTestEntry {
   void const *handle;
 };
 
-struct PtTestEntryStop {
+struct PtTestEntriesStop {
   int val;
 };
 
-PtTestEntry pt_test_entries() noexcept;
+struct PtTestEntriesCount {
+  size_t val;
+};
 
-PtTestEntryStop pt_test_entries_stop(PtTestEntry) noexcept;
-PtTestEntry pt_test_entries_next(PtTestEntry) noexcept;
+PtTestEntry pt_test_entries() PT_CAPI_NOEXCEPT;
+PtTestEntriesCount pt_test_entries_count() PT_CAPI_NOEXCEPT;
+
+PtTestEntriesStop pt_test_entries_stop(PtTestEntry) PT_CAPI_NOEXCEPT;
+PtTestEntry pt_test_entries_next(PtTestEntry) PT_CAPI_NOEXCEPT;
 
 typedef int pt_test_type_t;
 
@@ -80,12 +91,12 @@ struct PtTestRunResult {
   pt_run_result_t val;
 };
 
-PtTestType pt_test_entry_type(PtTestEntry) noexcept;
-PtTestNamespace pt_test_entry_namespace(PtTestEntry) noexcept;
-PtTestName pt_test_entry_name(PtTestEntry) noexcept;
-PtTestFile pt_test_entry_file(PtTestEntry) noexcept;
-PtTestLine pt_test_entry_line(PtTestEntry) noexcept;
-PtTestRunResult pt_test_entry_run(PtTestEntry) noexcept;
+PtTestType pt_test_entry_type(PtTestEntry) PT_CAPI_NOEXCEPT;
+PtTestNamespace pt_test_entry_namespace(PtTestEntry) PT_CAPI_NOEXCEPT;
+PtTestName pt_test_entry_name(PtTestEntry) PT_CAPI_NOEXCEPT;
+PtTestFile pt_test_entry_file(PtTestEntry) PT_CAPI_NOEXCEPT;
+PtTestLine pt_test_entry_line(PtTestEntry) PT_CAPI_NOEXCEPT;
+PtTestRunResult pt_test_entry_run(PtTestEntry) PT_CAPI_NOEXCEPT;
 
 #define PT_CAPI_SECRET \
   { 'p', 't', 'l', 's' }
@@ -101,23 +112,21 @@ struct PtSymbolTableId {
 struct PtSymbolTable {
   PtSymbolTableId id;
 
-  PtTestEntry (*pt_test_entries)() noexcept;
-  PtTestEntryStop (*pt_test_entries_stop)(PtTestEntry) noexcept;
-  PtTestEntry (*pt_test_entries_next)(PtTestEntry) noexcept;
+  PtTestEntry (*pt_test_entries)() PT_CAPI_NOEXCEPT;
+  PtTestEntriesCount (*pt_test_entries_count)() PT_CAPI_NOEXCEPT;
+  PtTestEntriesStop (*pt_test_entries_stop)(PtTestEntry) PT_CAPI_NOEXCEPT;
+  PtTestEntry (*pt_test_entries_next)(PtTestEntry) PT_CAPI_NOEXCEPT;
 
-  PtTestType (*pt_test_entry_type)(PtTestEntry) noexcept;
-  PtTestNamespace (*pt_test_entry_namespace)(PtTestEntry) noexcept;
-  PtTestName (*pt_test_entry_name)(PtTestEntry) noexcept;
-  PtTestFile (*pt_test_entry_file)(PtTestEntry) noexcept;
-  PtTestLine (*pt_test_entry_line)(PtTestEntry) noexcept;
-  PtTestRunResult (*pt_test_entry_run)(PtTestEntry) noexcept;
-
-  void *pt_symbol_table_end;
+  PtTestType (*pt_test_entry_type)(PtTestEntry) PT_CAPI_NOEXCEPT;
+  PtTestNamespace (*pt_test_entry_namespace)(PtTestEntry) PT_CAPI_NOEXCEPT;
+  PtTestName (*pt_test_entry_name)(PtTestEntry) PT_CAPI_NOEXCEPT;
+  PtTestFile (*pt_test_entry_file)(PtTestEntry) PT_CAPI_NOEXCEPT;
+  PtTestLine (*pt_test_entry_line)(PtTestEntry) PT_CAPI_NOEXCEPT;
+  PtTestRunResult (*pt_test_entry_run)(PtTestEntry) PT_CAPI_NOEXCEPT;
 };
 
 #ifdef __cplusplus
-static_assert(sizeof(PtSymbolTable) ==
-              (sizeof(PtSymbolTableId)) + (9 * sizeof(void(*)())) + sizeof(void *));
+static_assert(sizeof(PtSymbolTable) == (sizeof(PtSymbolTableId)) + (10 * sizeof(void(*)())));
 #endif
 
 #ifdef __cplusplus
@@ -275,6 +284,8 @@ namespace private_detail {
 void register_internal_test(InternalTest &entry) noexcept;
 
 InternalTest const *internal_tests() noexcept;
+size_t internal_tests_count() noexcept;
+
 }  // namespace private_detail
 
 template <class>

@@ -2,20 +2,28 @@
 
 #include <cassert>
 
-namespace pt {
+namespace pt::private_detail {
+
 struct {
   InternalTest *tail{nullptr};
+  size_t count{};
 } static registrar{};
 
-}  // namespace pt
+}  // namespace pt::private_detail
 
 namespace pt::capi {
 
 extern "C" {
 
-PtTestEntry pt_test_entries() noexcept { return PtTestEntry{static_cast<void *>(registrar.tail)}; }
+PtTestEntry pt_test_entries() noexcept {
+  return PtTestEntry{static_cast<void const *>(private_detail::internal_tests())};
+}
 
-PtTestEntryStop pt_test_entries_stop(const PtTestEntry entry) noexcept {
+PtTestEntriesCount pt_test_entries_count() noexcept {
+  return PtTestEntriesCount{private_detail::internal_tests_count()};
+}
+
+PtTestEntriesStop pt_test_entries_stop(const PtTestEntry entry) noexcept {
   return {entry.handle == nullptr};
 }
 
@@ -72,6 +80,7 @@ PtTestRunResult pt_test_entry_run(const PtTestEntry entry) noexcept {
 PtSymbolTable pt_symbol_table{
     {PT_CAPI_SECRET, PT_CAPI_VERSION},
     pt_test_entries,
+    pt_test_entries_count,
     pt_test_entries_stop,
     pt_test_entries_next,
     pt_test_entry_type,
@@ -80,9 +89,6 @@ PtSymbolTable pt_symbol_table{
     pt_test_entry_file,
     pt_test_entry_line,
     pt_test_entry_run,
-
-    // End
-    nullptr,
 };
 
 }  // extern "C"
@@ -100,9 +106,11 @@ void register_internal_test(InternalTest &entry) noexcept {
   entry.set_next(registrar.tail);
 
   registrar.tail = &entry;
+  registrar.count++;
 }
 
 InternalTest const *internal_tests() noexcept { return registrar.tail; }
+size_t internal_tests_count() noexcept { return registrar.count; }
 
 }  // namespace private_detail
 

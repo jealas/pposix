@@ -164,10 +164,14 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
     if (secret[0u] != 'p' || secret[1u] != 't' || secret[2u] != 'l' || secret[3u] != 's') {
       std::cout << "Invalid symbol table secret" << std::endl;
     } else {
+      size_t count{};
       for (auto entry = symbols->pt_test_entries(); !symbols->pt_test_entries_stop(entry).val;
            entry = symbols->pt_test_entries_next(entry)) {
         symbols->pt_test_entry_run(entry);
+        count++;
       }
+
+      PT_ASSERT(symbols->pt_test_entries_count().val == count);
     }
 
   } else {
