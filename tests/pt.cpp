@@ -7,10 +7,83 @@
 #include "pposix/util.hpp"
 
 namespace pt {
-
 struct {
   InternalTest *tail{nullptr};
 } static registrar{};
+
+}  // namespace pt
+
+namespace pt::capi {
+
+extern "C" {
+
+PtTestEntry pt_test_entries() noexcept { return PtTestEntry{static_cast<void *>(registrar.tail)}; }
+
+PtTestEntryStop pt_test_entries_stop(const PtTestEntry entry) noexcept {
+  return {entry.handle == nullptr};
+}
+
+PtTestEntry pt_test_entries_next(const PtTestEntry entry) noexcept {
+  if (entry.handle == nullptr) {
+    return PtTestEntry{nullptr};
+  } else {
+    const auto test{static_cast<InternalTest const *>(entry.handle)};
+    return PtTestEntry{static_cast<void const *>(test->next())};
+  }
+}
+
+PtTestType pt_test_entry_type(const PtTestEntry entry) noexcept {
+  const auto test{static_cast<InternalTest const *>(entry.handle)};
+  return PtTestType{pt_test_type{pposix::underlying_v(test->type())}};
+}
+
+PtTestNamespace pt_test_entry_namespace(const PtTestEntry entry) noexcept {
+  const auto test{static_cast<InternalTest const *>(entry.handle)};
+  return {test->id().name_space};
+}
+
+PtTestName pt_test_entry_name(const PtTestEntry entry) noexcept {
+  const auto test{static_cast<InternalTest const *>(entry.handle)};
+  return {test->id().name};
+}
+
+PtTestFile pt_test_entry_file(const PtTestEntry entry) noexcept {
+  const auto test{static_cast<InternalTest const *>(entry.handle)};
+  return {test->loc().file};
+}
+
+PtTestLine pt_test_entry_line(const PtTestEntry entry) noexcept {
+  const auto test{static_cast<InternalTest const *>(entry.handle)};
+  return {test->loc().line};
+}
+
+PtTestRunResult pt_test_entry_run(const PtTestEntry entry) noexcept {
+  if (entry.handle == nullptr) {
+    return {pt_run_result::run_error};
+  }
+
+  try {
+    const auto test{static_cast<InternalTest const *>(entry.handle)};
+
+    pt::run(*test);
+
+    return {pt_run_result::run_success};
+  } catch (...) {
+    return {pt_run_result::run_internal_error};
+  }
+}
+
+symbol_table pt_symbol_table{
+    pt_test_entries,    pt_test_entries_stop,    pt_test_entries_next,
+    pt_test_entry_type, pt_test_entry_namespace, pt_test_entry_name,
+    pt_test_entry_file, pt_test_entry_line,      pt_test_entry_run,
+};
+
+}  // extern "C"
+
+}  // namespace pt::capi
+
+namespace pt {
 
 namespace private_detail {
 
@@ -144,72 +217,5 @@ void run(const Test &test) noexcept {
     std::exit(EXIT_FAILURE);
   }
 }
-
-namespace capi {
-
-extern "C" {
-
-Entry pt_test_entries() noexcept { return Entry{static_cast<void *>(registrar.tail)}; }
-
-Stop pt_test_entries_stop(const Entry entry) noexcept { return {entry.handle == nullptr}; }
-
-Entry pt_test_entries_next(const Entry entry) noexcept {
-  if (entry.handle == nullptr) {
-    return Entry{nullptr};
-  } else {
-    const auto test{static_cast<InternalTest const *>(entry.handle)};
-    return Entry{static_cast<void const *>(test->next())};
-  }
-}
-
-Type pt_test_entry_type(const Entry entry) noexcept {
-  const auto test{static_cast<InternalTest const *>(entry.handle)};
-  return Type{pt_test_type{pposix::underlying_v(test->type())}};
-}
-
-Namespace pt_test_entry_namespace(const Entry entry) noexcept {
-  const auto test{static_cast<InternalTest const *>(entry.handle)};
-  return {test->id().name_space};
-}
-
-Name pt_test_entry_name(const Entry entry) noexcept {
-  const auto test{static_cast<InternalTest const *>(entry.handle)};
-  return {test->id().name};
-}
-
-File pt_test_entry_file(const Entry entry) noexcept {
-  const auto test{static_cast<InternalTest const *>(entry.handle)};
-  return {test->loc().file};
-}
-
-Line pt_test_entry_line(const Entry entry) noexcept {
-  const auto test{static_cast<InternalTest const *>(entry.handle)};
-  return {test->loc().line};
-}
-
-RunResult pt_test_entry_run(const Entry entry) noexcept {
-  if (entry.handle == nullptr) {
-    return {pt_run_result::run_error};
-  }
-
-  try {
-    const auto test{static_cast<InternalTest const *>(entry.handle)};
-
-    pt::run(*test);
-
-    return {pt_run_result::run_success};
-  } catch (...) {
-    return {pt_run_result::run_internal_error};
-  }
-}
-
-symbol_table pt_symbol_table{
-    pt_test_entries,    pt_test_entries_stop,    pt_test_entries_next,
-    pt_test_entry_type, pt_test_entry_namespace, pt_test_entry_name,
-    pt_test_entry_file, pt_test_entry_line,      pt_test_entry_run,
-};
-}
-
-}  // namespace capi
 
 }  // namespace pt

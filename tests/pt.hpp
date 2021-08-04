@@ -1,6 +1,7 @@
 #ifndef PPOSIX_PT_HPP
 #define PPOSIX_PT_HPP
 
+#ifdef __cplusplus
 // Include the iostream header first
 #include <iostream>
 // DO NOT MOVE
@@ -10,7 +11,94 @@
 #include <regex>
 #include <thread>
 #include <vector>
+#endif  // __cplusplus
 
+#ifdef __cplusplus
+namespace pt::capi {
+extern "C" {
+#endif  // __cplusplus
+
+struct PtTestEntry {
+  void const *handle;
+};
+
+struct PtTestEntryStop {
+  int val;
+};
+
+PtTestEntry pt_test_entries() noexcept;
+
+PtTestEntryStop pt_test_entries_stop(PtTestEntry) noexcept;
+PtTestEntry pt_test_entries_next(PtTestEntry) noexcept;
+
+typedef int pt_test_type_t;
+
+enum pt_test_type : pt_test_type_t {
+  pt_normal_type,
+  pt_thread_type,
+  pt_spawn_type,
+};
+
+struct PtTestType {
+  pt_test_type_t val;
+};
+
+struct PtTestNamespace {
+  char const *val;
+};
+
+struct PtTestName {
+  char const *val;
+};
+
+struct PtTestFile {
+  char const *val;
+};
+
+struct PtTestLine {
+  size_t val;
+};
+
+typedef int pt_run_result_t;
+
+enum pt_run_result : pt_run_result_t {
+  run_success,
+  run_skipped,
+  run_failed,
+  run_error,
+  run_internal_error,
+};
+
+struct PtTestRunResult {
+  pt_run_result_t val;
+};
+
+PtTestType pt_test_entry_type(PtTestEntry) noexcept;
+PtTestNamespace pt_test_entry_namespace(PtTestEntry) noexcept;
+PtTestName pt_test_entry_name(PtTestEntry) noexcept;
+PtTestFile pt_test_entry_file(PtTestEntry) noexcept;
+PtTestLine pt_test_entry_line(PtTestEntry) noexcept;
+PtTestRunResult pt_test_entry_run(PtTestEntry) noexcept;
+
+struct symbol_table {
+  PtTestEntry (*pt_test_entries)() noexcept;
+  PtTestEntryStop (*pt_test_entries_stop)(PtTestEntry) noexcept;
+  PtTestEntry (*pt_test_entries_next)(PtTestEntry) noexcept;
+
+  PtTestType (*pt_test_entry_type)(PtTestEntry) noexcept;
+  PtTestNamespace (*pt_test_entry_namespace)(PtTestEntry) noexcept;
+  PtTestName (*pt_test_entry_name)(PtTestEntry) noexcept;
+  PtTestFile (*pt_test_entry_file)(PtTestEntry) noexcept;
+  PtTestLine (*pt_test_entry_line)(PtTestEntry) noexcept;
+  PtTestRunResult (*pt_test_entry_run)(PtTestEntry) noexcept;
+};
+
+#ifdef __cplusplus
+}
+}  // namespace pt::capi
+#endif
+
+#ifdef __cplusplus
 namespace pt {
 
 struct assert_line {
@@ -189,86 +277,6 @@ inline void assert_true(const Result &result, const assert_line &line) {
 
 #define PT_SPAWN_TEST(name_space, name) PT_GENERIC_TEST(name_space, name, ::pt::Type::Spawn)
 
-namespace pt::capi {
-
-struct Entry {
-  void const *handle;
-};
-
-extern "C" {
-
-struct Stop {
-  int val;
-};
-
-Entry pt_test_entries() noexcept;
-
-Stop pt_test_entries_stop(Entry) noexcept;
-Entry pt_test_entries_next(Entry) noexcept;
-
-typedef int pt_test_type_t;
-
-enum pt_test_type : pt_test_type_t {
-  pt_normal_type,
-  pt_thread_type,
-  pt_spawn_type,
-};
-
-struct Type {
-  pt_test_type_t val;
-};
-
-struct Namespace {
-  char const *val;
-};
-
-struct Name {
-  char const *val;
-};
-
-struct File {
-  char const *val;
-};
-
-struct Line {
-  size_t val;
-};
-
-typedef int pt_run_result_t;
-
-enum pt_run_result : pt_run_result_t {
-  run_success,
-  run_skipped,
-  run_failed,
-  run_error,
-  run_internal_error,
-};
-
-struct RunResult {
-  pt_run_result_t val;
-};
-
-Type pt_test_entry_type(Entry) noexcept;
-Namespace pt_test_entry_namespace(Entry) noexcept;
-Name pt_test_entry_name(Entry) noexcept;
-File pt_test_entry_file(Entry) noexcept;
-Line pt_test_entry_line(Entry) noexcept;
-RunResult pt_test_entry_run(Entry) noexcept;
-}
-
-struct symbol_table {
-  Entry (*pt_test_entries)() noexcept;
-  Stop (*pt_test_entries_stop)(Entry) noexcept;
-  Entry (*pt_test_entries_next)(Entry) noexcept;
-
-  Type (*pt_test_entry_type)(Entry) noexcept;
-  Namespace (*pt_test_entry_namespace)(Entry) noexcept;
-  Name (*pt_test_entry_name)(Entry) noexcept;
-  File (*pt_test_entry_file)(Entry) noexcept;
-  Line (*pt_test_entry_line)(Entry) noexcept;
-  RunResult (*pt_test_entry_run)(Entry) noexcept;
-};
-
-}  // namespace pt::capi
+#endif  // __cplusplus
 
 #endif  // PPOSIX_PT_HPP
