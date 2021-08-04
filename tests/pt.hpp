@@ -82,62 +82,69 @@ inline std::ostream &operator<<(std::ostream &out, const Location &location) {
   return out << location.file << ':' << location.line;
 }
 
-enum class Type {
+enum class Type : int {
   Normal,
   Thread,
   Spawn,
 };
 
-struct RegistrationEntry {
-  virtual ~RegistrationEntry() = default;
+struct Test {
+  virtual ~Test() = default;
 
-  RegistrationEntry(const Type type, const Id &id, const Location &location)
-      : type{type}, id{id}, location{location} {}
+  Test() noexcept = default;
 
-  RegistrationEntry(const RegistrationEntry &) = delete;
-  RegistrationEntry(RegistrationEntry &&) = delete;
+  Test(const Test &) = delete;
+  Test(Test &&) = delete;
 
-  RegistrationEntry &operator=(const RegistrationEntry &) = delete;
-  RegistrationEntry &operator=(RegistrationEntry &&) = delete;
+  Test &operator=(const Test &) = delete;
+  Test &operator=(Test &&) = delete;
 
-  Type type{};
-  Id id;
-  Location location;
+  virtual const Id &id() const noexcept = 0;
+  virtual const Location &loc() const noexcept = 0;
+  virtual Type type() const noexcept = 0;
 
-  RegistrationEntry const *next{};
-
-  virtual void run_test() const;
+  virtual void run() const = 0;
 };
 
-void run(const std::vector<std::reference_wrapper<const Id>> &test_matches);
-
-[[noreturn]] void main(const std::vector<std::regex> &patterns);
-
-RegistrationEntry const *registered_tests();
-
-class Test {
+class InternalTest : public Test {
  public:
-  inline explicit Test(RegistrationEntry const *entry) : entry_{entry} {
-    assert(entry != nullptr);
-  }
+  InternalTest(const Type t, const Id &id, const Location &loc) noexcept
+      : type_{t}, id_{id}, location_{loc} {}
 
-  inline const Id &id() const noexcept { return entry_->id; }
-  inline const Location &loc() const noexcept { return entry_->location; }
+  inline const Id &id() const noexcept { return id_; }
+  inline const Location &loc() const noexcept { return location_; }
+  inline Type type() const noexcept { return type_; }
 
-  inline void run_test() const { entry_->run_test(); }
+  virtual void run() const;
+
+  inline InternalTest const *next() const noexcept { return next_; }
+
+  // TODO: Make this a private function only for friends
+  inline void set_next(InternalTest const *next) noexcept { next_ = next; }
 
  private:
-  RegistrationEntry const *entry_{};
+  Type type_{};
+  Id id_{};
+  Location location_{};
+
+  InternalTest const *next_{};
 };
 
-void register_test(RegistrationEntry &entry);
+void run(const Test &test) noexcept;
+
+namespace private_detail {
+
+void register_internal_test(InternalTest &entry) noexcept;
+
+InternalTest const *internal_tests() noexcept;
+}  // namespace private_detail
 
 template <class>
-class Registration : public RegistrationEntry {
+class Registration : public InternalTest {
  public:
   Registration(const Type type, const Id &id, const Location &location) noexcept
-      : RegistrationEntry{type, id, location} {
-    ::pt::register_test(*this);
+      : InternalTest{type, id, location} {
+    ::pt::private_detail::register_internal_test(*this);
   }
 };
 
@@ -171,15 +178,97 @@ inline void assert_true(const Result &result, const assert_line &line) {
   namespace name_space {                                                                \
   struct name : ::pt::Registration<name> {                                              \
     using ::pt::Registration<name>::Registration;                                       \
-    void run_test() const override;                                                     \
+    void run() const override;                                                          \
   } const static name##_registration{type, {#name_space, #name}, {__FILE__, __LINE__}}; \
   }                                                                                     \
-  void name_space ::name ::run_test() const
+  void name_space ::name ::run() const
 
 #define PT_TEST(name_space, name) PT_GENERIC_TEST(name_space, name, ::pt::Type::Normal)
 
 #define PT_THREAD_TEST(name_space, name) PT_GENERIC_TEST(name_space, name, ::pt::Type::Thread)
 
 #define PT_SPAWN_TEST(name_space, name) PT_GENERIC_TEST(name_space, name, ::pt::Type::Spawn)
+
+namespace pt::capi {
+
+struct Entry {
+  void const *handle;
+};
+
+extern "C" {
+
+struct Stop {
+  int val;
+};
+
+Entry pt_test_entries() noexcept;
+
+Stop pt_test_entries_stop(Entry) noexcept;
+Entry pt_test_entries_next(Entry) noexcept;
+
+typedef int pt_test_type_t;
+
+enum pt_test_type : pt_test_type_t {
+  pt_normal_type,
+  pt_thread_type,
+  pt_spawn_type,
+};
+
+struct Type {
+  pt_test_type_t val;
+};
+
+struct Namespace {
+  char const *val;
+};
+
+struct Name {
+  char const *val;
+};
+
+struct File {
+  char const *val;
+};
+
+struct Line {
+  size_t val;
+};
+
+typedef int pt_run_result_t;
+
+enum pt_run_result : pt_run_result_t {
+  run_success,
+  run_skipped,
+  run_failed,
+  run_error,
+  run_internal_error,
+};
+
+struct RunResult {
+  pt_run_result_t val;
+};
+
+Type pt_test_entry_type(Entry) noexcept;
+Namespace pt_test_entry_namespace(Entry) noexcept;
+Name pt_test_entry_name(Entry) noexcept;
+File pt_test_entry_file(Entry) noexcept;
+Line pt_test_entry_line(Entry) noexcept;
+RunResult pt_test_entry_run(Entry) noexcept;
+}
+
+struct symbol_table {
+  Entry (*pt_test_entries)() noexcept;
+  Stop (*pt_test_entries_stop)(Entry) noexcept;
+  Entry (*pt_test_entries_next)(Entry) noexcept;
+
+  Type (*pt_test_entry_type)(Entry) noexcept;
+  Namespace (*pt_test_entry_namespace)(Entry) noexcept;
+  Name (*pt_test_entry_name)(Entry) noexcept;
+  File (*pt_test_entry_file)(Entry) noexcept;
+  Line (*pt_test_entry_line)(Entry) noexcept;
+  RunResult (*pt_test_entry_run)(Entry) noexcept;
+};
+
+}  // namespace pt::capi
 
 #endif  // PPOSIX_PT_HPP

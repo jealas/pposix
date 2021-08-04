@@ -50,6 +50,7 @@ add_library(
         src/mman.cpp
         src/fcntl.cpp
         src/dup.cpp
+        src/dlfcn.cpp
 
         ${PPOSIX_EXTENSION_SRC}
 )

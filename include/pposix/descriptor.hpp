@@ -11,6 +11,19 @@ namespace pposix {
 struct null_d_t {};
 inline constexpr null_d_t null_d{};
 
+template <class T>
+class raw_d {
+ public:
+  constexpr explicit raw_d(const T value) noexcept : value_{value} {}
+
+  constexpr explicit operator T() const noexcept { return value_; }
+
+  constexpr bool operator==(const T other) const noexcept { return value_ == other; }
+
+ private:
+  T value_;
+};
+
 template <class FdWrapper, class UnderlyingFd, UnderlyingFd Fd>
 struct descriptor_constant {
   constexpr FdWrapper operator()() const noexcept { return FdWrapper{Fd}; }
@@ -24,11 +37,11 @@ class [[nodiscard]] descriptor {
   static_assert(noexcept(ClosePolicy(std::declval<Descriptor>())));
 
  public:
-   descriptor() noexcept = default;
+  descriptor() noexcept = default;
 
-   explicit descriptor(null_d_t) noexcept {}
+  explicit descriptor(null_d_t) noexcept {}
 
-   explicit descriptor(Descriptor descriptor) : raw_descriptor_{descriptor} {}
+  explicit descriptor(Descriptor descriptor) : raw_descriptor_{descriptor} {}
 
   ~descriptor() {
     if (const auto err{close()}) {
@@ -37,23 +50,23 @@ class [[nodiscard]] descriptor {
   }
 
   descriptor(const descriptor &other) = delete;
-   descriptor(descriptor &&other) noexcept { std::swap(raw_descriptor_, other.raw_descriptor_); }
+  descriptor(descriptor &&other) noexcept { std::swap(raw_descriptor_, other.raw_descriptor_); }
 
   descriptor &operator=(const descriptor &) = delete;
 
-   descriptor &operator=(descriptor &&other) noexcept {
+  descriptor &operator=(descriptor &&other) noexcept {
     std::swap(raw_descriptor_, other.raw_descriptor_);
   }
 
-  [[nodiscard]]  bool empty() const noexcept { return raw_descriptor_ == GetNull{}(); }
-   bool operator==(null_d_t) const noexcept { return empty(); }
+  [[nodiscard]] bool empty() const noexcept { return raw_descriptor_ == GetNull{}(); }
+  bool operator==(null_d_t) const noexcept { return empty(); }
 
-   explicit operator bool() const noexcept { return not empty(); }
+  explicit operator bool() const noexcept { return not empty(); }
 
-   Descriptor raw() const noexcept { return raw_descriptor_; }
+  Descriptor raw() const noexcept { return raw_descriptor_; }
 
-   Descriptor *operator->() noexcept { return &raw_descriptor_; }
-   Descriptor const *operator->() const noexcept { return &raw_descriptor_; }
+  Descriptor *operator->() noexcept { return &raw_descriptor_; }
+  Descriptor const *operator->() const noexcept { return &raw_descriptor_; }
 
   [[nodiscard]] Descriptor release() noexcept {
     Descriptor tmp_fd{raw_descriptor_};

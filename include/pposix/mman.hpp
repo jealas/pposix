@@ -27,7 +27,7 @@ class mmap_d {
   size_t length_{0u};
 };
 
-bool operator==(const mmap_d &lhs, const mmap_d &rhs) noexcept {
+constexpr bool operator==(const mmap_d &lhs, const mmap_d &rhs) noexcept {
   return lhs.address() == rhs.address() and lhs.length() == rhs.length();
 }
 
