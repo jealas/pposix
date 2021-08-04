@@ -118,17 +118,17 @@ void InternalTest::run() const {
   throw std::logic_error{"Default InternalTest::run should never be called"};
 }
 
-void run(const Test &test) noexcept {
+TestResult run(const Test &test) noexcept {
   try {
     std::cout << "Running " << test.id() << std::endl;
     test.run();
-    return;
+    return {};
 
   } catch (const test_failed &fail) {
     std::cerr << "FAILED: " << test.loc() << '[' << test.id() << ']' << '\n'
               << '\t' << fail.what() << '\n';
     std::cerr << std::endl;
-    return;
+    return {};
 
   } catch (const std::runtime_error &error) {
     std::cerr << "ERROR: Uncaught runtime error while running test " << test.id() << '\n'
@@ -139,7 +139,7 @@ void run(const Test &test) noexcept {
     std::cerr << "ERROR: Uncaught exception while running test " << test.id() << '\n'
               << exception.what();
     std::cerr << std::endl;
-    return;
+    return {};
 
   } catch (...) {
     std::cerr << "INTERNAL ERROR: Unknown exception caught while running test " << test.id();

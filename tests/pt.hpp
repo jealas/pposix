@@ -9,10 +9,6 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
-#include <regex>
-#include <thread>
-#include <vector>
 
 #else
 #include <stddef.h>
@@ -277,7 +273,7 @@ class LibraryTest : public Test {
 
 struct TestResult {};
 
-void run(const Test &test) noexcept;
+TestResult run(const Test &test) noexcept;
 
 namespace private_detail {
 
