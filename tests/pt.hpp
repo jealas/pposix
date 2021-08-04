@@ -6,20 +6,19 @@
 #include <iostream>
 // DO NOT MOVE
 
-#ifdef __cplusplus
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
-#else
-#include <stddef.h>
-#include <stdint.h>
-#endif
-
-#include <cassert>
 #include <functional>
 #include <regex>
 #include <thread>
 #include <vector>
-#endif  // __cplusplus
+
+#else
+#include <stddef.h>
+#include <stdint.h>
+
+#endif
 
 #ifdef __cplusplus
 namespace pt::capi {
