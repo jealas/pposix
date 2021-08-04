@@ -5,7 +5,7 @@
 namespace pt::private_detail {
 
 struct {
-  InternalTest *tail{nullptr};
+  InternalTest const *tail{nullptr};
   size_t count{};
 } static registrar{};
 
