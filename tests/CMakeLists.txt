@@ -32,7 +32,7 @@ target_compile_options(
 
         PRIVATE
         ${PPOSIX_TEST_COMPILE_OPTIONS}
-        -std=c++14
+        -std=c++11
 )
 
 add_executable(

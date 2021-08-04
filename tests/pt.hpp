@@ -168,25 +168,9 @@ struct stop_iteration : std::exception {
   using std::exception::exception;
 };
 
-template <class Start, class End>
-constexpr auto range(Start start, End end) {
-  return [start = start, end = end]() mutable {
-    if (start < end) {
-      return start++;
-    } else {
-      throw stop_iteration{};
-    }
-  };
-}
-
-template <class Iterable>
-constexpr auto range(const Iterable &iterable) {
-  return range(std::cbegin(iterable), std::cend(iterable));
-}
-
 struct Id {
-  capi::PtTestNamespace name_space{};
-  capi::PtTestName name{};
+  capi::PtTestNamespace name_space;
+  capi::PtTestName name;
 
   std::string full_name() const { return std::string{name_space.val} + "::" + name.val; }
 };
@@ -196,8 +180,8 @@ inline std::ostream &operator<<(std::ostream &out, const Id &id) {
 }
 
 struct Location {
-  capi::PtTestFile file{};
-  capi::PtTestLine line{};
+  capi::PtTestFile file;
+  capi::PtTestLine line;
 
   inline std::string uri() const { return std::string{"file://"} + file.val; }
 };
