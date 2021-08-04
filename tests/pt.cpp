@@ -2,16 +2,19 @@
 
 #include <cassert>
 
-namespace pt::private_detail {
+namespace pt {
+namespace private_detail {
 
 struct {
   InternalTest const *tail{nullptr};
   size_t count{};
 } static registrar{};
 
-}  // namespace pt::private_detail
+}  // namespace private_detail
+}  // namespace pt
 
-namespace pt::capi {
+namespace pt {
+namespace capi {
 
 extern "C" {
 
@@ -38,7 +41,7 @@ PtTestEntry pt_test_entries_next(const PtTestEntry entry) noexcept {
 
 PtTestType pt_test_entry_type(const PtTestEntry entry) noexcept {
   const auto test{static_cast<InternalTest const *>(entry.handle)};
-  return PtTestType{pt_test_type{static_cast<pt_test_type_t>(test->type())}};
+  return PtTestType{pt_test_type(static_cast<pt_test_type_t>(test->type()))};
 }
 
 PtTestNamespace pt_test_entry_namespace(const PtTestEntry entry) noexcept {
@@ -93,7 +96,8 @@ PtSymbolTable pt_symbol_table{
 
 }  // extern "C"
 
-}  // namespace pt::capi
+}  // namespace capi
+}  // namespace pt
 
 namespace pt {
 

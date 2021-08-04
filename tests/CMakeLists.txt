@@ -7,6 +7,19 @@ add_library(
         pt.cpp
 )
 
+target_compile_features(
+        libpt
+
+        PUBLIC
+        cxx_std_11
+)
+
+set_target_properties(
+        libpt
+
+        PROPERTIES
+        CXX_EXTENSIONS OFF
+)
 
 target_link_libraries(
         libpt
@@ -19,6 +32,7 @@ target_compile_options(
 
         PRIVATE
         ${PPOSIX_TEST_COMPILE_OPTIONS}
+        -std=c++14
 )
 
 add_executable(

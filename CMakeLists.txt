@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 project(pposix)
 
-set(CMAKE_CXX_STANDARD 17)
-
 option(PPOSIX_LINUX "Enable Linux extensions" OFF)
 option(PPOSIX_RT "Enable Real-Time extensions" OFF)
 
@@ -68,6 +66,20 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin
             dl
     )
 endif ()
+
+target_compile_features(
+        pposix
+
+        PUBLIC
+        cxx_std_17
+)
+
+set_target_properties(
+        pposix
+
+        PROPERTIES
+        CXX_EXTENSIONS OFF
+)
 
 target_compile_definitions(
         pposix

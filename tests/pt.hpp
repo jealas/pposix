@@ -17,7 +17,8 @@
 #endif
 
 #ifdef __cplusplus
-namespace pt::capi {
+namespace pt {
+namespace capi {
 extern "C" {
 #endif  // __cplusplus
 
@@ -123,12 +124,14 @@ struct PtSymbolTable {
 };
 
 #ifdef __cplusplus
-static_assert(sizeof(PtSymbolTable) == (sizeof(PtSymbolTableId)) + (10 * sizeof(void(*)())));
+static_assert(sizeof(PtSymbolTable) == (sizeof(PtSymbolTableId)) + (10 * sizeof(void(*)())),
+              "Symbol table size changed!");
 #endif
 
 #ifdef __cplusplus
 }
-}  // namespace pt::capi
+}  // namespace capi
+}  // namespace pt
 #endif
 
 #ifdef __cplusplus
@@ -263,7 +266,7 @@ class LibraryTest : public Test {
     return Location{syms_.pt_test_entry_file(test_), syms_.pt_test_entry_line(test_)};
   }
 
-  inline Type type() const noexcept { return Type{syms_.pt_test_entry_type(test_).val}; }
+  inline Type type() const noexcept { return Type(syms_.pt_test_entry_type(test_).val); }
 
   inline virtual void run() const { syms_.pt_test_entry_run(test_); }
 
