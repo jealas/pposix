@@ -22,7 +22,7 @@ struct TestCase {
     throw std::logic_error{"pt::Test::test should never be called."};
   };
 
-  virtual std::future<pt::TestResult> run() const {
+  virtual std::future<pt::RunResult> run() const {
     throw std::logic_error{"pt::Test::run should never be called."};
   }
 };
@@ -33,9 +33,9 @@ class NormalTest final : public TestCase {
 
   inline const pt::Test &test() const override { return test_; }
 
-  inline std::future<pt::TestResult> run() const override {
-    std::promise<pt::TestResult> p{};
-    p.set_value(pt::TestResult{});
+  inline std::future<pt::RunResult> run() const override {
+    std::promise<pt::RunResult> p{};
+    p.set_value(pt::RunResult{});
     return p.get_future();
   }
 
@@ -49,9 +49,9 @@ class ThreadTest final : public TestCase {
 
   inline const pt::Test &test() const override { return test_; }
 
-  inline std::future<pt::TestResult> run() const override {
-    std::promise<pt::TestResult> p{};
-    p.set_value(pt::TestResult{});
+  inline std::future<pt::RunResult> run() const override {
+    std::promise<pt::RunResult> p{};
+    p.set_value(pt::RunResult{});
     return p.get_future();
   }
 
@@ -65,9 +65,9 @@ class SpawnTest final : public TestCase {
 
   inline const pt::Test &test() const override { return test_; }
 
-  inline std::future<pt::TestResult> run() const override {
-    std::promise<pt::TestResult> p{};
-    p.set_value(pt::TestResult{});
+  inline std::future<pt::RunResult> run() const override {
+    std::promise<pt::RunResult> p{};
+    p.set_value(pt::RunResult{});
     return p.get_future();
   }
 

@@ -81,6 +81,7 @@ enum pt_run_result : pt_run_result_t {
   run_failed,
   run_error,
   run_internal_error,
+  run_exception,
 };
 
 struct PtTestRunResult {
@@ -271,9 +272,16 @@ class LibraryTest : public Test {
   capi::PtTestEntry test_;
 };
 
-struct TestResult {};
+enum class RunResult : capi::pt_run_result_t {
+  Success = capi::pt_run_result::run_success,
+  Skipped = capi::pt_run_result::run_skipped,
+  Failed = capi::pt_run_result::run_failed,
+  Error = capi::pt_run_result::run_error,
+  InternalError = capi::pt_run_result::run_internal_error,
+  Exception = capi::pt_run_result::run_exception,
+};
 
-TestResult run(const Test &test) noexcept;
+RunResult run(const Test &test) noexcept;
 
 namespace private_detail {
 

@@ -69,7 +69,7 @@ PtTestRunResult pt_test_entry_run(const PtTestEntry entry) noexcept {
   try {
     const auto test{static_cast<InternalTest const *>(entry.handle)};
 
-    pt::run(*test);
+    return {static_cast<pt_run_result_t>(pt::run(*test))};
 
     return {pt_run_result::run_success};
   } catch (...) {
@@ -118,33 +118,38 @@ void InternalTest::run() const {
   throw std::logic_error{"Default InternalTest::run should never be called"};
 }
 
-TestResult run(const Test &test) noexcept {
+RunResult run(const Test &test) noexcept {
   try {
     std::cout << "Running " << test.id() << std::endl;
     test.run();
-    return {};
+    return RunResult::Success;
 
+  } catch (const test_skipped &skipped) {
+    return RunResult::Skipped;
   } catch (const test_failed &fail) {
     std::cerr << "FAILED: " << test.loc() << '[' << test.id() << ']' << '\n'
               << '\t' << fail.what() << '\n';
     std::cerr << std::endl;
-    return {};
+    return RunResult::Failed;
 
   } catch (const std::runtime_error &error) {
     std::cerr << "ERROR: Uncaught runtime error while running test " << test.id() << '\n'
               << error.what();
     std::cerr << std::endl;
-    std::exit(EXIT_FAILURE);
+
+    return RunResult::Error;
+
   } catch (const std::exception &exception) {
     std::cerr << "ERROR: Uncaught exception while running test " << test.id() << '\n'
               << exception.what();
     std::cerr << std::endl;
-    return {};
 
+    return RunResult::Exception;
   } catch (...) {
     std::cerr << "INTERNAL ERROR: Unknown exception caught while running test " << test.id();
     std::cerr << std::endl;
-    std::exit(EXIT_FAILURE);
+
+    return RunResult::InternalError;
   }
 }
 
