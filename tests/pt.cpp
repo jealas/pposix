@@ -5,7 +5,7 @@
 namespace pt {
 namespace private_detail {
 
-struct {
+struct GlobalRegistrar {
   InternalTest const *tail{nullptr};
   size_t count{};
 } static registrar{};

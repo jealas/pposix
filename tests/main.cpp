@@ -5,7 +5,9 @@
 #include "pposix/dlfcn.hpp"
 #include "pt.hpp"
 
-PT_TEST(pt::tests, test_hello_main) { PT_ASSERT(false); }
+PT_SUITE("pt main") {
+  PT_TEST(hello_main) { PT_ASSERT(false); }
+}
 
 struct TestCase {
   virtual ~TestCase() = default;
@@ -109,6 +111,42 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
 }
 
 [[noreturn]] void run_matching(const std::vector<std::regex> &patterns) {
+  if (const auto res = pposix::capi::dlopen("./libtest_pposix.so")) {
+    auto pt_symbol_table = pposix::capi::dlsym((*res).raw(), "pt_symbol_table");
+    PT_ASSERT(!pt_symbol_table.has_error());
+
+    const auto handle{std::move(pt_symbol_table).value()};
+
+    auto const *symbols = static_cast<pt::capi::PtSymbolTable const *>(
+        static_cast<pposix::capi::raw_sym_t>(handle.raw()));
+
+    const auto &secret{symbols->id.secret};
+
+    if (secret[0u] != 'p' || secret[1u] != 't' || secret[2u] != 'l' || secret[3u] != 's') {
+      std::cout << "Invalid symbol table secret" << std::endl;
+    } else {
+      size_t count{};
+      for (auto entry = symbols->pt_test_entries(); !symbols->pt_test_entries_stop(entry).val;
+           entry = symbols->pt_test_entries_next(entry)) {
+        count++;
+
+        const pt::Id id{symbols->pt_test_entry_namespace(entry),
+                        symbols->pt_test_entry_name(entry)};
+        for (const auto &pattern : patterns) {
+          if (std::regex_search(id.full_name(), pattern)) {
+            symbols->pt_test_entry_run(entry);
+            break;
+          }
+        }
+      }
+
+      PT_ASSERT(symbols->pt_test_entries_count().val == count);
+    }
+
+  } else {
+    std::cerr << "No library tests found" << std::endl;
+  }
+
   try {
     std::vector<std::reference_wrapper<const pt::Test>> tests{};
     size_t total_tests{};
@@ -121,7 +159,7 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
 
       const auto full_name{test_id.full_name()};
       for (const auto &pattern : patterns) {
-        if (std::regex_match(full_name, pattern)) {
+        if (std::regex_search(full_name, pattern)) {
           tests.emplace_back(*test_entry);
           break;
         }
@@ -150,34 +188,6 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
 }
 
 [[noreturn]] void run_all() {
-  if (const auto res = pposix::capi::dlopen("./libtest_pposix.so")) {
-    auto pt_symbol_table = pposix::capi::dlsym((*res).raw(), "pt_symbol_table");
-    PT_ASSERT(!pt_symbol_table.has_error());
-
-    const auto handle{std::move(pt_symbol_table).value()};
-
-    auto const *symbols = static_cast<pt::capi::PtSymbolTable const *>(
-        static_cast<pposix::capi::raw_sym_t>(handle.raw()));
-
-    const auto &secret{symbols->id.secret};
-
-    if (secret[0u] != 'p' || secret[1u] != 't' || secret[2u] != 'l' || secret[3u] != 's') {
-      std::cout << "Invalid symbol table secret" << std::endl;
-    } else {
-      size_t count{};
-      for (auto entry = symbols->pt_test_entries(); !symbols->pt_test_entries_stop(entry).val;
-           entry = symbols->pt_test_entries_next(entry)) {
-        symbols->pt_test_entry_run(entry);
-        count++;
-      }
-
-      PT_ASSERT(symbols->pt_test_entries_count().val == count);
-    }
-
-  } else {
-    std::cerr << "No library tests found" << std::endl;
-  }
-
   for (auto test_entry{pt::private_detail::internal_tests()}; test_entry;
        test_entry = test_entry->next()) {
     try {

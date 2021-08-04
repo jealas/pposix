@@ -32,7 +32,6 @@ target_compile_options(
 
         PRIVATE
         ${PPOSIX_TEST_COMPILE_OPTIONS}
-        -std=c++11
 )
 
 add_executable(
@@ -72,6 +71,7 @@ add_library(
         MODULE
 
         test_pposix.cpp
+        test_compiles.cpp
 )
 
 target_link_libraries(

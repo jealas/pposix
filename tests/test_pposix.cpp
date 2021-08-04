@@ -1,15 +1,18 @@
 #include "pt.hpp"
 
-PT_TEST(pposix::tests, test_failing_assert) { PT_ASSERT(20 == 2); }
+PT_SUITE(hmm) {
+  PT_TEST(test_failing_assert) { PT_ASSERT(20 == 2); }
 
-PT_TEST(pposix::tests, test_empty_body) {}
+  PT_TEST(test_empty_body) {}
 
-namespace outer_namespace {
+  namespace outer_namespace {
 
-PT_TEST(pposix::tests, test_in_named_namespace) {}
+  PT_TEST(test_in_named_namespace) {}
 
-}  // namespace outer_namespace
+  }  // namespace outer_namespace
 
-PT_THREAD_TEST(pposix::tests, test_threaded_test) {}
+  PT_THREAD_TEST(test_threaded_test) {}
 
-PT_SPAWN_TEST(pposix::tests, test_spawn_test) {}
+  PT_SPAWN_TEST(test_spawn_test) {}
+
+}  // namespace

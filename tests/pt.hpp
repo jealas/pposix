@@ -314,20 +314,28 @@ inline void assert_true(const Result &result, const assert_line &line) {
 
 #define PT_ASSERT(expression) ::pt::assert_true((expression), {__FILE__, __LINE__, #expression})
 
-#define PT_GENERIC_TEST(name_space, name, type)                                                 \
-  namespace name_space {                                                                        \
-  struct name : ::pt::Registration<name> {                                                      \
-    using ::pt::Registration<name>::Registration;                                               \
-    void run() const override;                                                                  \
-  } const static name##_registration{type, {{#name_space}, {#name}}, {{__FILE__}, {__LINE__}}}; \
-  }                                                                                             \
-  void name_space ::name ::run() const
+#define PT_SUITE(name_space)                \
+  namespace {                               \
+  struct {                                  \
+    char const *namespace_str{#name_space}; \
+  } static constexpr pt_test_suite;         \
+  }                                         \
+  namespace
 
-#define PT_TEST(name_space, name) PT_GENERIC_TEST(name_space, name, ::pt::Type::Normal)
+#define PT_GENERIC_TEST(name, type)                                              \
+  struct name : ::pt::Registration<name> {                                       \
+    using ::pt::Registration<name>::Registration;                                \
+    virtual void run() const override;                                           \
+  } const static name##_registration{                                            \
+      type, {{pt_test_suite.namespace_str}, {#name}}, {{__FILE__}, {__LINE__}}}; \
+                                                                                 \
+  void name::run() const
 
-#define PT_THREAD_TEST(name_space, name) PT_GENERIC_TEST(name_space, name, ::pt::Type::Thread)
+#define PT_TEST(name) PT_GENERIC_TEST(name, ::pt::Type::Normal)
 
-#define PT_SPAWN_TEST(name_space, name) PT_GENERIC_TEST(name_space, name, ::pt::Type::Spawn)
+#define PT_THREAD_TEST(name) PT_GENERIC_TEST(name, ::pt::Type::Thread)
+
+#define PT_SPAWN_TEST(name) PT_GENERIC_TEST(name, ::pt::Type::Spawn)
 
 #endif  // __cplusplus
 
