@@ -242,9 +242,9 @@ class InternalTest : public Test {
   InternalTest const *next_{};
 };
 
-class ExternalTest : public Test {
+class LibraryTest : public Test {
  public:
-  inline explicit ExternalTest(capi::PtSymbolTable syms, capi::PtTestEntry test)
+  inline explicit LibraryTest(capi::PtSymbolTable syms, capi::PtTestEntry test)
       : syms_{syms}, test_{test} {};
 
   inline Id id() const noexcept {

@@ -77,10 +77,11 @@ class result {
     return std::visit(get_error_visitor{}, result_);
   }
 
-  [[nodiscard]] T &value() noexcept(false) {
-    return std::visit(get_mutable_value_visitor{}, result_);
+  [[nodiscard]] T &&value() &&noexcept(false) {
+    return std::move(std::visit(get_mutable_value_visitor{}, result_));
   }
-  [[nodiscard]] T const &value() const noexcept(false) {
+
+  [[nodiscard]] T const &value() const &noexcept(false) {
     return std::visit(get_immutable_value_visitor{}, result_);
   }
 

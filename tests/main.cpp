@@ -70,7 +70,7 @@ PT_TEST(pt::tests, test_hello_main) { PT_ASSERT(false); }
     auto pt_symbol_table = pposix::capi::dlsym((*res).raw(), "pt_symbol_table");
     PT_ASSERT(!pt_symbol_table.has_error());
 
-    const auto handle{std::move(pt_symbol_table.value())};
+    const auto handle{std::move(pt_symbol_table).value()};
 
     auto const *symbols = static_cast<pt::capi::PtSymbolTable const *>(
         static_cast<pposix::capi::raw_sym_t>(handle.raw()));
