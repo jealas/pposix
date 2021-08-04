@@ -6,6 +6,14 @@
 #include <iostream>
 // DO NOT MOVE
 
+#ifdef __cplusplus
+#include <cstddef>
+#include <cstdint>
+#else
+#include <stddef.h>
+#include <stdint.h>
+#endif
+
 #include <cassert>
 #include <functional>
 #include <regex>
@@ -80,7 +88,20 @@ PtTestFile pt_test_entry_file(PtTestEntry) noexcept;
 PtTestLine pt_test_entry_line(PtTestEntry) noexcept;
 PtTestRunResult pt_test_entry_run(PtTestEntry) noexcept;
 
-struct symbol_table {
+#define PT_CAPI_SECRET \
+  { 'p', 't', 'l', 's' }
+
+#define PT_CAPI_VERSION \
+  { 0, 0, 0, 0 }
+
+struct PtSymbolTableId {
+  uint8_t secret[4];
+  uint8_t version[4];
+};
+
+struct PtSymbolTable {
+  PtSymbolTableId id;
+
   PtTestEntry (*pt_test_entries)() noexcept;
   PtTestEntryStop (*pt_test_entries_stop)(PtTestEntry) noexcept;
   PtTestEntry (*pt_test_entries_next)(PtTestEntry) noexcept;
@@ -92,6 +113,10 @@ struct symbol_table {
   PtTestLine (*pt_test_entry_line)(PtTestEntry) noexcept;
   PtTestRunResult (*pt_test_entry_run)(PtTestEntry) noexcept;
 };
+
+#ifdef __cplusplus
+static_assert(sizeof(PtSymbolTable) == (sizeof(PtSymbolTableId)) + (9 * sizeof(void(*)())));
+#endif
 
 #ifdef __cplusplus
 }

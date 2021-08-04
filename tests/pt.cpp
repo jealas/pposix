@@ -73,10 +73,17 @@ PtTestRunResult pt_test_entry_run(const PtTestEntry entry) noexcept {
   }
 }
 
-symbol_table pt_symbol_table{
-    pt_test_entries,    pt_test_entries_stop,    pt_test_entries_next,
-    pt_test_entry_type, pt_test_entry_namespace, pt_test_entry_name,
-    pt_test_entry_file, pt_test_entry_line,      pt_test_entry_run,
+PtSymbolTable pt_symbol_table{
+    {PT_CAPI_SECRET, PT_CAPI_VERSION},
+    pt_test_entries,
+    pt_test_entries_stop,
+    pt_test_entries_next,
+    pt_test_entry_type,
+    pt_test_entry_namespace,
+    pt_test_entry_name,
+    pt_test_entry_file,
+    pt_test_entry_line,
+    pt_test_entry_run,
 };
 
 }  // extern "C"

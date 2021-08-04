@@ -72,12 +72,18 @@ PT_TEST(pt::tests, test_hello_main) { PT_ASSERT(false); }
 
     const auto handle{std::move(pt_symbol_table.value())};
 
-    auto const *symbols = static_cast<pt::capi::symbol_table const *>(
+    auto const *symbols = static_cast<pt::capi::PtSymbolTable const *>(
         static_cast<pposix::capi::raw_sym_t>(handle.raw()));
 
-    for (auto entry = symbols->pt_test_entries(); !symbols->pt_test_entries_stop(entry).val;
-         entry = symbols->pt_test_entries_next(entry)) {
-      symbols->pt_test_entry_run(entry);
+    const auto &secret{symbols->id.secret};
+
+    if (secret[0u] != 'p' || secret[1u] != 't' || secret[2u] != 'l' || secret[3u] != 's') {
+      std::cout << "Invalid symbol table secret" << std::endl;
+    } else {
+      for (auto entry = symbols->pt_test_entries(); !symbols->pt_test_entries_stop(entry).val;
+           entry = symbols->pt_test_entries_next(entry)) {
+        symbols->pt_test_entry_run(entry);
+      }
     }
 
   } else {
