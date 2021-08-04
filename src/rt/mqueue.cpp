@@ -2,7 +2,7 @@
 
 #include "pposix/errno.hpp"
 
-namespace pposix::rt {
+namespace pposix {
 
 std::error_code close_mq_d(const ::mqd_t mq_descriptor) noexcept {
   return PPOSIX_COMMON_CALL(::mq_close, mq_descriptor);
@@ -95,4 +95,4 @@ result<mq_message> mq::timed_receive(byte_span message,
                             message.length(), underlying_v(priority), &absolute_time);
 }
 
-}  // namespace pposix::rt
+}  // namespace pposix

@@ -14,7 +14,7 @@
 #include "pposix/time.hpp"
 #include "pposix/util.hpp"
 
-namespace pposix::rt {
+namespace pposix {
 
 constexpr ::mqd_t NULL_MQD_T{-1};
 
@@ -243,4 +243,4 @@ class mq {
   unique_mq_d mq_d_{};
 };
 
-}  // namespace pposix::rt
+}  // namespace pposix

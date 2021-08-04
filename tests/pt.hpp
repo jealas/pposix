@@ -174,31 +174,31 @@ constexpr auto range(const Iterable &iterable) {
 }
 
 struct Id {
-  char const *name_space{};
-  char const *name{};
+  capi::PtTestNamespace name_space{};
+  capi::PtTestName name{};
 
-  std::string full_name() const { return std::string{name_space} + "::" + name; }
+  std::string full_name() const { return std::string{name_space.val} + "::" + name.val; }
 };
 
 inline std::ostream &operator<<(std::ostream &out, const Id &id) {
-  return out << id.name_space << "::" << id.name;
+  return out << id.name_space.val << "::" << id.name.val;
 }
 
 struct Location {
-  char const *file{};
-  size_t line{};
+  capi::PtTestFile file{};
+  capi::PtTestLine line{};
 
-  inline std::string uri() const { return std::string{"file://"} + file; }
+  inline std::string uri() const { return std::string{"file://"} + file.val; }
 };
 
 inline std::ostream &operator<<(std::ostream &out, const Location &location) {
-  return out << location.file << ':' << location.line;
+  return out << location.file.val << ':' << location.line.val;
 }
 
-enum class Type : int {
-  Normal,
-  Thread,
-  Spawn,
+enum class Type : capi::pt_test_type_t {
+  Normal = capi::pt_test_type::pt_normal_type,
+  Thread = capi::pt_test_type::pt_thread_type,
+  Spawn = capi::pt_test_type::pt_spawn_type,
 };
 
 struct Test {
@@ -212,8 +212,8 @@ struct Test {
   Test &operator=(const Test &) = delete;
   Test &operator=(Test &&) = delete;
 
-  virtual const Id &id() const noexcept = 0;
-  virtual const Location &loc() const noexcept = 0;
+  virtual Id id() const noexcept = 0;
+  virtual Location loc() const noexcept = 0;
   virtual Type type() const noexcept = 0;
 
   virtual void run() const = 0;
@@ -224,15 +224,14 @@ class InternalTest : public Test {
   InternalTest(const Type t, const Id &id, const Location &loc) noexcept
       : type_{t}, id_{id}, location_{loc} {}
 
-  inline const Id &id() const noexcept { return id_; }
-  inline const Location &loc() const noexcept { return location_; }
+  inline Id id() const noexcept { return id_; }
+  inline Location loc() const noexcept { return location_; }
   inline Type type() const noexcept { return type_; }
 
   virtual void run() const;
 
+  // TODO: Make these private functions only for friends
   inline InternalTest const *next() const noexcept { return next_; }
-
-  // TODO: Make this a private function only for friends
   inline void set_next(InternalTest const *next) noexcept { next_ = next; }
 
  private:
@@ -241,6 +240,28 @@ class InternalTest : public Test {
   Location location_{};
 
   InternalTest const *next_{};
+};
+
+class ExternalTest : public Test {
+ public:
+  inline explicit ExternalTest(capi::PtSymbolTable syms, capi::PtTestEntry test)
+      : syms_{syms}, test_{test} {};
+
+  inline Id id() const noexcept {
+    return Id{syms_.pt_test_entry_namespace(test_), syms_.pt_test_entry_name(test_)};
+  }
+
+  inline Location loc() const noexcept {
+    return Location{syms_.pt_test_entry_file(test_), syms_.pt_test_entry_line(test_)};
+  }
+
+  inline Type type() const noexcept { return Type{syms_.pt_test_entry_type(test_).val}; }
+
+  inline virtual void run() const { syms_.pt_test_entry_run(test_); }
+
+ private:
+  capi::PtSymbolTable syms_{};
+  capi::PtTestEntry test_;
 };
 
 void run(const Test &test) noexcept;
@@ -287,13 +308,13 @@ inline void assert_true(const Result &result, const assert_line &line) {
 
 #define PT_ASSERT(expression) ::pt::assert_true((expression), {__FILE__, __LINE__, #expression})
 
-#define PT_GENERIC_TEST(name_space, name, type)                                         \
-  namespace name_space {                                                                \
-  struct name : ::pt::Registration<name> {                                              \
-    using ::pt::Registration<name>::Registration;                                       \
-    void run() const override;                                                          \
-  } const static name##_registration{type, {#name_space, #name}, {__FILE__, __LINE__}}; \
-  }                                                                                     \
+#define PT_GENERIC_TEST(name_space, name, type)                                                 \
+  namespace name_space {                                                                        \
+  struct name : ::pt::Registration<name> {                                                      \
+    using ::pt::Registration<name>::Registration;                                               \
+    void run() const override;                                                                  \
+  } const static name##_registration{type, {{#name_space}, {#name}}, {{__FILE__}, {__LINE__}}}; \
+  }                                                                                             \
   void name_space ::name ::run() const
 
 #define PT_TEST(name_space, name) PT_GENERIC_TEST(name_space, name, ::pt::Type::Normal)

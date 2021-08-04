@@ -84,7 +84,7 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-set(PPOSIX_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Werror -fno-rtti)
+set(PPOSIX_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Werror -fno-rtti -Wno-unused-function)
 
 target_compile_options(
         pposix
