@@ -3,9 +3,6 @@
 #include <cassert>
 #include <future>
 
-#include "pposix/dlfcn.hpp"
-#include "pposix/util.hpp"
-
 namespace pt {
 struct {
   InternalTest *tail{nullptr};
@@ -34,7 +31,7 @@ PtTestEntry pt_test_entries_next(const PtTestEntry entry) noexcept {
 
 PtTestType pt_test_entry_type(const PtTestEntry entry) noexcept {
   const auto test{static_cast<InternalTest const *>(entry.handle)};
-  return PtTestType{pt_test_type{pposix::underlying_v(test->type())}};
+  return PtTestType{pt_test_type{static_cast<pt_test_type_t>(test->type())}};
 }
 
 PtTestNamespace pt_test_entry_namespace(const PtTestEntry entry) noexcept {
@@ -191,7 +188,7 @@ std::unique_ptr<TestCase> wrap_test(const Test &test) {
       return std::make_unique<SpawnTest>(test);
     default:
       throw std::logic_error{"Unhandled test type: " +
-                             std::to_string(pposix::underlying_v(test.type()))};
+                             std::to_string(static_cast<capi::pt_test_type_t>(test.type()))};
   }
 }
 
