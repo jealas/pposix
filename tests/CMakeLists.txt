@@ -37,7 +37,7 @@ target_link_libraries(
         pthread
 )
 
-if (APPLE OR LINUX)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_link_libraries(
             pt
 

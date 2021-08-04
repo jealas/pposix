@@ -55,6 +55,20 @@ add_library(
         ${PPOSIX_EXTENSION_SRC}
 )
 
+target_link_libraries(
+        pposix
+
+        pthread
+)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(
+            pposix
+
+            dl
+    )
+endif ()
+
 target_compile_definitions(
         pposix
 
