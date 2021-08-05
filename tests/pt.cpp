@@ -106,7 +106,7 @@ PtTestRunResult pt_test_entry_run(const PtTestEntry entry) noexcept {
 
   try {
     const auto test{static_cast<InternalTest const *>(entry.handle)};
-    return {static_cast<pt_run_result_t>(pt::run(*test))};
+    return {static_cast<pt_run_result_t>(pt::private_detail::run_internal(*test))};
   } catch (...) {
     return {pt_run_result::run_internal_error};
   }
@@ -137,13 +137,7 @@ namespace private_detail {
 
 InternalTest const *internal_tests() noexcept { return registrar.normal_tests(); }
 
-}  // namespace private_detail
-
-void InternalTest::run() const {
-  throw std::logic_error{"Default InternalTest::run should never be called"};
-}
-
-RunResult run(const Test &test) noexcept {
+RunResult run_internal(const InternalTest &test) noexcept {
   try {
     std::cout << "Running " << test.id() << std::endl;
     test.run();
@@ -176,6 +170,12 @@ RunResult run(const Test &test) noexcept {
 
     return RunResult::InternalError;
   }
+}
+
+}  // namespace private_detail
+
+void InternalTest::run() const {
+  throw std::logic_error{"Default InternalTest::run should never be called"};
 }
 
 }  // namespace pt

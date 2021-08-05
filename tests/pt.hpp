@@ -208,25 +208,7 @@ enum class TestType : capi::pt_test_type_t {
   Spawn = capi::pt_test_type::pt_spawn_type,
 };
 
-struct Test {
-  virtual ~Test() = default;
-
-  Test() noexcept = default;
-
-  Test(const Test &) = delete;
-  Test(Test &&) = delete;
-
-  Test &operator=(const Test &) = delete;
-  Test &operator=(Test &&) = delete;
-
-  virtual Id id() const noexcept = 0;
-  virtual Location loc() const noexcept = 0;
-  virtual TestType type() const noexcept = 0;
-
-  virtual void run() const = 0;
-};
-
-class InternalTest : public Test {
+class InternalTest {
  public:
   InternalTest(const TestType t, const Id &id, const Location &loc) noexcept
       : type_{t}, id_{id}, location_{loc} {}
@@ -249,28 +231,6 @@ class InternalTest : public Test {
   InternalTest const *next_{};
 };
 
-class LibraryTest : public Test {
- public:
-  inline explicit LibraryTest(capi::PtSymbolTable syms, capi::PtTestEntry test)
-      : syms_{syms}, test_{test} {};
-
-  inline Id id() const noexcept {
-    return Id{syms_.pt_test_entry_namespace(test_), syms_.pt_test_entry_name(test_)};
-  }
-
-  inline Location loc() const noexcept {
-    return Location{syms_.pt_test_entry_file(test_), syms_.pt_test_entry_line(test_)};
-  }
-
-  inline TestType type() const noexcept { return TestType(syms_.pt_test_entry_type(test_).val); }
-
-  inline virtual void run() const { syms_.pt_test_entry_run(test_); }
-
- private:
-  capi::PtSymbolTable syms_{};
-  capi::PtTestEntry test_;
-};
-
 enum class RunResult : capi::pt_run_result_t {
   Success = capi::pt_run_result::run_success,
   Skipped = capi::pt_run_result::run_skipped,
@@ -280,9 +240,9 @@ enum class RunResult : capi::pt_run_result_t {
   Exception = capi::pt_run_result::run_exception,
 };
 
-RunResult run(const Test &test) noexcept;
-
 namespace private_detail {
+
+RunResult run_internal(const InternalTest &test) noexcept;
 
 void register_internal_test(TestType type, InternalTest &entry) noexcept;
 

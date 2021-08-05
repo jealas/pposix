@@ -1,6 +1,7 @@
 #include <chrono>
-#include <future>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <regex>
 #include <string>
@@ -43,7 +44,7 @@ struct WorkQueue {
     }
   }
 
-  void TryPush(std::shared_ptr<T> value) {
+  void Push(std::shared_ptr<T> value) {
     {
       std::lock_guard<std::mutex> lk{m_};
       q_.push(std::move(value));
@@ -67,57 +68,53 @@ struct TestCase {
 
   TestCase &operator=(const TestCase &) = delete;
   TestCase &operator=(TestCase &&) = delete;
+};
 
-  inline virtual const pt::Test &test() const {
-    throw std::logic_error{"pt::Test::test should never be called."};
+class NormalTest final : public TestCase {};
+
+class LibraryTest final : public TestCase {
+ public:
+  inline explicit LibraryTest(std::shared_ptr<pt::capi::PtSymbolTable> syms,
+                              pt::capi::PtTestEntry test)
+      : syms_{std::move(syms)}, test_{test} {
+    assert(syms_);
   };
 
-  virtual std::future<pt::RunResult> run() const {
-    throw std::logic_error{"pt::Test::run should never be called."};
-  }
-};
-
-class NormalTest final : public TestCase {
- public:
-  inline explicit NormalTest(const pt::Test &test) : test_{test} {}
-
-  inline const pt::Test &test() const override { return test_; }
-
-  inline std::future<pt::RunResult> run() const override {
-    std::promise<pt::RunResult> p{};
-    p.set_value(pt::RunResult{});
-    return p.get_future();
+  inline pt::Id id() const noexcept {
+    return pt::Id{syms_->pt_test_entry_namespace(test_), syms_->pt_test_entry_name(test_)};
   }
 
- private:
-  const pt::Test &test_;
-};
+  inline pt::Location loc() const noexcept {
+    return pt::Location{syms_->pt_test_entry_file(test_), syms_->pt_test_entry_line(test_)};
+  }
 
-class SpawnTest final : public TestCase {
- public:
-  inline explicit SpawnTest(const pt::Test &test) : test_{test} {}
+  inline pt::TestType type() const noexcept {
+    return pt::TestType(syms_->pt_test_entry_type(test_).val);
+  }
 
-  inline const pt::Test &test() const override { return test_; }
-
-  inline std::future<pt::RunResult> run() const override {
-    std::promise<pt::RunResult> p{};
-    p.set_value(pt::RunResult{});
-    return p.get_future();
+  inline pt::RunResult run() const noexcept {
+    return pt::RunResult{syms_->pt_test_entry_run(test_).val};
   }
 
  private:
-  const pt::Test &test_;
+  std::shared_ptr<pt::capi::PtSymbolTable> syms_{};
+  pt::capi::PtTestEntry test_;
 };
 
-std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
-  switch (test.type()) {
-    case pt::TestType::Normal:
-      return std::make_unique<NormalTest>(test);
-    case pt::TestType::Spawn:
-      return std::make_unique<SpawnTest>(test);
-    default:
-      throw std::logic_error{"Unhandled test type: " +
-                             std::to_string(static_cast<pt::capi::pt_test_type_t>(test.type()))};
+class SpawnTest final : public TestCase {};
+
+template <class Fn>
+void for_each_library_test(const pt::capi::PtSymbolTable &syms, pt::capi::PtTestEntry test,
+                           Fn fn) {
+  for (; !syms.pt_test_entries_stop(test).val; test = syms.pt_test_entries_next(test)) {
+    fn(syms, test);
+  }
+}
+
+template <class Fn>
+void for_each_internal_test(pt::InternalTest const *test, Fn fn) {
+  for (; test != nullptr; test = test->next()) {
+    fn(*test);
   }
 }
 
@@ -127,7 +124,7 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
     const auto full_name{test_entry->id().full_name()};
     if (full_name == name) {
       try {
-        pt::run(*test_entry);
+        pt::private_detail::run_internal(*test_entry);
         std::exit(EXIT_SUCCESS);
       } catch (...) {
         std::cerr << "INTERNAL ERROR: Unknown exception caught in pt::run_one!" << std::endl;
@@ -176,7 +173,7 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
   }
 
   try {
-    std::vector<std::reference_wrapper<const pt::Test>> tests{};
+    std::vector<std::reference_wrapper<const pt::InternalTest>> tests{};
     size_t total_tests{};
 
     for (auto test_entry{pt::private_detail::internal_tests()}; test_entry;
@@ -198,7 +195,7 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
     std::cout << "Matched " << tests.size() << " tests" << std::endl;
 
     for (const auto &test : tests) {
-      pt::run(test);
+      pt::private_detail::run_internal(test);
     }
 
     std::exit(EXIT_SUCCESS);
@@ -219,7 +216,7 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
   for (auto test_entry{pt::private_detail::internal_tests()}; test_entry;
        test_entry = test_entry->next()) {
     try {
-      pt::run(*test_entry);
+      pt::private_detail::run_internal(*test_entry);
     } catch (...) {
       std::cerr << "INTERNAL ERROR: Unknown exception caught in pt::run_all!";
       std::cerr << std::endl;
