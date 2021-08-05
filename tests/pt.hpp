@@ -21,8 +21,10 @@ extern "C" {
 
 #ifdef __cplusplus
 #define PT_CAPI_NOEXCEPT noexcept
+#define PT_CAPI_UNDERLYING_ENUM(type) : type
 #else
 #define PT_CAPI_NOEXCEPT
+#define PT_CAPI_UNDERLYING_ENUM
 #endif
 
 struct PtTestEntry {
@@ -45,9 +47,9 @@ PtTestEntry pt_test_entries_next(PtTestEntry) PT_CAPI_NOEXCEPT;
 
 typedef int pt_test_type_t;
 
-enum pt_test_type : pt_test_type_t {
-  pt_normal_type,
-  pt_spawn_type,
+enum pt_test_type PT_CAPI_UNDERLYING_ENUM(pt_test_type_t){
+    pt_normal_type,
+    pt_spawn_type,
 };
 
 struct PtTestType {
@@ -72,13 +74,8 @@ struct PtTestLine {
 
 typedef int pt_run_result_t;
 
-enum pt_run_result : pt_run_result_t {
-  run_success,
-  run_skipped,
-  run_failed,
-  run_error,
-  run_internal_error,
-  run_exception,
+enum pt_run_result PT_CAPI_UNDERLYING_ENUM(pt_run_result_t){
+    run_success, run_skipped, run_failed, run_error, run_internal_error, run_exception,
 };
 
 struct PtTestRunResult {
