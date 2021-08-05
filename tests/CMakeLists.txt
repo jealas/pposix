@@ -65,6 +65,12 @@ target_compile_options(
         ${PPOSIX_TEST_COMPILE_OPTIONS}
 )
 
+add_dependencies(
+        pt
+
+        test_pposix
+)
+
 add_library(
         test_pposix
 
