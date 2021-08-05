@@ -166,13 +166,6 @@ RunResult run_internal(const InternalTest &test) noexcept {
 
     return RunResult::Failed;
 
-  } catch (const std::runtime_error &error) {
-    std::cerr << "ERROR: Uncaught runtime error while running test " << test.id() << '\n'
-              << error.what();
-    std::cerr << std::endl;
-
-    return RunResult::Error;
-
   } catch (const pt::internal_error &error) {
     std::cerr << "INTERNAL ERROR: Internal error occurred while running test " << test.id() << '\n'
               << error.what();
@@ -180,18 +173,25 @@ RunResult run_internal(const InternalTest &test) noexcept {
 
     return RunResult::InternalError;
 
+  } catch (const std::runtime_error &error) {
+    std::cerr << "ERROR: Uncaught runtime error while running test " << test.id() << '\n'
+              << error.what();
+    std::cerr << std::endl;
+
+    return RunResult::Error;
+
   } catch (const std::exception &exception) {
     std::cerr << "ERROR: Uncaught exception while running test " << test.id() << '\n'
               << exception.what();
     std::cerr << std::endl;
 
-    return RunResult::Exception;
+    return RunResult::Error;
 
   } catch (...) {
-    std::cerr << "ERROR: Unknown exception caught while running test " << test.id();
+    std::cerr << "EXCEPTION: Unknown exception caught while running test " << test.id();
     std::cerr << std::endl;
 
-    return RunResult::Error;
+    return RunResult::Exception;
   }
 }
 
