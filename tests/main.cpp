@@ -219,13 +219,7 @@ void for_each_internal_test(Fn fn) {
 [[noreturn]] void run_all() {
   for (auto test_entry{pt::private_detail::internal_tests()}; test_entry;
        test_entry = test_entry->next()) {
-    try {
-      pt::private_detail::run_internal(*test_entry);
-    } catch (...) {
-      std::cerr << "INTERNAL ERROR: Unknown exception caught in pt::run_all!";
-      std::cerr << std::endl;
-      std::exit(EXIT_FAILURE);
-    }
+    pt::private_detail::run_internal(*test_entry);
   }
 
   std::exit(EXIT_SUCCESS);
