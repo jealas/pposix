@@ -197,22 +197,25 @@ enum class TestType : capi::pt_test_type_t {
   Spawn = capi::pt_test_type::pt_spawn_type,
 };
 
+using test_fn = void() noexcept(false);
+
 class InternalTest {
  public:
-  InternalTest(const TestType t, const Id &id, const Location &loc) noexcept
-      : type_{t}, id_{id}, location_{loc} {}
+  InternalTest(test_fn &fn, const TestType t, const Id &id, const Location &loc) noexcept
+      : fn_{fn}, type_{t}, id_{id}, location_{loc} {}
+
+  inline void run() const noexcept(false) { return fn_(); }
 
   inline Id id() const noexcept { return id_; }
   inline Location loc() const noexcept { return location_; }
   inline TestType type() const noexcept { return type_; }
-
-  virtual void run() const;
 
   // TODO: Make these private functions only for friends
   inline InternalTest const *next() const noexcept { return next_; }
   inline void set_next(InternalTest const *next) noexcept { next_ = next; }
 
  private:
+  test_fn &fn_;
   TestType type_{};
   Id id_{};
   Location location_{};
@@ -242,8 +245,8 @@ InternalTest const *internal_tests() noexcept;
 template <class, TestType Type>
 class Registration : public InternalTest {
  public:
-  Registration(const Id &id, const Location &location) noexcept
-      : InternalTest{Type, id, location} {
+  Registration(test_fn &fn, const Id &id, const Location &location) noexcept
+      : InternalTest{fn, Type, id, location} {
     ::pt::private_detail::register_internal_test(Type, *this);
   }
 };
@@ -281,14 +284,14 @@ inline void assert_true(const Result &result, const assert_line &line) {
   }                                         \
   namespace
 
-#define PT_GENERIC_TEST(name, type)                                            \
-  struct name : ::pt::Registration<name, type> {                               \
-    using ::pt::Registration<name, type>::Registration;                        \
-    virtual void run() const override;                                         \
-  } const static name##_registration{{{pt_test_suite.namespace_str}, {#name}}, \
-                                     {{__FILE__}, {__LINE__}}};                \
-                                                                               \
-  void name::run() const
+#define PT_GENERIC_TEST(name, type)                                                   \
+  struct name : ::pt::Registration<name, type> {                                      \
+    using ::pt::Registration<name, type>::Registration;                               \
+    static void run() noexcept(false);                                                \
+  } const static name##_registration{                                                 \
+      name::run, {{pt_test_suite.namespace_str}, {#name}}, {{__FILE__}, {__LINE__}}}; \
+                                                                                      \
+  void name::run() noexcept(false)
 
 #define PT_TEST(name) PT_GENERIC_TEST(name, ::pt::TestType::Normal)
 

@@ -186,8 +186,4 @@ RunResult run_internal(const InternalTest &test) noexcept {
 
 }  // namespace private_detail
 
-void InternalTest::run() const {
-  throw std::logic_error{"Default InternalTest::run should never be called"};
-}
-
 }  // namespace pt
