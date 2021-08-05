@@ -22,3 +22,27 @@ PT_SUITE(std::vector) {
     PT_ASSERT(v.size() == 1);
   }
 }
+
+namespace {
+
+PT_SUITE("anonymous original test name") {
+  PT_TEST(original_name) {}
+}
+
+namespace original_name {
+
+PT_SUITE("nested copied test name") {
+  PT_TEST(original_name) {}
+}
+
+}  // namespace original_name
+
+namespace copied_name {
+
+PT_SUITE("copied test name") {
+  PT_TEST(original_name) {}
+}
+
+}  // namespace copied_name
+
+}  // namespace
