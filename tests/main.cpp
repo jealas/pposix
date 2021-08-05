@@ -123,7 +123,42 @@ void for_each_internal_test(Fn fn) {
   }
 }
 
+std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(const char *path) {
+  if (auto library_handle = pposix::capi::dlopen(path)) {
+    if (auto symbol_handle =
+            pposix::capi::dlsym((*library_handle).raw(), PT_SYMBOL_TABLE_NAME_STR)) {
+      // Transfer ownership of the underlying symbol handle to the symbols pointer
+      auto const *symbols = static_cast<pt::capi::PtSymbolTable const *>(
+          static_cast<pposix::capi::raw_sym_t>(std::move(symbol_handle).value().raw()));
+
+      const auto &secret{symbols->id.secret.val};
+
+      if (secret[0u] != 'p' || secret[1u] != 't' || secret[2u] != 'l' || secret[3u] != 's') {
+        std::cout << "Invalid symbol table secret" << std::endl;
+        return {};
+
+      } else {
+        auto deleter{[res = std::move(library_handle).value()](
+                         const pt::capi::PtSymbolTable *) mutable noexcept {
+          if (const auto err{res.close()}) {
+            assert(!err);
+          }
+        }};
+        return std::shared_ptr<const pt::capi::PtSymbolTable>{symbols, std::move(deleter)};
+      }
+    } else {
+      std::cerr << "No test symbol table found" << std::endl;
+      return {};
+    }
+  } else {
+    std::cerr << "No library tests found" << std::endl;
+    return {};
+  }
+}
+
 [[noreturn]] void run_one(const std::string &name) {
+  std::cout << "Run one" << std::endl;
+
   for_each_internal_test([&](const auto test_entry) {
     const auto &test{test_entry.get()};
 
@@ -143,37 +178,22 @@ void for_each_internal_test(Fn fn) {
 }
 
 [[noreturn]] void run_matching(const std::vector<std::regex> &patterns) {
-  if (const auto res = pposix::capi::dlopen("./libtest_pposix.so")) {
-    auto pt_symbol_table = pposix::capi::dlsym((*res).raw(), PT_SYMBOL_TABLE_NAME_STR);
-    PT_ASSERT(!pt_symbol_table.has_error());
+  std::cout << "Run matching" << std::endl;
 
-    const auto handle{std::move(pt_symbol_table).value()};
+  const auto symbols{load_symbol_table("./libtest_pposix.so")};
 
-    auto const *symbols = static_cast<pt::capi::PtSymbolTable const *>(
-        static_cast<pposix::capi::raw_sym_t>(handle.raw()));
+  size_t count{};
+  for_each_library_test(*symbols, [&](const auto test) {
+    count++;
 
-    const auto &secret{symbols->id.secret.val};
-
-    if (secret[0u] != 'p' || secret[1u] != 't' || secret[2u] != 'l' || secret[3u] != 's') {
-      std::cout << "Invalid symbol table secret" << std::endl;
-    } else {
-      size_t count{};
-      for_each_library_test(*symbols, [&](const auto test) {
-        count++;
-
-        const pt::Id id{symbols->pt_test_entry_namespace(test), symbols->pt_test_entry_name(test)};
-        for (const auto &pattern : patterns) {
-          if (std::regex_search(id.full_name(), pattern)) {
-            symbols->pt_test_entry_run(test);
-            break;
-          }
-        }
-      });
+    const pt::Id id{symbols->pt_test_entry_namespace(test), symbols->pt_test_entry_name(test)};
+    for (const auto &pattern : patterns) {
+      if (std::regex_search(id.full_name(), pattern)) {
+        symbols->pt_test_entry_run(test);
+        break;
+      }
     }
-
-  } else {
-    std::cerr << "No library tests found" << std::endl;
-  }
+  });
 
   try {
     std::vector<std::reference_wrapper<const pt::InternalTest>> tests{};
@@ -217,10 +237,12 @@ void for_each_internal_test(Fn fn) {
 }
 
 [[noreturn]] void run_all() {
-  for (auto test_entry{pt::private_detail::internal_tests()}; test_entry;
-       test_entry = test_entry->next()) {
-    pt::private_detail::run_internal(*test_entry);
-  }
+  std::cout << "Run all" << std::endl;
+
+  const auto symbols{load_symbol_table("./libtest_pposix.so")};
+  for_each_library_test(*symbols, [&](const auto test) { symbols->pt_test_entry_run(test); });
+
+  for_each_internal_test([](const auto test) { pt::private_detail::run_internal(test); });
 
   std::exit(EXIT_SUCCESS);
 }
