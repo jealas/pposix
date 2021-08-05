@@ -13,8 +13,6 @@ PT_SUITE(std::vector) {
 
   }  // namespace outer_namespace
 
-  PT_THREAD_TEST(threaded_test) {}
-
   PT_SPAWN_TEST(spawn_test) {}
 
   PT_TEST(push_back_on_empty) {

@@ -5,10 +5,41 @@
 namespace pt {
 namespace private_detail {
 
-struct GlobalRegistrar {
-  InternalTest const *tail{nullptr};
-  size_t count{};
+class GlobalRegistrar {
+ public:
+  inline InternalTest const *normal_tests() const noexcept { return normal_tests_; }
+  inline InternalTest const *spawn_tests() const noexcept { return spawn_tests_; }
+  inline InternalTest const *unknown_tests() const noexcept { return unknown_tests_; }
+
+  inline void register_internal_test(TestType type, InternalTest &entry) noexcept {
+    assert(entry.next() == nullptr);
+
+    const auto tail{[=]() -> InternalTest const ** {
+      switch (type) {
+        case TestType::Normal:
+          return &normal_tests_;
+        case TestType::Spawn:
+          return &spawn_tests_;
+        default:
+          return &unknown_tests_;
+      }
+    }()};
+
+    // Only and last modification to the registration entry
+    entry.set_next(*tail);
+    *tail = &entry;
+  }
+
+ private:
+  InternalTest const *normal_tests_{nullptr};
+  InternalTest const *spawn_tests_{nullptr};
+  InternalTest const *unknown_tests_{nullptr};
+
 } static registrar{};
+
+void register_internal_test(TestType type, InternalTest &entry) noexcept {
+  registrar.register_internal_test(type, entry);
+}
 
 }  // namespace private_detail
 }  // namespace pt
@@ -18,12 +49,16 @@ namespace capi {
 
 extern "C" {
 
-PtTestEntry pt_test_entries() noexcept {
-  return PtTestEntry{static_cast<void const *>(private_detail::internal_tests())};
+PtTestEntry pt_normal_tests() noexcept {
+  return PtTestEntry{static_cast<void const *>(private_detail::registrar.normal_tests())};
 }
 
-PtTestEntriesCount pt_test_entries_count() noexcept {
-  return PtTestEntriesCount{private_detail::internal_tests_count()};
+PtTestEntry pt_spawn_tests() noexcept {
+  return PtTestEntry{static_cast<void const *>(private_detail::registrar.spawn_tests())};
+}
+
+PtTestEntry pt_unknown_tests() noexcept {
+  return PtTestEntry{static_cast<void const *>(private_detail::registrar.unknown_tests())};
 }
 
 PtTestEntriesStop pt_test_entries_stop(const PtTestEntry entry) noexcept {
@@ -71,19 +106,16 @@ PtTestRunResult pt_test_entry_run(const PtTestEntry entry) noexcept {
 
   try {
     const auto test{static_cast<InternalTest const *>(entry.handle)};
-
     return {static_cast<pt_run_result_t>(pt::run(*test))};
-
-    return {pt_run_result::run_success};
   } catch (...) {
     return {pt_run_result::run_internal_error};
   }
 }
 
-PtSymbolTable pt_symbol_table{
+PtSymbolTable PT_SYMBOL_TABLE_NAME{
     {PT_CAPI_SECRET, PT_CAPI_VERSION},
-    pt_test_entries,
-    pt_test_entries_count,
+    pt_normal_tests,
+    pt_spawn_tests,
     pt_test_entries_stop,
     pt_test_entries_next,
     pt_test_entry_type,
@@ -103,18 +135,7 @@ namespace pt {
 
 namespace private_detail {
 
-void register_internal_test(InternalTest &entry) noexcept {
-  assert(entry.next() == nullptr);
-
-  // Only and last modification to the registration entry
-  entry.set_next(registrar.tail);
-
-  registrar.tail = &entry;
-  registrar.count++;
-}
-
-InternalTest const *internal_tests() noexcept { return registrar.tail; }
-size_t internal_tests_count() noexcept { return registrar.count; }
+InternalTest const *internal_tests() noexcept { return registrar.normal_tests(); }
 
 }  // namespace private_detail
 

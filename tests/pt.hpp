@@ -40,8 +40,8 @@ struct PtTestEntriesCount {
   size_t val;
 };
 
-PtTestEntry pt_test_entries() PT_CAPI_NOEXCEPT;
-PtTestEntriesCount pt_test_entries_count() PT_CAPI_NOEXCEPT;
+PtTestEntry pt_normal_tests() PT_CAPI_NOEXCEPT;
+PtTestEntry pt_spawn_tests() PT_CAPI_NOEXCEPT;
 
 PtTestEntriesStop pt_test_entries_stop(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestEntry pt_test_entries_next(PtTestEntry) PT_CAPI_NOEXCEPT;
@@ -50,7 +50,6 @@ typedef int pt_test_type_t;
 
 enum pt_test_type : pt_test_type_t {
   pt_normal_type,
-  pt_thread_type,
   pt_spawn_type,
 };
 
@@ -96,22 +95,30 @@ PtTestFile pt_test_entry_file(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestLine pt_test_entry_line(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestRunResult pt_test_entry_run(PtTestEntry) PT_CAPI_NOEXCEPT;
 
+struct PtSecret {
+  uint8_t val[4];
+};
+
+struct PtVersion {
+  uint8_t val[4];
+};
+
 #define PT_CAPI_SECRET \
-  { 'p', 't', 'l', 's' }
+  PtSecret { 'p', 't', 'l', 's' }
 
 #define PT_CAPI_VERSION \
-  { 0, 0, 0, 0 }
+  PtVersion { 0, 0, 0, 0 }
 
 struct PtSymbolTableId {
-  uint8_t secret[4];
-  uint8_t version[4];
+  PtSecret secret;
+  PtVersion version;
 };
 
 struct PtSymbolTable {
   PtSymbolTableId id;
 
-  PtTestEntry (*pt_test_entries)() PT_CAPI_NOEXCEPT;
-  PtTestEntriesCount (*pt_test_entries_count)() PT_CAPI_NOEXCEPT;
+  PtTestEntry (*pt_normal_tests)() PT_CAPI_NOEXCEPT;
+  PtTestEntry (*pt_spawn_tests)() PT_CAPI_NOEXCEPT;
   PtTestEntriesStop (*pt_test_entries_stop)(PtTestEntry) PT_CAPI_NOEXCEPT;
   PtTestEntry (*pt_test_entries_next)(PtTestEntry) PT_CAPI_NOEXCEPT;
 
@@ -123,8 +130,14 @@ struct PtSymbolTable {
   PtTestRunResult (*pt_test_entry_run)(PtTestEntry) PT_CAPI_NOEXCEPT;
 };
 
+#define PT_SYMBOL_TABLE_NAME pt_symbol_table_65e13a5d_64ab_4214_8fd9_40478724a480
+#define PT_SYMBOL_TABLE_NAME_STR "pt_symbol_table_65e13a5d_64ab_4214_8fd9_40478724a480"
+
+#define PT_SYMBOL_TABLE_SIZE 10
+
 #ifdef __cplusplus
-static_assert(sizeof(PtSymbolTable) == (sizeof(PtSymbolTableId)) + (10 * sizeof(void(*)())),
+static_assert(sizeof(PtSymbolTable) ==
+                  (sizeof(PtSymbolTableId)) + (PT_SYMBOL_TABLE_SIZE * sizeof(void(*)())),
               "Symbol table size changed!");
 #endif
 
@@ -190,9 +203,8 @@ inline std::ostream &operator<<(std::ostream &out, const Location &location) {
   return out << location.file.val << ':' << location.line.val;
 }
 
-enum class Type : capi::pt_test_type_t {
+enum class TestType : capi::pt_test_type_t {
   Normal = capi::pt_test_type::pt_normal_type,
-  Thread = capi::pt_test_type::pt_thread_type,
   Spawn = capi::pt_test_type::pt_spawn_type,
 };
 
@@ -209,19 +221,19 @@ struct Test {
 
   virtual Id id() const noexcept = 0;
   virtual Location loc() const noexcept = 0;
-  virtual Type type() const noexcept = 0;
+  virtual TestType type() const noexcept = 0;
 
   virtual void run() const = 0;
 };
 
 class InternalTest : public Test {
  public:
-  InternalTest(const Type t, const Id &id, const Location &loc) noexcept
+  InternalTest(const TestType t, const Id &id, const Location &loc) noexcept
       : type_{t}, id_{id}, location_{loc} {}
 
   inline Id id() const noexcept { return id_; }
   inline Location loc() const noexcept { return location_; }
-  inline Type type() const noexcept { return type_; }
+  inline TestType type() const noexcept { return type_; }
 
   virtual void run() const;
 
@@ -230,7 +242,7 @@ class InternalTest : public Test {
   inline void set_next(InternalTest const *next) noexcept { next_ = next; }
 
  private:
-  Type type_{};
+  TestType type_{};
   Id id_{};
   Location location_{};
 
@@ -250,7 +262,7 @@ class LibraryTest : public Test {
     return Location{syms_.pt_test_entry_file(test_), syms_.pt_test_entry_line(test_)};
   }
 
-  inline Type type() const noexcept { return Type(syms_.pt_test_entry_type(test_).val); }
+  inline TestType type() const noexcept { return TestType(syms_.pt_test_entry_type(test_).val); }
 
   inline virtual void run() const { syms_.pt_test_entry_run(test_); }
 
@@ -272,19 +284,18 @@ RunResult run(const Test &test) noexcept;
 
 namespace private_detail {
 
-void register_internal_test(InternalTest &entry) noexcept;
+void register_internal_test(TestType type, InternalTest &entry) noexcept;
 
 InternalTest const *internal_tests() noexcept;
-size_t internal_tests_count() noexcept;
 
 }  // namespace private_detail
 
-template <class>
+template <class, TestType Type>
 class Registration : public InternalTest {
  public:
-  Registration(const Type type, const Id &id, const Location &location) noexcept
-      : InternalTest{type, id, location} {
-    ::pt::private_detail::register_internal_test(*this);
+  Registration(const Id &id, const Location &location) noexcept
+      : InternalTest{Type, id, location} {
+    ::pt::private_detail::register_internal_test(Type, *this);
   }
 };
 
@@ -312,30 +323,29 @@ inline void assert_true(const Result &result, const assert_line &line) {
 
 }  // namespace pt
 
-#define PT_ASSERT(expression) ::pt::assert_true((expression), {__FILE__, __LINE__, #expression})
-
 #define PT_SUITE(name_space)                \
   namespace {                               \
   struct {                                  \
     char const *namespace_str{#name_space}; \
+    size_t line{__LINE__};                  \
   } static constexpr pt_test_suite;         \
   }                                         \
   namespace
 
-#define PT_GENERIC_TEST(name, type)                                              \
-  struct name : ::pt::Registration<name> {                                       \
-    using ::pt::Registration<name>::Registration;                                \
-    virtual void run() const override;                                           \
-  } const static name##_registration{                                            \
-      type, {{pt_test_suite.namespace_str}, {#name}}, {{__FILE__}, {__LINE__}}}; \
-                                                                                 \
+#define PT_GENERIC_TEST(name, type)                                            \
+  struct name : ::pt::Registration<name, type> {                               \
+    using ::pt::Registration<name, type>::Registration;                        \
+    virtual void run() const override;                                         \
+  } const static name##_registration{{{pt_test_suite.namespace_str}, {#name}}, \
+                                     {{__FILE__}, {__LINE__}}};                \
+                                                                               \
   void name::run() const
 
-#define PT_TEST(name) PT_GENERIC_TEST(name, ::pt::Type::Normal)
+#define PT_TEST(name) PT_GENERIC_TEST(name, ::pt::TestType::Normal)
 
-#define PT_THREAD_TEST(name) PT_GENERIC_TEST(name, ::pt::Type::Thread)
+#define PT_SPAWN_TEST(name) PT_GENERIC_TEST(name, ::pt::TestType::Spawn)
 
-#define PT_SPAWN_TEST(name) PT_GENERIC_TEST(name, ::pt::Type::Spawn)
+#define PT_ASSERT(expression) ::pt::assert_true((expression), {__FILE__, __LINE__, #expression})
 
 #endif  // __cplusplus
 

@@ -1,4 +1,7 @@
+#include <chrono>
 #include <future>
+#include <memory>
+#include <queue>
 #include <regex>
 #include <string>
 
@@ -6,8 +9,53 @@
 #include "pt.hpp"
 
 PT_SUITE("pt main") {
-  PT_TEST(hello_main) { PT_ASSERT(false); }
+  PT_TEST(hello_main) {
+    PT_ASSERT(true);
+    PT_ASSERT(true);
+    PT_ASSERT(true);
+
+    PT_ASSERT(false);
+  }
 }
+
+template <class T>
+struct WorkQueue {
+  std::shared_ptr<T> WaitUntilPop(const std::chrono::steady_clock::time_point deadline) {
+    std::unique_lock<std::mutex> lk{m_};
+    if (const auto res{cv_.wait_until(lk, deadline, [this]() { return !q_.empty(); })}) {
+      auto front{std::move(q_.front())};
+      q_.pop();
+      return std::move(front);
+    } else {
+      return {};
+    }
+  }
+
+  std::shared_ptr<T> TryPop() {
+    std::lock_guard<std::mutex> lk{m_};
+
+    if (q_.empty()) {
+      return {};
+    } else {
+      auto front{std::move(q_.front())};
+      q_.pop();
+      return std::move(front);
+    }
+  }
+
+  void TryPush(std::shared_ptr<T> value) {
+    {
+      std::lock_guard<std::mutex> lk{m_};
+      q_.push(std::move(value));
+    }
+
+    cv_.notify_one();
+  }
+
+  mutable std::mutex m_{};
+  std::condition_variable cv_{};
+  std::queue<std::shared_ptr<T>> q_{};
+};
 
 struct TestCase {
   virtual ~TestCase() = default;
@@ -45,22 +93,6 @@ class NormalTest final : public TestCase {
   const pt::Test &test_;
 };
 
-class ThreadTest final : public TestCase {
- public:
-  inline explicit ThreadTest(const pt::Test &test) : test_{test} {}
-
-  inline const pt::Test &test() const override { return test_; }
-
-  inline std::future<pt::RunResult> run() const override {
-    std::promise<pt::RunResult> p{};
-    p.set_value(pt::RunResult{});
-    return p.get_future();
-  }
-
- private:
-  const pt::Test &test_;
-};
-
 class SpawnTest final : public TestCase {
  public:
   inline explicit SpawnTest(const pt::Test &test) : test_{test} {}
@@ -79,11 +111,9 @@ class SpawnTest final : public TestCase {
 
 std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
   switch (test.type()) {
-    case pt::Type::Normal:
+    case pt::TestType::Normal:
       return std::make_unique<NormalTest>(test);
-    case pt::Type::Thread:
-      return std::make_unique<ThreadTest>(test);
-    case pt::Type::Spawn:
+    case pt::TestType::Spawn:
       return std::make_unique<SpawnTest>(test);
     default:
       throw std::logic_error{"Unhandled test type: " +
@@ -112,7 +142,7 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
 
 [[noreturn]] void run_matching(const std::vector<std::regex> &patterns) {
   if (const auto res = pposix::capi::dlopen("./libtest_pposix.so")) {
-    auto pt_symbol_table = pposix::capi::dlsym((*res).raw(), "pt_symbol_table");
+    auto pt_symbol_table = pposix::capi::dlsym((*res).raw(), PT_SYMBOL_TABLE_NAME_STR);
     PT_ASSERT(!pt_symbol_table.has_error());
 
     const auto handle{std::move(pt_symbol_table).value()};
@@ -120,13 +150,13 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
     auto const *symbols = static_cast<pt::capi::PtSymbolTable const *>(
         static_cast<pposix::capi::raw_sym_t>(handle.raw()));
 
-    const auto &secret{symbols->id.secret};
+    const auto &secret{symbols->id.secret.val};
 
     if (secret[0u] != 'p' || secret[1u] != 't' || secret[2u] != 'l' || secret[3u] != 's') {
       std::cout << "Invalid symbol table secret" << std::endl;
     } else {
       size_t count{};
-      for (auto entry = symbols->pt_test_entries(); !symbols->pt_test_entries_stop(entry).val;
+      for (auto entry = symbols->pt_normal_tests(); !symbols->pt_test_entries_stop(entry).val;
            entry = symbols->pt_test_entries_next(entry)) {
         count++;
 
@@ -139,8 +169,6 @@ std::unique_ptr<TestCase> wrap_test(const pt::Test &test) {
           }
         }
       }
-
-      PT_ASSERT(symbols->pt_test_entries_count().val == count);
     }
 
   } else {
