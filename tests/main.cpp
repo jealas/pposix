@@ -28,7 +28,7 @@ template <class T>
 struct WorkQueue {
   std::shared_ptr<T> WaitUntilPop(const std::chrono::steady_clock::time_point deadline) {
     std::unique_lock<std::mutex> lk{m_};
-    if (const auto res{cv_.wait_until(lk, deadline, [this]() { return !q_.empty(); })}) {
+    if (cv_.wait_until(lk, deadline, [this]() { return !q_.empty(); })) {
       auto front{std::move(q_.front())};
       q_.pop();
       return std::move(front);
@@ -109,34 +109,34 @@ class LibraryTest final : public TestCase {
 class SpawnTest final : public TestCase {};
 
 template <class Fn>
-void for_each_library_test(const pt::capi::PtSymbolTable &syms, pt::capi::PtTestEntry test,
-                           Fn fn) {
-  for (; !syms.pt_test_entries_stop(test).val; test = syms.pt_test_entries_next(test)) {
-    fn(syms, test);
+void for_each_library_test(const pt::capi::PtSymbolTable &syms, Fn fn) {
+  for (auto test{syms.pt_normal_tests()}; !syms.pt_test_entries_stop(test).val;
+       test = syms.pt_test_entries_next(test)) {
+    fn(test);
   }
 }
 
 template <class Fn>
-void for_each_internal_test(pt::InternalTest const *test, Fn fn) {
-  for (; test != nullptr; test = test->next()) {
-    fn(*test);
+void for_each_internal_test(Fn fn) {
+  for (auto test{pt::private_detail::internal_tests()}; test != nullptr; test = test->next()) {
+    fn(std::cref(*test));
   }
 }
 
 [[noreturn]] void run_one(const std::string &name) {
-  for (auto test_entry{pt::private_detail::internal_tests()}; test_entry;
-       test_entry = test_entry->next()) {
-    const auto full_name{test_entry->id().full_name()};
+  for_each_internal_test([&](const auto test_entry) {
+    const auto &test{test_entry.get()};
+
+    const auto full_name{test.id().full_name()};
     if (full_name == name) {
-      try {
-        pt::private_detail::run_internal(*test_entry);
+      const auto result{pt::private_detail::run_internal(test)};
+      if (result == pt::RunResult::Success) {
         std::exit(EXIT_SUCCESS);
-      } catch (...) {
-        std::cerr << "INTERNAL ERROR: Unknown exception caught in pt::run_one!" << std::endl;
+      } else {
         std::exit(EXIT_FAILURE);
       }
     }
-  }
+  });
 
   std::cerr << "ERROR: Test case not found: " << name << std::endl;
   std::exit(EXIT_FAILURE);
@@ -158,19 +158,17 @@ void for_each_internal_test(pt::InternalTest const *test, Fn fn) {
       std::cout << "Invalid symbol table secret" << std::endl;
     } else {
       size_t count{};
-      for (auto entry = symbols->pt_normal_tests(); !symbols->pt_test_entries_stop(entry).val;
-           entry = symbols->pt_test_entries_next(entry)) {
+      for_each_library_test(*symbols, [&](const auto test) {
         count++;
 
-        const pt::Id id{symbols->pt_test_entry_namespace(entry),
-                        symbols->pt_test_entry_name(entry)};
+        const pt::Id id{symbols->pt_test_entry_namespace(test), symbols->pt_test_entry_name(test)};
         for (const auto &pattern : patterns) {
           if (std::regex_search(id.full_name(), pattern)) {
-            symbols->pt_test_entry_run(entry);
+            symbols->pt_test_entry_run(test);
             break;
           }
         }
-      }
+      });
     }
 
   } else {
@@ -181,20 +179,21 @@ void for_each_internal_test(pt::InternalTest const *test, Fn fn) {
     std::vector<std::reference_wrapper<const pt::InternalTest>> tests{};
     size_t total_tests{};
 
-    for (auto test_entry{pt::private_detail::internal_tests()}; test_entry;
-         test_entry = test_entry->next()) {
+    for_each_internal_test([&](const auto test_entry) {
+      const auto &test{test_entry.get()};
+
       ++total_tests;
 
-      const auto test_id{test_entry->id()};
+      const auto test_id{test.id()};
 
       const auto full_name{test_id.full_name()};
       for (const auto &pattern : patterns) {
         if (std::regex_search(full_name, pattern)) {
-          tests.emplace_back(*test_entry);
+          tests.emplace_back(test);
           break;
         }
       }
-    }
+    });
 
     std::cout << "Found " << total_tests << " tests" << std::endl;
     std::cout << "Matched " << tests.size() << " tests" << std::endl;
