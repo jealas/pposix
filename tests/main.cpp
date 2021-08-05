@@ -9,6 +9,8 @@
 #include "pposix/dlfcn.hpp"
 #include "pt.hpp"
 
+namespace my_namespace {
+
 PT_SUITE("pt main") {
   PT_TEST(hello_main) {
     PT_ASSERT(true);
@@ -18,6 +20,8 @@ PT_SUITE("pt main") {
     PT_ASSERT(false);
   }
 }
+
+}  // namespace my_namespace
 
 template <class T>
 struct WorkQueue {
