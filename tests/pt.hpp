@@ -2,13 +2,10 @@
 #define PPOSIX_PT_HPP
 
 #ifdef __cplusplus
-// Include the iostream header first
-#include <iostream>
-// DO NOT MOVE
-
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <system_error>
 
 #else
 #include <stddef.h>
@@ -188,20 +185,12 @@ struct Id {
   std::string full_name() const { return std::string{name_space.val} + "::" + name.val; }
 };
 
-inline std::ostream &operator<<(std::ostream &out, const Id &id) {
-  return out << id.name_space.val << "::" << id.name.val;
-}
-
 struct Location {
   capi::PtTestFile file;
   capi::PtTestLine line;
 
   inline std::string uri() const { return std::string{"file://"} + file.val; }
 };
-
-inline std::ostream &operator<<(std::ostream &out, const Location &location) {
-  return out << location.file.val << ':' << location.line.val;
-}
 
 enum class TestType : capi::pt_test_type_t {
   Normal = capi::pt_test_type::pt_normal_type,

@@ -1,5 +1,9 @@
 #include "pt.hpp"
 
+// Include the iostream header first
+#include <iostream>
+// DO NOT MOVE
+
 #include <cassert>
 
 namespace pt {
@@ -132,6 +136,14 @@ PtSymbolTable PT_SYMBOL_TABLE_NAME{
 }  // namespace pt
 
 namespace pt {
+
+inline std::ostream &operator<<(std::ostream &out, const Id &id) {
+  return out << id.name_space.val << "::" << id.name.val;
+}
+
+inline std::ostream &operator<<(std::ostream &out, const Location &location) {
+  return out << location.file.val << ':' << location.line.val;
+}
 
 namespace private_detail {
 
