@@ -153,14 +153,17 @@ RunResult run_internal(const InternalTest &test) noexcept {
   try {
     std::cout << "Running " << test.id() << std::endl;
     test.run();
+
     return RunResult::Success;
 
-  } catch (const test_skipped &skipped) {
+  } catch (const pt::test_skipped &skipped) {
     return RunResult::Skipped;
-  } catch (const test_failed &fail) {
+
+  } catch (const pt::test_failed &fail) {
     std::cerr << "FAILED: " << test.loc() << '[' << test.id() << ']' << '\n'
               << '\t' << fail.what() << '\n';
     std::cerr << std::endl;
+
     return RunResult::Failed;
 
   } catch (const std::runtime_error &error) {
@@ -170,17 +173,25 @@ RunResult run_internal(const InternalTest &test) noexcept {
 
     return RunResult::Error;
 
+  } catch (const pt::internal_error &error) {
+    std::cerr << "INTERNAL ERROR: Internal error occurred while running test " << test.id() << '\n'
+              << error.what();
+    std::cerr << std::endl;
+
+    return RunResult::InternalError;
+
   } catch (const std::exception &exception) {
     std::cerr << "ERROR: Uncaught exception while running test " << test.id() << '\n'
               << exception.what();
     std::cerr << std::endl;
 
     return RunResult::Exception;
+
   } catch (...) {
-    std::cerr << "INTERNAL ERROR: Unknown exception caught while running test " << test.id();
+    std::cerr << "ERROR: Unknown exception caught while running test " << test.id();
     std::cerr << std::endl;
 
-    return RunResult::InternalError;
+    return RunResult::Error;
   }
 }
 
