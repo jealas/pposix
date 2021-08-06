@@ -11,6 +11,6 @@ PT_SUITE(hmm) {
 
   }  // namespace outer_namespace
 
-  PT_SPAWN_TEST(test_spawn_test) {}
+  PT_SPAWN(test_spawn_test) {}
 
 }  // namespace

@@ -13,7 +13,7 @@ PT_SUITE(std::vector) {
 
   }  // namespace outer_namespace
 
-  PT_SPAWN_TEST(spawn_test) {}
+  PT_SPAWN(spawn_test) {}
 
   PT_TEST(push_back_on_empty) {
     std::vector<int> v{};
@@ -46,3 +46,32 @@ PT_SUITE("copied test name") {
 }  // namespace copied_name
 
 }  // namespace
+
+namespace throws_macro {
+
+PT_SUITE(PT_THROWS) {
+  PT_TEST(no_throw) { PT_THROWS(1, std::exception); }
+
+  PT_TEST(throws) {
+    PT_THROWS([]() { throw std::exception{}; }(), std::exception);
+    PT_THROWS([]() { throw ""; }(), const char *);
+    PT_THROWS([]() { throw 1; }(), int);
+
+    struct {
+    } anonymous_struct{};
+
+    pt::throws<decltype(anonymous_struct)>(PT_ASSERTION_LINE, []() {
+      struct {
+      } anonymous{};
+      throw anonymous;
+    });
+
+    pt::throws<decltype(anonymous_struct)>([]() {
+      struct {
+      } anonymous{};
+      throw anonymous;
+    });
+  }
+}
+
+}  // namespace throws_macro

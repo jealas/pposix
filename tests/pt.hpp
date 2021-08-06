@@ -145,39 +145,45 @@ static_assert(sizeof(PtSymbolTable) ==
 namespace pt {
 
 struct assert_line {
-  char const *file;
-  size_t line;
-  char const *expression;
+  char const *file{};
+  size_t line{};
+  char const *expression{};
 };
 
-struct internal_error : std::runtime_error {
+struct internal_error final : std::runtime_error {
   using std::runtime_error::runtime_error;
 };
 
-struct test_failed : std::runtime_error {
-  using runtime_error::runtime_error;
+namespace private_detail {
+
+class test_exception {
+ public:
+  test_exception(std::string message) : message_{std::move(message)} {}
+
+  inline const std::string &message() const noexcept { return message_; }
+
+ private:
+  std::string message_{};
 };
 
-class assertion_failure : public test_failed {
- public:
-  assertion_failure(const std::string &message, const assert_line &line)
-      : test_failed{message}, line_{line} {}
+}  // namespace private_detail
 
-  const assert_line &line() const noexcept { return line_; }
+class test_failed final : public private_detail::test_exception {
+ public:
+  test_failed(std::string message, const assert_line &line)
+      : test_exception{std::move(message)}, line_{line} {}
+
+  inline const assert_line &line() const noexcept { return line_; }
 
  private:
   assert_line line_{};
 };
 
-class test_skipped : std::runtime_error {
-  using std::runtime_error::runtime_error;
+class test_skipped final : public private_detail::test_exception {
+  using test_exception::test_exception;
 };
 
 inline void skip(std::string reason) { throw test_skipped{std::move(reason)}; }
-
-struct stop_iteration : std::exception {
-  using std::exception::exception;
-};
 
 struct Id {
   capi::PtTestNamespace name_space;
@@ -252,29 +258,40 @@ class Registration : public InternalTest {
   }
 };
 
-template <class Iterator, class Body>
-void subtest(Iterator iter, Body body) {
-  while (true) {
-    try {
-      body(iter());
-    } catch (const pt::test_skipped &) {
-      continue;
-    } catch (const pt::stop_iteration &) {
-      break;
-    }
+template <class Result>
+inline void assert_true(const Result &result, const assert_line &line) noexcept(false) {
+  if (!result) {
+    throw test_failed{"Assertion failed.", line};
   }
 }
 
-template <class Result>
-inline void assert_true(const Result &result, const assert_line &line) {
-  if (!result) {
-    throw assertion_failure{std::string{line.expression} + " was false @ " +
-                                std::string{line.file} + ':' + std::to_string(line.line),
-                            line};
+template <class T, class Fn>
+inline void throws(const assert_line &line, const Fn &fn) noexcept(false) {
+  try {
+    fn();
+  } catch (const T &) {
+    return;
+  } catch (const pt::private_detail::test_exception &) {
+    throw;
+  } catch (...) {
+    throw test_failed{"Wrong exception was thrown", line};
   }
+
+  throw test_failed{"No exception was thrown", line};
+}
+
+template <class T, class Fn>
+inline void throws(const Fn &fn) noexcept(false) {
+  throws<T>({}, fn);
 }
 
 }  // namespace pt
+
+#define PT_ASSERTION_LINE_W_EXPRESSION(expression) \
+  { __FILE__, __LINE__, expression }
+
+#define PT_ASSERTION_LINE \
+  { __FILE__, __LINE__ }
 
 #define PT_SUITE(name_space)                \
   namespace {                               \
@@ -296,9 +313,14 @@ inline void assert_true(const Result &result, const assert_line &line) {
 
 #define PT_TEST(name) PT_GENERIC_TEST(name, ::pt::TestType::Normal)
 
-#define PT_SPAWN_TEST(name) PT_GENERIC_TEST(name, ::pt::TestType::Spawn)
+#define PT_SPAWN(name) PT_GENERIC_TEST(name, ::pt::TestType::Spawn)
 
-#define PT_ASSERT(expression) ::pt::assert_true((expression), {__FILE__, __LINE__, #expression})
+#define PT_ASSERT(expression) \
+  ::pt::assert_true((expression), PT_ASSERTION_LINE_W_EXPRESSION(#expression))
+
+#define PT_THROWS(expression, exception)                               \
+  ::pt::throws<exception>(PT_ASSERTION_LINE_W_EXPRESSION(#expression), \
+                          [&]() { (void)(expression); })
 
 #endif  // __cplusplus
 

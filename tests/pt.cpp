@@ -145,6 +145,18 @@ inline std::ostream &operator<<(std::ostream &out, const Location &location) {
   return out << location.file.val << ':' << location.line.val;
 }
 
+inline std::ostream &operator<<(std::ostream &out, const assert_line &line) {
+  if (line.expression) {
+    out << line.expression << (line.file ? " @ " : "");
+  }
+
+  if (line.file) {
+    out << line.file << ':' << line.line;
+  }
+
+  return out;
+}
+
 namespace private_detail {
 
 InternalTest const *internal_tests() noexcept { return registrar.normal_tests(); }
@@ -161,7 +173,7 @@ RunResult run_internal(const InternalTest &test) noexcept {
 
   } catch (const pt::test_failed &fail) {
     std::cerr << "FAILED: " << test.loc() << '[' << test.id() << ']' << '\n'
-              << '\t' << fail.what() << '\n';
+              << '\t' << fail.message() << ' ' << fail.line() << '\n';
     std::cerr << std::endl;
 
     return RunResult::Failed;
