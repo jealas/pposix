@@ -42,7 +42,6 @@ struct PtTestEntriesCount {
 };
 
 PtTestEntry pt_normal_tests() PT_CAPI_NOEXCEPT;
-PtTestEntry pt_spawn_tests() PT_CAPI_NOEXCEPT;
 
 PtTestEntriesStop pt_test_entries_stop(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestEntry pt_test_entries_next(PtTestEntry) PT_CAPI_NOEXCEPT;
@@ -114,7 +113,6 @@ struct PtSymbolTable {
   PtSymbolTableId id;
 
   PtTestEntry (*pt_normal_tests)() PT_CAPI_NOEXCEPT;
-  PtTestEntry (*pt_spawn_tests)() PT_CAPI_NOEXCEPT;
   PtTestEntriesStop (*pt_test_entries_stop)(PtTestEntry) PT_CAPI_NOEXCEPT;
   PtTestEntry (*pt_test_entries_next)(PtTestEntry) PT_CAPI_NOEXCEPT;
 
@@ -129,7 +127,7 @@ struct PtSymbolTable {
 #define PT_SYMBOL_TABLE_NAME pt_symbol_table_65e13a5d_64ab_4214_8fd9_40478724a480
 #define PT_SYMBOL_TABLE_NAME_STR "pt_symbol_table_65e13a5d_64ab_4214_8fd9_40478724a480"
 
-#define PT_SYMBOL_TABLE_SIZE 10
+#define PT_SYMBOL_TABLE_SIZE 9
 
 #ifdef __cplusplus
 static_assert(sizeof(PtSymbolTable) ==
@@ -179,8 +177,9 @@ struct Location {
 
 struct SubFail {
   pt::Location location{};
-  char const *var_name{};
-  std::string val_str{};
+  const char *label{};
+  const char *name{};
+  std::string message{};
 };
 
 class test_failed final : public private_detail::test_exception {
@@ -274,7 +273,7 @@ class Registration : public InternalTest {
 template <class Result>
 inline void assert_true(const Result &result, const assert_line &line) noexcept(false) {
   if (!result) {
-    throw test_failed{"ASSERTION FAILED:", line};
+    throw test_failed{"ASSERT FAILED", line};
   }
 }
 
@@ -312,7 +311,8 @@ struct subtest_runner {
       try {
         fn(val);
       } catch (pt::test_failed &fail) {
-        fail.push_sub_fail(pt::SubFail{location, var_name, std::to_string(val)});
+        fail.push_sub_fail(pt::SubFail{location, "SUBTEST", var_name,
+                                       std::string{var_name} + '=' + std::to_string(val)});
         throw;
       } catch (const pt::test_skipped &) {
         continue;
@@ -336,9 +336,31 @@ struct {
     return private_detail::subtest_runner<std::initializer_list<T>>{location, name, iterable};
   }
 
-} subtest;
+} constexpr subtest;
 
-}  // namespace pt
+struct section_runner {
+  pt::Location location;
+  char const *name{};
+
+  template <class Fn>
+  void operator-(Fn fn) const noexcept(false) {
+    try {
+      fn();
+    } catch (test_failed &fail) {
+      fail.push_sub_fail(SubFail{location, "SECTION", name, ""});
+      throw;
+    }
+  }
+};
+
+struct {
+  constexpr section_runner operator()(const Location &location, char const *name) const noexcept {
+    return section_runner{location, name};
+  }
+
+} constexpr section;
+
+};  // namespace pt
 
 #define PT_ASSERTION_LINE_W_EXPRESSION(expression) \
   { __FILE__, __LINE__, expression }
@@ -382,6 +404,8 @@ struct {
 
 #define PT_SUBTEST(var, ...) \
   ::pt::subtest(PT_LOCATION, #var, __VA_ARGS__) - [&](const auto &var) noexcept(false)
+
+#define PT_SECTION(name) ::pt::section(PT_LOCATION, #name) - [&]() noexcept(false)
 
 #endif  // __cplusplus
 

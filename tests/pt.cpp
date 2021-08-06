@@ -57,10 +57,6 @@ PtTestEntry pt_normal_tests() noexcept {
   return PtTestEntry{static_cast<void const *>(private_detail::registrar.normal_tests())};
 }
 
-PtTestEntry pt_spawn_tests() noexcept {
-  return PtTestEntry{static_cast<void const *>(private_detail::registrar.spawn_tests())};
-}
-
 PtTestEntry pt_unknown_tests() noexcept {
   return PtTestEntry{static_cast<void const *>(private_detail::registrar.unknown_tests())};
 }
@@ -119,7 +115,6 @@ PtTestRunResult pt_test_entry_run(const PtTestEntry entry) noexcept {
 PtSymbolTable PT_SYMBOL_TABLE_NAME{
     {PT_CAPI_SECRET, PT_CAPI_VERSION},
     pt_normal_tests,
-    pt_spawn_tests,
     pt_test_entries_stop,
     pt_test_entries_next,
     pt_test_entry_type,
@@ -179,14 +174,18 @@ RunResult run_internal(const InternalTest &test) noexcept {
     const auto indent{"  "};
     std::string indent_level{indent};
     for (auto begin{subtest_fails.crbegin()}, end{subtest_fails.crend()}; begin < end; ++begin) {
-      std::cerr << indent_level << "SUBTEST:" << ' ' << begin->var_name << "="
-                << begin->val_str << " @ " << begin->location << '[' << begin->var_name << ']'
-                << '\n';
+      std::cerr << indent_level << begin->label << ": ";
+
+      if (!begin->message.empty()) {
+        std::cerr << begin->message << " @ ";
+      }
+      std::cerr << begin->location << '[' << begin->name << ']' << '\n';
+
       indent_level += indent;
     }
 
     indent_level += indent;
-    std::cerr << indent_level << fail.message() << ' ' << fail.line() << '\n';
+    std::cerr << indent_level << fail.message() << ": " << fail.line() << '\n';
     std::cerr << std::endl;
 
     return RunResult::Failed;

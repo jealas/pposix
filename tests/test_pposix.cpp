@@ -34,4 +34,10 @@ PT_SUITE(hmm) {
       };
     };
   }
+
+  PT_TEST(subtests_in_section) {
+    PT_SECTION("This is a section name") {
+      PT_SUBTEST(v, {1, 2, 3}) { PT_ASSERT(v < 3); };
+    };
+  }
 }
