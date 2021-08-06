@@ -298,6 +298,46 @@ inline void throws(const Fn &fn) noexcept(false) {
   throws<T>({}, fn);
 }
 
+namespace private_detail {
+
+template <class Iterable>
+struct subtest_runner {
+  pt::Location location;
+  char const *var_name{};
+  Iterable iterable;
+
+  template <class Fn>
+  auto operator-(const Fn fn) const noexcept(false) {
+    for (const auto &val : iterable) {
+      try {
+        fn(val);
+      } catch (pt::test_failed &fail) {
+        fail.push_sub_fail(pt::SubFail{location, var_name, std::to_string(val)});
+        throw;
+      } catch (const pt::test_skipped &) {
+        continue;
+      }
+    }
+  }
+};
+
+}  // namespace private_detail
+
+struct {
+  template <class Iterable>
+  constexpr auto operator()(const ::pt::Location &location, const char *name,
+                            Iterable iterable) const noexcept(false) {
+    return private_detail::subtest_runner<Iterable>{location, name, std::move(iterable)};
+  }
+
+  template <class T>
+  constexpr auto operator()(const ::pt::Location &location, char const *name,
+                            std::initializer_list<T> iterable) const noexcept(false) {
+    return private_detail::subtest_runner<std::initializer_list<T>>{location, name, iterable};
+  }
+
+} subtest;
+
 }  // namespace pt
 
 #define PT_ASSERTION_LINE_W_EXPRESSION(expression) \
@@ -334,6 +374,14 @@ inline void throws(const Fn &fn) noexcept(false) {
 #define PT_THROWS(expression, exception)                               \
   ::pt::throws<exception>(PT_ASSERTION_LINE_W_EXPRESSION(#expression), \
                           [&]() { (void)(expression); })
+
+#define PT_LOCATION          \
+  ::pt::Location {           \
+    {__FILE__}, { __LINE__ } \
+  }
+
+#define PT_SUBTEST(var, ...) \
+  ::pt::subtest(PT_LOCATION, #var, __VA_ARGS__) - [&](const auto &var) noexcept(false)
 
 #endif  // __cplusplus
 
