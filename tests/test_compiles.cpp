@@ -1,3 +1,4 @@
+#include <list>
 #include <vector>
 
 #include "pt.hpp"
@@ -71,6 +72,20 @@ PT_SUITE(PT_THROWS) {
       } anonymous{};
       throw anonymous;
     });
+  }
+
+  PT_TEST(manual_subtest) {
+    pt::subtest({1, 2, 3}) = [](int) {};
+    pt::subtest(std::vector<int>{4, 5, 6}) = [](int) {};
+    pt::subtest(PT_LOCATION, "", "characters") = [](int) {};
+    pt::subtest(PT_LOCATION, nullptr, std::list<int>{4, 5, 6}) = [](int) {};
+  }
+
+  PT_TEST(manual_section) {
+    pt::section(nullptr) = []() {};
+    pt::section("") = []() {};
+    pt::section("manual section") = []() {};
+    pt::section(PT_LOCATION, "manual section with location") = []() {};
   }
 }
 

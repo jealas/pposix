@@ -299,41 +299,60 @@ inline void throws(const Fn &fn) noexcept(false) {
 
 namespace private_detail {
 
-template <class Iterable>
+template <class Begin, class End>
 struct subtest_runner {
   pt::Location location;
   char const *var_name{};
-  Iterable iterable;
+  Begin begin;
+  End end;
 
   template <class Fn>
-  auto operator*(const Fn fn) const noexcept(false) {
-    for (const auto &val : iterable) {
+  auto &operator=(const Fn fn) noexcept(false) {
+    for (; begin != end; ++begin) {
       try {
-        fn(val);
+        fn(*begin);
       } catch (pt::test_failed &fail) {
         fail.push_sub_fail(pt::SubFail{location, "SUBTEST", var_name,
-                                       std::string{var_name} + '=' + std::to_string(val)});
+                                       std::string{var_name} + " = " + std::to_string(*begin)});
         throw;
       } catch (const pt::test_skipped &) {
         continue;
       }
     }
+
+    return *this;
   }
 };
 
 }  // namespace private_detail
 
 struct {
+  template <class Begin, class End>
+  constexpr auto from_iterators(const Location &location, const char *name, Begin begin,
+                                End end) const noexcept {
+    return private_detail::subtest_runner<Begin, End>{location, name, begin, end};
+  }
+
   template <class Iterable>
-  constexpr auto operator()(const ::pt::Location &location, const char *name,
-                            Iterable iterable) const noexcept(false) {
-    return private_detail::subtest_runner<Iterable>{location, name, std::move(iterable)};
+  constexpr auto operator()(const Location &location, const char *name,
+                            const Iterable &iterable) const noexcept {
+    return from_iterators(location, name, std::begin(iterable), std::end(iterable));
   }
 
   template <class T>
   constexpr auto operator()(const ::pt::Location &location, char const *name,
-                            std::initializer_list<T> iterable) const noexcept(false) {
-    return private_detail::subtest_runner<std::initializer_list<T>>{location, name, iterable};
+                            const std::initializer_list<T> &iterable) const noexcept {
+    return from_iterators(location, name, std::begin(iterable), std::end(iterable));
+  }
+
+  template <class Iterable>
+  constexpr auto operator()(const Iterable &iterable) const noexcept(false) {
+    return (*this)({}, "#UNK", iterable);
+  }
+
+  template <class T>
+  constexpr auto operator()(const std::initializer_list<T> &iterable) const noexcept(false) {
+    return (*this)({}, "#UNK", iterable);
   }
 
 } constexpr subtest;
@@ -343,13 +362,15 @@ struct section_runner {
   char const *name{};
 
   template <class Fn>
-  void operator*(Fn fn) const noexcept(false) {
+  auto &operator=(Fn fn) const noexcept(false) {
     try {
       fn();
     } catch (test_failed &fail) {
       fail.push_sub_fail(SubFail{location, "SECTION", name, ""});
       throw;
     }
+
+    return *this;
   }
 };
 
@@ -358,10 +379,8 @@ struct {
     return section_runner{location, name};
   }
 
-  template <class Fn>
-  constexpr void operator()(const Location &location, char const *name, Fn fn) const
-      noexcept(false) {
-    section_runner{location, name} * fn;
+  constexpr section_runner operator()(char const *name) const noexcept {
+    return section_runner{{}, name};
   }
 
 } constexpr section;
@@ -409,9 +428,9 @@ struct {
   }
 
 #define PT_SUBTEST(var, ...) \
-  ::pt::subtest(PT_LOCATION, #var, __VA_ARGS__) *[&](const auto &var) noexcept(false)
+  ::pt::subtest(PT_LOCATION, #var, __VA_ARGS__) = [&](const auto &var) noexcept(false)
 
-#define PT_SECTION(name) ::pt::section(PT_LOCATION, #name) *[&]() noexcept(false)
+#define PT_SECTION(name) ::pt::section(PT_LOCATION, #name) = [&]() noexcept(false)
 
 #endif  // __cplusplus
 
