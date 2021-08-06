@@ -172,8 +172,21 @@ RunResult run_internal(const InternalTest &test) noexcept {
     return RunResult::Skipped;
 
   } catch (const pt::test_failed &fail) {
-    std::cerr << "FAILED: " << test.loc() << '[' << test.id() << ']' << '\n'
-              << '\t' << fail.message() << ' ' << fail.line() << '\n';
+    std::cerr << "FAILED: " << test.loc() << '[' << test.id() << ']' << '\n';
+
+    const auto &subtest_fails{fail.subtest_fails()};
+
+    const auto indent{"  "};
+    std::string indent_level{indent};
+    for (auto begin{subtest_fails.crbegin()}, end{subtest_fails.crend()}; begin < end; ++begin) {
+      std::cerr << indent_level << "SUBTEST:" << ' ' << begin->var_name << "="
+                << begin->val_str << " @ " << begin->location << '[' << begin->var_name << ']'
+                << '\n';
+      indent_level += indent;
+    }
+
+    indent_level += indent;
+    std::cerr << indent_level << fail.message() << ' ' << fail.line() << '\n';
     std::cerr << std::endl;
 
     return RunResult::Failed;

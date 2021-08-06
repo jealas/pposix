@@ -5,7 +5,9 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <system_error>
+#include <vector>
 
 #else
 #include <stddef.h>
@@ -168,6 +170,19 @@ class test_exception {
 
 }  // namespace private_detail
 
+struct Location {
+  capi::PtTestFile file;
+  capi::PtTestLine line;
+
+  inline std::string uri() const { return std::string{"file://"} + file.val; }
+};
+
+struct SubFail {
+  pt::Location location{};
+  char const *var_name{};
+  std::string val_str{};
+};
+
 class test_failed final : public private_detail::test_exception {
  public:
   test_failed(std::string message, const assert_line &line)
@@ -175,8 +190,13 @@ class test_failed final : public private_detail::test_exception {
 
   inline const assert_line &line() const noexcept { return line_; }
 
+  inline void push_sub_fail(const SubFail &fail) { subtest_fails_.emplace_back(fail); }
+
+  inline const std::vector<SubFail> &subtest_fails() const { return subtest_fails_; }
+
  private:
   assert_line line_{};
+  std::vector<SubFail> subtest_fails_{};
 };
 
 class test_skipped final : public private_detail::test_exception {
@@ -190,13 +210,6 @@ struct Id {
   capi::PtTestName name;
 
   std::string full_name() const { return std::string{name_space.val} + "::" + name.val; }
-};
-
-struct Location {
-  capi::PtTestFile file;
-  capi::PtTestLine line;
-
-  inline std::string uri() const { return std::string{"file://"} + file.val; }
 };
 
 enum class TestType : capi::pt_test_type_t {
@@ -261,7 +274,7 @@ class Registration : public InternalTest {
 template <class Result>
 inline void assert_true(const Result &result, const assert_line &line) noexcept(false) {
   if (!result) {
-    throw test_failed{"Assertion failed.", line};
+    throw test_failed{"ASSERTION FAILED:", line};
   }
 }
 
