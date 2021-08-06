@@ -306,7 +306,7 @@ struct subtest_runner {
   Iterable iterable;
 
   template <class Fn>
-  auto operator-(const Fn fn) const noexcept(false) {
+  auto operator*(const Fn fn) const noexcept(false) {
     for (const auto &val : iterable) {
       try {
         fn(val);
@@ -343,7 +343,7 @@ struct section_runner {
   char const *name{};
 
   template <class Fn>
-  void operator-(Fn fn) const noexcept(false) {
+  void operator*(Fn fn) const noexcept(false) {
     try {
       fn();
     } catch (test_failed &fail) {
@@ -356,6 +356,12 @@ struct section_runner {
 struct {
   constexpr section_runner operator()(const Location &location, char const *name) const noexcept {
     return section_runner{location, name};
+  }
+
+  template <class Fn>
+  constexpr void operator()(const Location &location, char const *name, Fn fn) const
+      noexcept(false) {
+    section_runner{location, name} * fn;
   }
 
 } constexpr section;
@@ -403,9 +409,9 @@ struct {
   }
 
 #define PT_SUBTEST(var, ...) \
-  ::pt::subtest(PT_LOCATION, #var, __VA_ARGS__) - [&](const auto &var) noexcept(false)
+  ::pt::subtest(PT_LOCATION, #var, __VA_ARGS__) *[&](const auto &var) noexcept(false)
 
-#define PT_SECTION(name) ::pt::section(PT_LOCATION, #name) - [&]() noexcept(false)
+#define PT_SECTION(name) ::pt::section(PT_LOCATION, #name) *[&]() noexcept(false)
 
 #endif  // __cplusplus
 
