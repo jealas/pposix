@@ -360,7 +360,7 @@ struct {
 
 } constexpr section;
 
-};  // namespace pt
+}  // namespace pt
 
 #define PT_ASSERTION_LINE_W_EXPRESSION(expression) \
   { __FILE__, __LINE__, expression }
