@@ -431,12 +431,12 @@ struct {
   ::pt::assertion(PT_ASSERTION_LINE_W_EXPRESSION(expression)) = [&]() { return (expression); }
 
 #define PT_THROWS(expression, exception)                                         \
-  ::pt::throws<exception>{PT_ASSERTION_LINE_W_EXPRESSION(#expression)} = [&]() { \
+  ::pt::throws<exception>(PT_ASSERTION_LINE_W_EXPRESSION(#expression)) = [&]() { \
     (void)(expression);                                                          \
   };
 
 #define PT_NOTHROWS(expression) \
-  ::pt::no_throws{PT_ASSERTION_LINE_W_EXPRESSION(#expression)} = [&]() { (void)(expression); }
+  ::pt::no_throws(PT_ASSERTION_LINE_W_EXPRESSION(#expression)) = [&]() { (void)(expression); }
 
 #define PT_LOCATION          \
   ::pt::Location {           \
