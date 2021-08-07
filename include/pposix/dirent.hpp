@@ -6,24 +6,16 @@
 #include <system_error>
 
 #include "pposix/descriptor.hpp"
-#include "pposix/file_descriptor.hpp"
+#include "pposix/fd.hpp"
 #include "pposix/result.hpp"
 
-namespace pposix {
+namespace pposix::capi {
 
 std::error_code close_dir(DIR *dir) noexcept;
 
-using dir_fd_t = int;
+using dir_descriptor = descriptor<DIR *, std::integral_constant<DIR *, nullptr>, close_dir>;
 
-enum class dir_fd : dir_fd_t {};
+result<dir_descriptor> opendir(dir_fd fd) noexcept;
+result<dir_descriptor> opendir(const char *dir) noexcept;
 
-struct unique_dir_fd : file_descriptor {
-  using file_descriptor::file_descriptor;
-};
-
-using unique_dirent = descriptor<DIR *, std::integral_constant<DIR *, nullptr>, close_dir>;
-
-result<unique_dirent> opendir(dir_fd fd) noexcept;
-result<unique_dirent> opendir(const char *dir) noexcept;
-
-}  // namespace pposix
+}  // namespace pposix::capi

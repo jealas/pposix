@@ -9,7 +9,7 @@ namespace pposix {
 #define PPOSIX_PLATFORM_SOLARIS 0
 #define PPOSIX_PLATFORM_LINUX 0
 
-enum class platform { macos, freebsd, openbsd, solaris, linux_ };
+enum class platform { macos, freebsd, openbsd, solaris, linux_, cygwin };
 
 #if defined(__APPLE__) && __APPLE__ && defined(__MACH__) && __MACH__
 inline constexpr platform compilation_platform{platform::macos};
@@ -36,6 +36,11 @@ inline constexpr platform compilation_platform{platform::solaris};
 inline constexpr platform compilation_platform{platform::linux_};
 #undef PPOSIX_PLATFORM_LINUX
 #define PPOSIX_PLATFORM_LINUX 1
+
+#elif defined(__CYGWIN__)
+inline constexpr platform compilation_platform{platform::cygwin};
+#undef PPOSIX_PLATFORM_CYGWIN
+#define PPOSIX_PLATFORM_CYGWIN 1
 
 #else
 #error "Unable to detect POSIX platform."

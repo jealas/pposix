@@ -3,6 +3,8 @@
 #include <chrono>
 #include <ratio>
 
+#include "pposix/duration.hpp"
+
 namespace pposix {
 
 using seconds = std::chrono::duration<int, std::chrono::seconds::period>;

@@ -3,16 +3,13 @@
 
 #include <fcntl.h>
 
-#include "file_descriptor.hpp"
+#include "fd.hpp"
 #include "platform.hpp"
 #include "result.hpp"
 #include "stat.hpp"
 #include "util.hpp"
 
-namespace pposix {
-
-namespace capi {
-
+namespace pposix::capi {
 enum class fcntl_cmd : int {
   dupfd = F_DUPFD,
   dupfd_cloexec = F_DUPFD_CLOEXEC,
@@ -78,10 +75,10 @@ enum class open_flag : unsigned {
   truncate = O_TRUNC,
 
 #if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD && !PPOSIX_PLATFORM_MACOS
-  tty_init = O_TTY_INIT
+  tty_init = O_TTY_INIT,
 #endif
 
-  append = O_APPEND,
+      append = O_APPEND,
 
 #if !PPOSIX_PLATFORM_FREEBSD
   dsync = O_DSYNC,
@@ -119,7 +116,8 @@ enum class access_mode : unsigned {
   read = O_RDONLY,
   read_write = O_RDWR,
 
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD && !PPOSIX_PLATFORM_OPENBSD && !PPOSIX_PLATFORM_MACOS
+#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD && !PPOSIX_PLATFORM_OPENBSD && \
+    !PPOSIX_PLATFORM_MACOS
   search = O_SEARCH,
 #endif
 
@@ -137,106 +135,9 @@ constexpr access_mode &operator|=(access_mode &lhs, access_mode rhs) noexcept {
   return lhs;
 }
 
-result<raw_fd> open(const char *path, capi::access_mode mode, capi::open_flag flags) noexcept;
+result<fd> open(const char *, capi::access_mode, capi::open_flag) noexcept;
+result<fd> open(const char *, capi::access_mode, capi::open_flag, capi::permission) noexcept;
 
-result<raw_fd> open(const char *path, capi::access_mode mode, capi::open_flag flags,
-                    capi::permission permission) noexcept;
-
-}  // namespace capi
-
-template <capi::fcntl_cmd Command>
-using fcntl_cmd = enum_flag<capi::fcntl_cmd, Command>;
-
-// fcntl ccommands
-constexpr fcntl_cmd<capi::fcntl_cmd::dupfd> dupfd{};
-constexpr fcntl_cmd<capi::fcntl_cmd::dupfd_cloexec> dupfd_cloexec{};
-constexpr fcntl_cmd<capi::fcntl_cmd::getfd> getfd{};
-constexpr fcntl_cmd<capi::fcntl_cmd::setfd> setfd{};
-constexpr fcntl_cmd<capi::fcntl_cmd::getfl> getfl{};
-constexpr fcntl_cmd<capi::fcntl_cmd::setfl> setfl{};
-constexpr fcntl_cmd<capi::fcntl_cmd::getlk> getlk{};
-constexpr fcntl_cmd<capi::fcntl_cmd::setlk> setlk{};
-constexpr fcntl_cmd<capi::fcntl_cmd::setlkw> setlkw{};
-constexpr fcntl_cmd<capi::fcntl_cmd::getown> getown{};
-constexpr fcntl_cmd<capi::fcntl_cmd::setown> setown{};
-constexpr fcntl_cmd<capi::fcntl_cmd::rdlck> rdlck{};
-constexpr fcntl_cmd<capi::fcntl_cmd::unlck> unlck{};
-constexpr fcntl_cmd<capi::fcntl_cmd::wrlck> wrlck{};
-
-#if PPOSIX_PLATFORM_LINUX
-constexpr fcntl_cmd<capi::fcntl_cmd::ofd_setlk> ofd_setlk{};
-constexpr fcntl_cmd<capi::fcntl_cmd::ofd_setlkw> ofd_setlkw{};
-constexpr fcntl_cmd<capi::fcntl_cmd::ofd_getlk> ofd_getlk{};
-constexpr fcntl_cmd<capi::fcntl_cmd::getown_ex> getown_ex{};
-constexpr fcntl_cmd<capi::fcntl_cmd::setown_ex> setown_ex{};
-constexpr fcntl_cmd<capi::fcntl_cmd::getsig> getsig{};
-constexpr fcntl_cmd<capi::fcntl_cmd::setsig> setsig{};
-constexpr fcntl_cmd<capi::fcntl_cmd::setlease> setlease{};
-constexpr fcntl_cmd<capi::fcntl_cmd::getlease> getlease{};
-constexpr fcntl_cmd<capi::fcntl_cmd::notify> notify{};
-constexpr fcntl_cmd<capi::fcntl_cmd::setpipe_sz> setpipe_sz{};
-constexpr fcntl_cmd<capi::fcntl_cmd::getpipe_sz> getpipe_sz{};
-constexpr fcntl_cmd<capi::fcntl_cmd::add_seals> add_seals{};
-constexpr fcntl_cmd<capi::fcntl_cmd::get_seals> get_seals{};
-constexpr fcntl_cmd<capi::fcntl_cmd::seal_seal> seal_seal{};
-constexpr fcntl_cmd<capi::fcntl_cmd::seal_shrink> seal_shrink{};
-constexpr fcntl_cmd<capi::fcntl_cmd::seal_grow> seal_grow{};
-constexpr fcntl_cmd<capi::fcntl_cmd::seal_write> seal_write{};
-constexpr fcntl_cmd<capi::fcntl_cmd::get_rw_hint> get_rw_hint{};
-constexpr fcntl_cmd<capi::fcntl_cmd::set_rw_hint> set_rw_hint{};
-constexpr fcntl_cmd<capi::fcntl_cmd::get_file_rw_hint> get_file_rw_hint{};
-constexpr fcntl_cmd<capi::fcntl_cmd::set_file_rw_hint> set_file_rw_hint{};
-#endif
-
-// Open flags
-template <capi::open_flag OpenFlag>
-using open_flag = enum_flag<capi::open_flag, OpenFlag>;
-
-constexpr open_flag<capi::open_flag::cloexec> cloexec{};
-constexpr open_flag<capi::open_flag::creat> creat{};
-constexpr open_flag<capi::open_flag::directory> directory{};
-constexpr open_flag<capi::open_flag::excl> excl{};
-constexpr open_flag<capi::open_flag::noctty> noctty{};
-constexpr open_flag<capi::open_flag::nofollow> nofollow{};
-constexpr open_flag<capi::open_flag::truncate> truncate{};
-
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_OPENBSD && !PPOSIX_PLATFORM_MACOS
-constexpr open_flag<capi::open_flag::tty_init> tty_init{};
-#endif
-
-constexpr open_flag<capi::open_flag::append> append{};
-
-#if !PPOSIX_PLATFORM_FREEBSD
-constexpr open_flag<capi::open_flag::dsync> dsync{};
-#endif
-
-constexpr open_flag<capi::open_flag::nonblock> nonblock{};
-
-#if !PPOSIX_PLATFORM_MACOS && !PPOSIX_PLATFORM_FREEBSD
-constexpr open_flag<capi::open_flag::rsync> rsync{};
-#endif
-
-constexpr open_flag<capi::open_flag::sync> sync{};
-
-constexpr open_flag<capi::open_flag::rdonly> rdonly{};
-
-// Access mode
-template <capi::access_mode AccessMode>
-using access_mode = enum_flag<capi::access_mode, AccessMode>;
-
-#if !PPOSIX_PLATFORM_MACOS && !PPOSIX_PLATFORM_OPENBSD
-constexpr access_mode<capi::access_mode::exec> exec{};
-#endif
-
-constexpr access_mode<capi::access_mode::read> read{};
-constexpr access_mode<capi::access_mode::read_write> read_write{};
-
-#if !PPOSIX_PLATFORM_LINUX && !PPOSIX_PLATFORM_FREEBSD && !PPOSIX_PLATFORM_OPENBSD && !PPOSIX_PLATFORM_MACOS
-constexpr access_mode<capi::access_mode::search> search{};
-#endif
-
-constexpr access_mode<capi::access_mode::write> write{};
-
-}  // namespace pposix
+}  // namespace pposix::capi
 
 #endif  // PPOSIX_FCNTL_HPP

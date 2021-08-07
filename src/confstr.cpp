@@ -1,7 +1,5 @@
 #include "pposix/confstr.hpp"
 
-#include <system_error>
-
 #include "pposix/errno.hpp"
 #include "pposix/util.hpp"
 

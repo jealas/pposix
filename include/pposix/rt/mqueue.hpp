@@ -14,7 +14,7 @@
 #include "pposix/time.hpp"
 #include "pposix/util.hpp"
 
-namespace pposix::rt {
+namespace pposix {
 
 constexpr ::mqd_t NULL_MQD_T{-1};
 
@@ -44,23 +44,6 @@ class mq_current_attr {
  private:
   ::mq_attr attributes_{};
 };
-
-// Message queue open
-template <capi::mq_mode Flag>
-using mq_mode_flag = exclusive_enum_flag<capi::mq_mode, Flag>;
-
-inline constexpr mq_mode_flag<capi::mq_mode::read_only> read_only{};
-inline constexpr mq_mode_flag<capi::mq_mode::write_only> write_only{};
-inline constexpr mq_mode_flag<capi::mq_mode::read_write> read_write{};
-
-template <capi::mq_option Flag>
-using mq_option_flag = enum_flag<capi::mq_option, Flag>;
-
-template <capi::mq_option Flags>
-using mq_option_flag_set = enum_flag<capi::mq_option, Flags>;
-
-inline constexpr mq_option_flag<capi::mq_option::excl> mq_excl{};
-inline constexpr mq_option_flag<capi::mq_option::non_blocking> mq_non_blocking{};
 
 class mq;
 
@@ -151,9 +134,8 @@ class mq {
   static result<mq> unsafe_open(const char* name, capi::mq_mode mode,
                                 capi::mq_option option) noexcept;
 
-  template <capi::mq_mode Mode>
-  static result<mq> open(const char* name, mq_mode_flag<Mode>) noexcept {
-    const mqd_t res{::mq_open(name, underlying_v(Mode))};
+  static inline result<mq> open(const char* name, capi::mq_mode mode) noexcept {
+    const mqd_t res{::mq_open(name, underlying_v(mode))};
     if (res == NULL_MQD_T) {
       return current_errno_code();
     } else {
@@ -162,12 +144,12 @@ class mq {
   }
 
   template <capi::mq_mode Mode, capi::mq_option Flag>
-  result<mq> open(const char* name, mq_mode_flag<Mode>, mq_option_flag<Flag>) noexcept {
+  inline result<mq> open(const char* name, capi::mq_mode mode, capi::mq_option options) noexcept {
     static_assert(Flag != capi::mq_option::excl,
                   "The mq_excl flag can only be used with the mq_open(name, mode, flags, "
                   "mq_create_queue) overload.");
 
-    const ::mqd_t res{::mq_open(name, underlying_v(Mode) | underlying_v(Flag))};
+    const ::mqd_t res{::mq_open(name, underlying_v(mode) | underlying_v(options))};
     if (res == NULL_MQD_T) {
       return current_errno_code();
     } else {
@@ -176,8 +158,9 @@ class mq {
   }
 
   template <capi::mq_mode Mode>
-  result<mq> open(const char* name, mq_mode_flag<Mode>, mq_create_queue attributes) noexcept {
-    const ::mqd_t res{::mq_open(name, underlying_v(Mode), attributes.mq_attr_ptr())};
+  inline result<mq> open(const char* name, capi::mq_mode mode,
+                         mq_create_queue attributes) noexcept {
+    const ::mqd_t res{::mq_open(name, underlying_v(mode), attributes.mq_attr_ptr())};
     if (res == NULL_MQD_T) {
       return current_errno_code();
     } else {
@@ -186,10 +169,10 @@ class mq {
   }
 
   template <capi::mq_mode Mode, capi::mq_option Flags>
-  result<mq> open(const char* name, mq_mode_flag<Mode>, mq_option_flag_set<Flags>,
-                  mq_create_queue create_queue) noexcept {
+  inline result<mq> open(const char* name, capi::mq_mode mode, capi::mq_option options,
+                         mq_create_queue create_queue) noexcept {
     const ::mqd_t res{
-        ::mq_open(name, underlying_v(Mode) | underlying_v(Flags), create_queue.mq_attr_ptr())};
+        ::mq_open(name, underlying_v(mode) | underlying_v(options), create_queue.mq_attr_ptr())};
     if (res == NULL_MQD_T) {
       return current_errno_code();
     } else {
@@ -201,18 +184,13 @@ class mq {
 
   result<mq_current_attr> getattr() noexcept;
 
-  template <capi::mq_option Option>
-  result<mq_current_attr> setattr(mq_option_flag<Option>) {
-    static_assert(
-        not mq_option_flag_set<Option>::has(mq_excl),
-        "mq_excl cannot be used with mq_setattr, since it's only relevant with mq_open.");
-
+  result<mq_current_attr> setattr(capi::mq_option option) {
     ::mq_attr new_attributes{};
-    new_attributes.mq_flags = underlying_v(Option);
+    new_attributes.mq_flags = underlying_v(option);
 
     ::mq_attr current_attributes{};
 
-    const int res{::mq_setattr(*mq_d_, &new_attributes, &current_attributes)};
+    const int res{::mq_setattr(mq_d_.raw(), &new_attributes, &current_attributes)};
     if (res == -1) {
       return current_errno_code();
     } else {
@@ -265,4 +243,4 @@ class mq {
   unique_mq_d mq_d_{};
 };
 
-}  // namespace pposix::rt
+}  // namespace pposix

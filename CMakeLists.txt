@@ -1,22 +1,45 @@
 cmake_minimum_required(VERSION 3.9)
 project(pposix)
 
-set(CMAKE_CXX_STANDARD 17)
-
 option(PPOSIX_LINUX "Enable Linux extensions" OFF)
 option(PPOSIX_RT "Enable Real-Time extensions" OFF)
 
 # Global library options
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+set(PPOSIX_EXTENSION_SRC)
+
+# POSIX Realtime Extension Testing
+if (${PPOSIX_RT})
+    set(
+            PPOSIX_EXTENSION_SRC
+
+            ${PPOSIX_EXTENSION_SRC}
+
+            src/rt/mqueue.cpp
+    )
+endif ()
+
+# POSIX Linux Extension Testing
+if (${PPOSIX_LINUX})
+    set(
+            PPOSIX_EXTENSION_SRC
+
+            ${PPOSIX_EXTENSION_SRC}
+
+            src/lnx/epoll.cpp
+    )
+endif ()
+
 add_library(
         pposix
 
         src/errno.cpp
-        src/file_descriptor.cpp
+        src/fd.cpp
         src/sysconf.cpp
         src/socket.cpp
         src/file.cpp
+        src/directory.cpp
         src/ioctl.cpp
         src/dirent.cpp
         src/syslog.cpp
@@ -24,6 +47,38 @@ add_library(
         src/signal.cpp
         src/mman.cpp
         src/fcntl.cpp
+        src/dup.cpp
+        src/dlfcn.cpp
+
+        ${PPOSIX_EXTENSION_SRC}
+)
+
+target_link_libraries(
+        pposix
+
+        pthread
+)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(
+            pposix
+
+            dl
+    )
+endif ()
+
+target_compile_features(
+        pposix
+
+        PUBLIC
+        cxx_std_17
+)
+
+set_target_properties(
+        pposix
+
+        PROPERTIES
+        CXX_EXTENSIONS OFF
 )
 
 target_compile_definitions(
@@ -41,22 +96,13 @@ target_include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-set(GCC_OR_CLANG_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Werror)
+set(PPOSIX_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Werror -fno-rtti -Wno-unused-function)
 
 target_compile_options(
         pposix
 
         PRIVATE
-        $<$<CXX_COMPILER_ID:GNU>:${GCC_OR_CLANG_COMPILE_OPTIONS}>
-        $<$<CXX_COMPILER_ID:Clang>:${GCC_OR_CLANG_COMPILE_OPTIONS}>
+        ${PPOSIX_COMPILE_OPTIONS}
 )
 
-# POSIX Realtime Extension Testing
-if (${PPOSIX_RT})
-    add_subdirectory(src/rt)
-endif ()
-
-# POSIX Linux Extension Testing
-if (${PPOSIX_LINUX})
-    add_subdirectory(src/lnx)
-endif ()
+add_subdirectory(tests)
