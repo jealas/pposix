@@ -16,7 +16,7 @@ target_compile_features(
         libpt
 
         PUBLIC
-        cxx_std_11
+        cxx_std_14
 )
 
 set_target_properties(
