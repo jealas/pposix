@@ -388,7 +388,7 @@ struct SubTestRunner {
   End end;
 
   template <class Fn>
-  auto operator PT_OPERATOR(const Fn &fn) noexcept(false) {
+  void operator PT_OPERATOR(const Fn &fn) noexcept(false) {
     for (; begin != end; ++begin) {
       try {
         fn(*begin);
@@ -441,7 +441,7 @@ struct SectionRunner {
   char const *name{};
 
   template <class Fn>
-  auto operator PT_OPERATOR(const Fn &fn) const noexcept(false) {
+  void operator PT_OPERATOR(const Fn &fn) const noexcept(false) {
     try {
       fn();
     } catch (test_failed &fail) {
@@ -461,7 +461,7 @@ struct nothrows {
   constexpr explicit nothrows(const AssertLine &line) noexcept : line_{line} {}
 
   template <class Fn>
-  auto operator PT_OPERATOR(const Fn &fn) noexcept(false) {
+  void operator PT_OPERATOR(const Fn &fn) noexcept(false) {
     try {
       fn();
       return;
@@ -486,7 +486,7 @@ class throws {
   constexpr explicit throws(const AssertLine &line) noexcept : line_{line} {}
 
   template <class Fn>
-  auto operator PT_OPERATOR(const Fn &fn) noexcept(false) {
+  void operator PT_OPERATOR(const Fn &fn) noexcept(false) {
     try {
       fn();
       throw test_failed{"THROWS FAILED", line_};
@@ -507,7 +507,7 @@ class throws {
 
 struct AssertionRunner {
   template <class Fn>
-  auto operator PT_OPERATOR(const Fn &fn) const noexcept(false) {
+  void operator PT_OPERATOR(const Fn &fn) const noexcept(false) {
     if (!fn()) {
       throw test_failed{"ASSERT FAILED", line_};
     }
