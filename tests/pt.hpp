@@ -5,7 +5,6 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <system_error>
 #include <vector>
 
@@ -62,6 +61,46 @@ struct PtTestLine {
   size_t val;
 };
 
+typedef int pt_log_level_t;
+
+enum pt_log_level PT_CAPI_UNDERLYING_ENUM(pt_log_level_t){
+    info,
+    warning,
+    error,
+    fatal,
+};
+
+struct PtLogLevel {
+  pt_log_level val;
+};
+
+struct PtStreamData {
+  void *val;
+};
+
+struct PtStreamVTable {
+  void (*write)(PtStreamData data, char const *const);
+};
+
+struct PtLogStream {
+  PtStreamVTable const *vtable;
+  PtStreamData stream;
+};
+
+struct PtLoggerData {
+  void *val;
+};
+
+struct PtLoggerVTable {
+  void (*log)(PtLoggerData, PtLogLevel, char const *const);
+  PtLogStream (*stream)(PtLoggerData, PtLogLevel);
+};
+
+struct PtLogger {
+  PtLoggerVTable const *vtable;
+  PtLoggerData logger;
+};
+
 typedef int pt_run_result_t;
 
 enum pt_run_result PT_CAPI_UNDERLYING_ENUM(pt_run_result_t){
@@ -76,7 +115,7 @@ PtTestNamespace pt_test_entry_namespace(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestName pt_test_entry_name(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestFile pt_test_entry_file(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestLine pt_test_entry_line(PtTestEntry) PT_CAPI_NOEXCEPT;
-PtTestRunResult pt_test_entry_run(PtTestEntry) PT_CAPI_NOEXCEPT;
+PtTestRunResult pt_test_entry_run(PtTestEntry, PtLogger) PT_CAPI_NOEXCEPT;
 
 struct PtSecret {
   uint8_t val[4];
@@ -108,7 +147,7 @@ struct PtSymbolTable {
   PtTestName (*pt_test_entry_name)(PtTestEntry) PT_CAPI_NOEXCEPT;
   PtTestFile (*pt_test_entry_file)(PtTestEntry) PT_CAPI_NOEXCEPT;
   PtTestLine (*pt_test_entry_line)(PtTestEntry) PT_CAPI_NOEXCEPT;
-  PtTestRunResult (*pt_test_entry_run)(PtTestEntry) PT_CAPI_NOEXCEPT;
+  PtTestRunResult (*pt_test_entry_run)(PtTestEntry, PtLogger) PT_CAPI_NOEXCEPT;
 };
 
 #define PT_SYMBOL_TABLE_NAME pt_symbol_table_65e13a5d_64ab_4214_8fd9_40478724a480
@@ -131,6 +170,74 @@ static_assert(sizeof(PtSymbolTable) ==
 #ifdef __cplusplus
 namespace pt {
 
+enum class LogLevel : capi::pt_log_level_t {
+  Info = capi::pt_log_level::info,
+  Warn = capi::pt_log_level::warning,
+  Error = capi::pt_log_level::error,
+  Fatal = capi::pt_log_level::fatal,
+};
+
+class LogStream {
+ public:
+  inline explicit LogStream(capi::PtLogStream stream) : stream_{stream} {}
+
+  inline void write(char const *const str) const noexcept {
+    stream_.vtable->write(stream_.stream, str);
+  }
+
+ private:
+  capi::PtLogStream stream_;
+};
+
+inline LogStream &operator<<(LogStream &stream, char const *const str) {
+  stream.write(str);
+  return stream;
+}
+
+inline LogStream &operator<<(LogStream &stream, const std::string str) {
+  stream.write(str.c_str());
+  return stream;
+}
+
+inline LogStream &operator<<(LogStream &stream, const char c) {
+  char buffer[2]{c, '\0'};
+  stream.write(buffer);
+  return stream;
+}
+
+inline LogStream &operator<<(LogStream &stream, const size_t size) {
+  // TODO: Only allocate exactly the space necessary
+  char buffer[100];
+  std::sprintf(buffer, "%zu", size);
+
+  stream.write(buffer);
+  return stream;
+}
+
+class Logger {
+ public:
+  inline explicit Logger(capi::PtLogger logger) noexcept : logger_{logger} {}
+
+  inline void log(char const *const line) const noexcept {
+    // TODO: Replace
+    logger_.vtable->log(logger_.logger, {capi::pt_log_level::info}, line);
+  }
+
+  inline void log(const std::string &line) const noexcept {
+    logger_.vtable->log(logger_.logger, {capi::pt_log_level::info}, line.c_str());
+  }
+
+  inline LogStream stream(const LogLevel level) noexcept {
+    return LogStream{
+        logger_.vtable->stream(logger_.logger, {static_cast<capi::pt_log_level>(level)})};
+  }
+
+  inline capi::PtLogger c_log() const noexcept { return logger_; }
+
+ private:
+  capi::PtLogger logger_{};
+};
+
 struct Id {
   capi::PtTestNamespace name_space;
   capi::PtTestName name;
@@ -149,6 +256,26 @@ struct AssertLine {
   Location location{};
   char const *expression{};
 };
+
+inline LogStream &operator<<(LogStream &out, const Id &id) {
+  return out << id.name_space.val << "::" << id.name.val;
+}
+
+inline LogStream &operator<<(LogStream &out, const Location &location) {
+  return out << location.file.val << ":" << location.line.val;
+}
+
+inline LogStream &operator<<(LogStream &out, const AssertLine &line) {
+  if (line.expression) {
+    out << line.expression << (line.location.file.val ? " @ " : "");
+  }
+
+  if (line.location.file.val) {
+    out << line.location.file.val << ":" << line.location.line.val;
+  }
+
+  return out;
+}
 
 struct internal_error final : std::runtime_error {
   using std::runtime_error::runtime_error;
@@ -232,7 +359,7 @@ enum class RunResult : capi::pt_run_result_t {
 
 namespace private_detail {
 
-RunResult run_internal(const InternalTest &test) noexcept;
+RunResult run_internal(const InternalTest &test, Logger &log) noexcept;
 
 void register_internal_test(InternalTest &entry) noexcept;
 

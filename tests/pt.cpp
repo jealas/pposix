@@ -1,11 +1,5 @@
 #include "pt.hpp"
 
-// Include the iostream header first
-#include <iostream>
-// DO NOT MOVE
-
-#include <cassert>
-
 namespace pt {
 namespace private_detail {
 
@@ -75,14 +69,15 @@ PtTestLine pt_test_entry_line(const PtTestEntry entry) noexcept {
   return {test->loc().line};
 }
 
-PtTestRunResult pt_test_entry_run(const PtTestEntry entry) noexcept {
+PtTestRunResult pt_test_entry_run(const PtTestEntry entry, const PtLogger log) noexcept {
   if (entry.handle == nullptr) {
     return {pt_run_result::run_error};
   }
 
   try {
     const auto test{static_cast<InternalTest const *>(entry.handle)};
-    return {static_cast<pt_run_result_t>(pt::private_detail::run_internal(*test))};
+    auto logger{Logger{log}};
+    return {static_cast<pt_run_result_t>(pt::private_detail::run_internal(*test, logger))};
   } catch (...) {
     return {pt_run_result::run_internal_error};
   }
@@ -107,33 +102,17 @@ PtSymbolTable PT_SYMBOL_TABLE_NAME{
 
 namespace pt {
 
-inline std::ostream &operator<<(std::ostream &out, const Id &id) {
-  return out << id.name_space.val << "::" << id.name.val;
-}
-
-inline std::ostream &operator<<(std::ostream &out, const Location &location) {
-  return out << location.file.val << ':' << location.line.val;
-}
-
-inline std::ostream &operator<<(std::ostream &out, const AssertLine &line) {
-  if (line.expression) {
-    out << line.expression << (line.location.file.val ? " @ " : "");
-  }
-
-  if (line.location.file.val) {
-    out << line.location.file.val << ':' << line.location.line.val;
-  }
-
-  return out;
-}
-
 namespace private_detail {
 
 InternalTest const *internal_tests() noexcept { return registrar.normal_tests(); }
 
-RunResult run_internal(const InternalTest &test) noexcept {
+RunResult run_internal(const InternalTest &test, Logger &logger) noexcept {
+  auto out_stream{logger.stream(LogLevel::Info)};
+  auto err_stream{logger.stream(LogLevel::Error)};
+
   try {
-    std::cout << "Running " << test.id() << std::endl;
+    out_stream << "Running " << test.id() << '\n';
+
     test.run();
 
     return RunResult::Success;
@@ -142,53 +121,51 @@ RunResult run_internal(const InternalTest &test) noexcept {
     return RunResult::Skipped;
 
   } catch (const pt::test_failed &fail) {
-    std::cerr << "FAILED: " << test.loc() << '[' << test.id() << ']' << '\n';
+    err_stream << "FAILED: " << test.loc() << '[' << test.id() << ']' << '\n';
 
     const auto &subtest_fails{fail.subtest_fails()};
 
     const auto indent{"  "};
     std::string indent_level{indent};
     for (auto begin{subtest_fails.crbegin()}, end{subtest_fails.crend()}; begin < end; ++begin) {
-      std::cerr << indent_level << begin->label << ": ";
+      err_stream << indent_level << begin->label << ": ";
 
       if (!begin->message.empty()) {
-        std::cerr << begin->message << " @ ";
+        err_stream << begin->message << " @ ";
       }
-      std::cerr << begin->location << '[' << begin->name << ']' << '\n';
+      err_stream << begin->location << '[' << begin->name << ']' << '\n';
 
       indent_level += indent;
     }
 
     indent_level += indent;
-    std::cerr << indent_level << fail.message() << ": " << fail.line() << '\n';
-    std::cerr << std::endl;
+    err_stream << indent_level << fail.message() << ": " << fail.line() << '\n';
+    err_stream << '\n';
 
     return RunResult::Failed;
 
   } catch (const pt::internal_error &error) {
-    std::cerr << "INTERNAL ERROR: Internal error occurred while running test " << test.id() << '\n'
-              << error.what();
-    std::cerr << std::endl;
+    err_stream << "INTERNAL ERROR: Internal error occurred while running test " << test.id()
+               << '\n'
+               << error.what() << '\n';
 
     return RunResult::InternalError;
 
   } catch (const std::runtime_error &error) {
-    std::cerr << "ERROR: Uncaught runtime error while running test " << test.id() << '\n'
-              << error.what();
-    std::cerr << std::endl;
+    err_stream << "ERROR: Uncaught runtime error while running test " << test.id() << '\n'
+               << error.what() << '\n';
 
     return RunResult::Error;
 
   } catch (const std::exception &exception) {
-    std::cerr << "ERROR: Uncaught exception while running test " << test.id() << '\n'
-              << exception.what();
-    std::cerr << std::endl;
+    err_stream << "ERROR: Uncaught exception while running test " << test.id() << '\n'
+               << exception.what() << '\n';
 
     return RunResult::Error;
 
   } catch (...) {
-    std::cerr << "EXCEPTION: Unknown exception caught while running test " << test.id();
-    std::cerr << std::endl;
+    err_stream << "EXCEPTION: Unknown exception caught while running test " << test.id();
+    err_stream << '\n';
 
     return RunResult::Exception;
   }

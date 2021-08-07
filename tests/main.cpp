@@ -2,7 +2,7 @@
 
 #include <chrono>
 #include <condition_variable>
-#include <iostream>
+#include <cstdio>
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -11,23 +11,55 @@
 
 #include "pt.hpp"
 
-namespace my_namespace {
+static const pt::capi::PtStreamVTable fprint_stream_vtable{
+    +[](pt::capi::PtStreamData data, char const *const str) {
+      std::fputs(str, static_cast<FILE *>(data.val));
+    },
+};
 
-PT_SUITE("pt main") {
-  PT_TEST(hello_main) {
-    PT_ASSERT(true);
-    PT_ASSERT(true);
-    PT_ASSERT(true);
+static const pt::capi::PtLoggerVTable fprint_logger_vtable{
+    +[](pt::capi::PtLoggerData, pt::capi::PtLogLevel level, char const *str) noexcept {
+      const auto file_stream{[level]() {
+        switch (level.val) {
+          case pt::capi::pt_log_level::info:
+          case pt::capi::pt_log_level::warning:
+            return stdout;
 
-    PT_ASSERT(false);
-  }
-}
+          case pt::capi::pt_log_level::error:
+          case pt::capi::pt_log_level::fatal:
+          default:
+            return stderr;
+        }
+      }()};
 
-}  // namespace my_namespace
+      ::fputs(str, file_stream);
+    },
+    +[](pt::capi::PtLoggerData, pt::capi::PtLogLevel level) noexcept {
+      const auto file_stream{[level]() {
+        switch (level.val) {
+          case pt::capi::pt_log_level::info:
+          case pt::capi::pt_log_level::warning:
+            return stdout;
+
+          case pt::capi::pt_log_level::error:
+          case pt::capi::pt_log_level::fatal:
+          default:
+            return stderr;
+        }
+      }()};
+
+      return pt::capi::PtLogStream{
+          &fprint_stream_vtable,
+          {
+              static_cast<void *>(file_stream),
+          },
+      };
+    },
+};
 
 template <class T>
 struct WorkQueue {
-  std::shared_ptr<T> WaitUntilPop(const std::chrono::steady_clock::time_point deadline) {
+  std::shared_ptr<T> wait_pop(const std::chrono::steady_clock::time_point deadline) {
     std::unique_lock<std::mutex> lk{m_};
     if (cv_.wait_until(lk, deadline, [this]() { return !q_.empty(); })) {
       auto front{std::move(q_.front())};
@@ -38,7 +70,7 @@ struct WorkQueue {
     }
   }
 
-  std::shared_ptr<T> TryPop() {
+  std::shared_ptr<T> try_pop() {
     std::lock_guard<std::mutex> lk{m_};
 
     if (q_.empty()) {
@@ -50,7 +82,7 @@ struct WorkQueue {
     }
   }
 
-  void Push(std::shared_ptr<T> value) {
+  void push(std::shared_ptr<T> value) {
     {
       std::lock_guard<std::mutex> lk{m_};
       q_.push(std::move(value));
@@ -94,8 +126,8 @@ class LibraryTest final : public TestCase {
     return pt::Location{syms_->pt_test_entry_file(test_), syms_->pt_test_entry_line(test_)};
   }
 
-  inline pt::RunResult run() const noexcept {
-    return pt::RunResult(syms_->pt_test_entry_run(test_).val);
+  inline pt::RunResult run(pt::Logger logger) const noexcept {
+    return pt::RunResult(syms_->pt_test_entry_run(test_, logger.c_log()).val);
   }
 
  private:
@@ -126,7 +158,6 @@ std::unique_ptr<void, decltype(close_lib)> load_test_lib(char const *const path)
   if (auto lib_handle{::dlopen(path, RTLD_GLOBAL | RTLD_LAZY)}) {
     return {lib_handle, close_lib};
   } else {
-    std::cerr << "Unable to load library: " << ::dlerror() << std::endl;
     return {nullptr, close_lib};
   }
 }
@@ -139,7 +170,6 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(char const *con
       const auto &secret{symbols->id.secret.val};
 
       if (secret[0u] != 'p' || secret[1u] != 't' || secret[2u] != 'l' || secret[3u] != 's') {
-        std::cout << "Invalid symbol table secret" << std::endl;
         return {};
 
       } else {
@@ -147,7 +177,6 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(char const *con
             symbols, [lib = std::move(lib)](const pt::capi::PtSymbolTable *) mutable noexcept {}};
       }
     } else {
-      std::cerr << "Unable to load symbols: " << ::dlerror() << std::endl;
     }
   }
 
@@ -155,14 +184,16 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(char const *con
 }
 
 [[noreturn]] void run_one(const std::string &name) {
-  std::cout << "Run one" << std::endl;
+  std::fprintf(stdout, "Run one\n");
+
+  pt::Logger logger{pt::capi::PtLogger{&fprint_logger_vtable, {nullptr}}};
 
   for_each_internal_test([&](const auto test_entry) {
     const auto &test{test_entry.get()};
 
     const auto full_name{test.id().full_name()};
     if (full_name == name) {
-      const auto result{pt::private_detail::run_internal(test)};
+      const auto result{pt::private_detail::run_internal(test, logger)};
       if (result == pt::RunResult::Success) {
         std::exit(EXIT_SUCCESS);
       } else {
@@ -171,12 +202,14 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(char const *con
     }
   });
 
-  std::cerr << "ERROR: Test case not found: " << name << std::endl;
+  std::fprintf(stderr, "ERROR: Test case not found: %s", name.c_str());
   std::exit(EXIT_FAILURE);
 }
 
 [[noreturn]] void run_matching(const std::vector<std::regex> &patterns) {
-  std::cout << "Run matching" << std::endl;
+  std::fprintf(stdout, "Run matching\n");
+
+  pt::Logger logger{pt::capi::PtLogger{&fprint_logger_vtable, {nullptr}}};
 
   if (const auto symbols{load_symbol_table("./libtest_compiles.so")}) {
     size_t count{};
@@ -186,7 +219,7 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(char const *con
       const pt::Id id{symbols->pt_test_entry_namespace(test), symbols->pt_test_entry_name(test)};
       for (const auto &pattern : patterns) {
         if (std::regex_search(id.full_name(), pattern)) {
-          symbols->pt_test_entry_run(test);
+          symbols->pt_test_entry_run(test, logger.c_log());
           break;
         }
       }
@@ -213,35 +246,38 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(char const *con
       }
     });
 
-    std::cout << "Found " << total_tests << " tests" << std::endl;
-    std::cout << "Matched " << tests.size() << " tests" << std::endl;
+    std::fprintf(stdout, "Found %zu tests", total_tests);
+    std::fprintf(stdout, "Matched %zu tests", tests.size());
 
+    pt::Logger logger{pt::capi::PtLogger{&fprint_logger_vtable, {nullptr}}};
     for (const auto &test : tests) {
-      pt::private_detail::run_internal(test);
+      pt::private_detail::run_internal(test, logger);
     }
-
-    std::exit(EXIT_SUCCESS);
-
   } catch (const std::exception &exception) {
-    std::cerr << "INTERNAL ERROR: Uncaught exception in pt::run_matching: " << exception.what();
-    std::cerr << std::endl;
-    std::exit(EXIT_FAILURE);
+    std::fprintf(stderr, "INTERNAL ERROR: Uncaught exception in pt::run_matching: %s",
+                 exception.what());
 
+    std::exit(EXIT_FAILURE);
   } catch (...) {
-    std::cerr << "INTERNAL ERROR: Unknown exception caught in pt::run_matching!";
-    std::cerr << std::endl;
+    std::fprintf(stderr, "INTERNAL ERROR: Unknown exception caught in pt::run_matching!");
+
     std::exit(EXIT_FAILURE);
   }
+
+  std::exit(EXIT_FAILURE);
 }
 
 [[noreturn]] void run_all() {
-  std::cout << "Run all" << std::endl;
+  std::fprintf(stdout, "Run all\n");
+
+  pt::Logger logger{pt::capi::PtLogger{&fprint_logger_vtable, {nullptr}}};
 
   if (const auto symbols{load_symbol_table("./libtest_compiles.so")}) {
-    for_each_library_test(*symbols, [&](const auto test) { symbols->pt_test_entry_run(test); });
+    for_each_library_test(
+        *symbols, [&](const auto test) { symbols->pt_test_entry_run(test, logger.c_log()); });
   }
 
-  for_each_internal_test([](const auto test) { pt::private_detail::run_internal(test); });
+  for_each_internal_test([&](const auto test) { pt::private_detail::run_internal(test, logger); });
 
   std::exit(EXIT_SUCCESS);
 }
@@ -252,8 +288,8 @@ int main(const int argc, const char *argv[]) {
 
   } else if (std::strcmp(argv[1], "run") == 0) {
     if (argc != 3) {
-      std::cerr << "'run' command only accepts one test name" << std::endl;
-      return EXIT_FAILURE;
+      std::fprintf(stderr, "'run' command only accepts one test name");
+      std::exit(EXIT_FAILURE);
     }
 
     run_one(argv[2]);
@@ -267,14 +303,14 @@ int main(const int argc, const char *argv[]) {
       try {
         patterns.emplace_back(regex_c_str);
       } catch (const std::regex_error &error) {
-        std::cerr << "Invalid test name regex: " << '"' << regex_c_str << '"' << '\n'
-                  << "std::regex_error" << '-' << error.what() << std::endl;
-        return EXIT_FAILURE;
+        std::fprintf(stderr, "Invalid test name regex: \"%s\"\nstd::regex::error %s\n",
+                     regex_c_str, error.what());
+        std::exit(EXIT_FAILURE);
       }
     }
 
     run_matching(patterns);
   }
 
-  return EXIT_FAILURE;
+  std::exit(EXIT_FAILURE);
 }
