@@ -12,32 +12,17 @@ namespace private_detail {
 class GlobalRegistrar {
  public:
   inline InternalTest const *normal_tests() const noexcept { return normal_tests_; }
-  inline InternalTest const *spawn_tests() const noexcept { return spawn_tests_; }
-  inline InternalTest const *unknown_tests() const noexcept { return unknown_tests_; }
 
   inline void register_internal_test(TestType type, InternalTest &entry) noexcept {
     assert(entry.next() == nullptr);
 
-    const auto tail{[=]() -> InternalTest const ** {
-      switch (type) {
-        case TestType::Normal:
-          return &normal_tests_;
-        case TestType::Spawn:
-          return &spawn_tests_;
-        default:
-          return &unknown_tests_;
-      }
-    }()};
-
     // Only and last modification to the registration entry
-    entry.set_next(*tail);
-    *tail = &entry;
+    entry.set_next(normal_tests_);
+    normal_tests_ = &entry;
   }
 
  private:
   InternalTest const *normal_tests_{nullptr};
-  InternalTest const *spawn_tests_{nullptr};
-  InternalTest const *unknown_tests_{nullptr};
 
 } static registrar{};
 
