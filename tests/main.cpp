@@ -120,9 +120,20 @@ void for_each_internal_test(Fn fn) {
   }
 }
 
-std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(const char *path) noexcept {
-  if (const auto lib_handle{::dlopen(path, RTLD_GLOBAL | RTLD_LAZY)}) {
-    if (const auto symbol_handle = ::dlsym(lib_handle, PT_SYMBOL_TABLE_NAME_STR)) {
+const auto close_lib{[](void *lib) { ::dlclose(lib); }};
+
+std::unique_ptr<void, decltype(close_lib)> load_test_lib(char const *const path) {
+  if (auto lib_handle{::dlopen(path, RTLD_GLOBAL | RTLD_LAZY)}) {
+    return {lib_handle, close_lib};
+  } else {
+    std::cerr << "Unable to load library: " << ::dlerror() << std::endl;
+    return {nullptr, close_lib};
+  }
+}
+
+std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(char const *const path) noexcept {
+  if (auto lib{load_test_lib(path)}) {
+    if (const auto symbol_handle = ::dlsym(lib.get(), PT_SYMBOL_TABLE_NAME_STR)) {
       // Transfer ownership of the underlying symbol handle to the symbols pointer
       auto const *symbols = static_cast<pt::capi::PtSymbolTable const *>(symbol_handle);
       const auto &secret{symbols->id.secret.val};
@@ -133,10 +144,10 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(const char *pat
 
       } else {
         return std::shared_ptr<const pt::capi::PtSymbolTable>{
-            symbols, [lib_handle](const pt::capi::PtSymbolTable *) mutable noexcept {
-              ::dlclose(lib_handle);
-            }};
+            symbols, [lib = std::move(lib)](const pt::capi::PtSymbolTable *) mutable noexcept {}};
       }
+    } else {
+      std::cerr << "Unable to load symbols: " << ::dlerror() << std::endl;
     }
   }
 
@@ -167,20 +178,20 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(const char *pat
 [[noreturn]] void run_matching(const std::vector<std::regex> &patterns) {
   std::cout << "Run matching" << std::endl;
 
-  const auto symbols{load_symbol_table("./libtest_pposix.so")};
+  if (const auto symbols{load_symbol_table("./libtest_compiles.so")}) {
+    size_t count{};
+    for_each_library_test(*symbols, [&](const auto test) {
+      count++;
 
-  size_t count{};
-  for_each_library_test(*symbols, [&](const auto test) {
-    count++;
-
-    const pt::Id id{symbols->pt_test_entry_namespace(test), symbols->pt_test_entry_name(test)};
-    for (const auto &pattern : patterns) {
-      if (std::regex_search(id.full_name(), pattern)) {
-        symbols->pt_test_entry_run(test);
-        break;
+      const pt::Id id{symbols->pt_test_entry_namespace(test), symbols->pt_test_entry_name(test)};
+      for (const auto &pattern : patterns) {
+        if (std::regex_search(id.full_name(), pattern)) {
+          symbols->pt_test_entry_run(test);
+          break;
+        }
       }
-    }
-  });
+    });
+  }
 
   try {
     std::vector<std::reference_wrapper<const pt::InternalTest>> tests{};
@@ -226,8 +237,9 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(const char *pat
 [[noreturn]] void run_all() {
   std::cout << "Run all" << std::endl;
 
-  const auto symbols{load_symbol_table("./libtest_pposix.so")};
-  for_each_library_test(*symbols, [&](const auto test) { symbols->pt_test_entry_run(test); });
+  if (const auto symbols{load_symbol_table("./libtest_compiles.so")}) {
+    for_each_library_test(*symbols, [&](const auto test) { symbols->pt_test_entry_run(test); });
+  }
 
   for_each_internal_test([](const auto test) { pt::private_detail::run_internal(test); });
 

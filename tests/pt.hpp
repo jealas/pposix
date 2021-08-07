@@ -365,6 +365,8 @@ class throws {
       throw test_failed{"THROWS FAILED", line_};
     } catch (const Exception &) {
       return;
+    } catch (const private_detail::test_exception &) {
+      throw;
     } catch (...) {
       throw test_failed{"WRONG EXCEPTION THROWN", line_};
     }
