@@ -307,7 +307,7 @@ struct subtest_runner {
   End end;
 
   template <class Fn>
-  auto &operator=(const Fn fn) noexcept(false) {
+  auto &operator=(const Fn &fn) noexcept(false) {
     for (; begin != end; ++begin) {
       try {
         fn(*begin);
@@ -362,7 +362,7 @@ struct section_runner {
   char const *name{};
 
   template <class Fn>
-  auto &operator=(Fn fn) const noexcept(false) {
+  auto &operator=(const Fn &fn) const noexcept(false) {
     try {
       fn();
     } catch (test_failed &fail) {

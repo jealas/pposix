@@ -21,12 +21,6 @@ set_target_properties(
         CXX_EXTENSIONS OFF
 )
 
-target_link_libraries(
-        libpt
-
-        pposix
-)
-
 target_compile_options(
         libpt
 
@@ -92,4 +86,14 @@ target_compile_options(
 
         PRIVATE
         ${PPOSIX_TEST_COMPILE_OPTIONS}
+)
+
+add_executable(
+        allocations_before_main
+
+        test_allocations_before_main.cpp
+)
+
+target_link_libraries(
+        allocations_before_main
 )

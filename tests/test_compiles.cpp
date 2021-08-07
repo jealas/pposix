@@ -87,6 +87,16 @@ PT_SUITE(PT_THROWS) {
     pt::section("manual section") = []() {};
     pt::section(PT_LOCATION, "manual section with location") = []() {};
   }
+
+  PT_TEST(subtest_mutation)
+  {
+    std::vector<int> v{};
+
+    PT_SUBTEST(e, v)
+    {
+            v.push_back(e);
+    };
+  }
 }
 
 }  // namespace throws_macro
