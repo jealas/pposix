@@ -49,7 +49,9 @@ PT_SUITE("copied test name") {
 namespace throws_macro {
 
 PT_SUITE(PT_THROWS) {
-  PT_TEST(no_throw) { PT_THROWS(1, std::exception); }
+  PT_TEST(no_throw) { PT_NOTHROWS(3); }
+
+  PT_TEST(assert_inside_no_throw) { PT_NOTHROWS(PT_ASSERT(false)); }
 
   PT_TEST(throws) {
     PT_THROWS([]() { throw std::exception{}; }(), std::exception);
@@ -59,17 +61,17 @@ PT_SUITE(PT_THROWS) {
     struct {
     } anonymous_struct{};
 
-    pt::throws<decltype(anonymous_struct)>(PT_ASSERTION_LINE, []() {
+    pt::throws<decltype(anonymous_struct)>({PT_ASSERTION_LINE}) = []() {
       struct {
       } anonymous{};
       throw anonymous;
-    });
+    };
 
-    pt::throws<decltype(anonymous_struct)>([]() {
+    pt::throws<decltype(anonymous_struct)>() = []() {
       struct {
       } anonymous{};
       throw anonymous;
-    });
+    };
   }
 
   PT_TEST(manual_subtest) {
@@ -86,14 +88,10 @@ PT_SUITE(PT_THROWS) {
     pt::section(PT_LOCATION, "manual section with location") = []() {};
   }
 
-  PT_TEST(subtest_mutation)
-  {
+  PT_TEST(subtest_mutation) {
     std::vector<int> v{};
 
-    PT_SUBTEST(e, v)
-    {
-            v.push_back(e);
-    };
+    PT_SUBTEST(e, v) { v.push_back(e); };
   }
 }
 

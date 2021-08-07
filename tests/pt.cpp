@@ -115,13 +115,13 @@ inline std::ostream &operator<<(std::ostream &out, const Location &location) {
   return out << location.file.val << ':' << location.line.val;
 }
 
-inline std::ostream &operator<<(std::ostream &out, const assert_line &line) {
+inline std::ostream &operator<<(std::ostream &out, const AssertLine &line) {
   if (line.expression) {
-    out << line.expression << (line.file ? " @ " : "");
+    out << line.expression << (line.location.file.val ? " @ " : "");
   }
 
-  if (line.file) {
-    out << line.file << ':' << line.line;
+  if (line.location.file.val) {
+    out << line.location.file.val << ':' << line.location.line.val;
   }
 
   return out;

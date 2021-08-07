@@ -131,9 +131,22 @@ static_assert(sizeof(PtSymbolTable) ==
 #ifdef __cplusplus
 namespace pt {
 
-struct assert_line {
-  char const *file{};
-  size_t line{};
+struct Id {
+  capi::PtTestNamespace name_space;
+  capi::PtTestName name;
+
+  std::string full_name() const { return std::string{name_space.val} + "::" + name.val; }
+};
+
+struct Location {
+  capi::PtTestFile file;
+  capi::PtTestLine line;
+
+  inline std::string uri() const { return std::string{"file://"} + file.val; }
+};
+
+struct AssertLine {
+  Location location{};
   char const *expression{};
 };
 
@@ -155,13 +168,6 @@ class test_exception {
 
 }  // namespace private_detail
 
-struct Location {
-  capi::PtTestFile file;
-  capi::PtTestLine line;
-
-  inline std::string uri() const { return std::string{"file://"} + file.val; }
-};
-
 struct SubFail {
   pt::Location location{};
   const char *label{};
@@ -171,17 +177,17 @@ struct SubFail {
 
 class test_failed final : public private_detail::test_exception {
  public:
-  test_failed(std::string message, const assert_line &line)
+  test_failed(std::string message, const AssertLine &line)
       : test_exception{std::move(message)}, line_{line} {}
 
-  inline const assert_line &line() const noexcept { return line_; }
+  inline const AssertLine &line() const noexcept { return line_; }
 
   inline void push_sub_fail(const SubFail &fail) { subtest_fails_.emplace_back(fail); }
 
   inline const std::vector<SubFail> &subtest_fails() const { return subtest_fails_; }
 
  private:
-  assert_line line_{};
+  AssertLine line_{};
   std::vector<SubFail> subtest_fails_{};
 };
 
@@ -191,14 +197,7 @@ class test_skipped final : public private_detail::test_exception {
 
 inline void skip(std::string reason) { throw test_skipped{std::move(reason)}; }
 
-struct Id {
-  capi::PtTestNamespace name_space;
-  capi::PtTestName name;
-
-  std::string full_name() const { return std::string{name_space.val} + "::" + name.val; }
-};
-
-using test_fn = void() noexcept(false);
+using test_fn = void();
 
 class InternalTest {
  public:
@@ -250,44 +249,19 @@ class Registration : public InternalTest {
   }
 };
 
-template <class Result>
-inline void assert_true(const Result &result, const assert_line &line) noexcept(false) {
-  if (!result) {
-    throw test_failed{"ASSERT FAILED", line};
-  }
-}
-
-template <class T, class Fn>
-inline void throws(const assert_line &line, const Fn &fn) noexcept(false) {
-  try {
-    fn();
-  } catch (const T &) {
-    return;
-  } catch (const pt::private_detail::test_exception &) {
-    throw;
-  } catch (...) {
-    throw test_failed{"Wrong exception was thrown", line};
-  }
-
-  throw test_failed{"No exception was thrown", line};
-}
-
-template <class T, class Fn>
-inline void throws(const Fn &fn) noexcept(false) {
-  throws<T>({}, fn);
-}
+#define PT_OPERATOR =
 
 namespace private_detail {
 
 template <class Begin, class End>
-struct subtest_runner {
+struct SubTestRunner {
   pt::Location location;
-  char const *var_name{};
+  char const *var_name;
   Begin begin;
   End end;
 
   template <class Fn>
-  auto &operator=(const Fn &fn) noexcept(false) {
+  auto operator PT_OPERATOR(const Fn &fn) noexcept(false) {
     for (; begin != end; ++begin) {
       try {
         fn(*begin);
@@ -299,8 +273,6 @@ struct subtest_runner {
         continue;
       }
     }
-
-    return *this;
   }
 };
 
@@ -310,7 +282,7 @@ struct {
   template <class Begin, class End>
   constexpr auto from_iterators(const Location &location, const char *name, Begin begin,
                                 End end) const noexcept {
-    return private_detail::subtest_runner<Begin, End>{location, name, begin, end};
+    return private_detail::SubTestRunner<Begin, End>{location, name, begin, end};
   }
 
   template <class Iterable>
@@ -327,51 +299,107 @@ struct {
 
   template <class Iterable>
   constexpr auto operator()(const Iterable &iterable) const noexcept(false) {
-    return (*this)({}, "#UNK", iterable);
+    return this->operator()({}, "#UNK", iterable);
   }
 
   template <class T>
   constexpr auto operator()(const std::initializer_list<T> &iterable) const noexcept(false) {
-    return (*this)({}, "#UNK", iterable);
+    return this->operator()({}, "#UNK", iterable);
   }
 
 } constexpr subtest;
 
-struct section_runner {
+struct SectionRunner {
   pt::Location location;
   char const *name{};
 
   template <class Fn>
-  auto &operator=(const Fn &fn) const noexcept(false) {
+  auto operator PT_OPERATOR(const Fn &fn) const noexcept(false) {
     try {
       fn();
     } catch (test_failed &fail) {
       fail.push_sub_fail(SubFail{location, "SECTION", name, ""});
       throw;
     }
-
-    return *this;
   }
 };
 
 struct {
-  constexpr section_runner operator()(const Location &location, char const *name) const noexcept {
-    return section_runner{location, name};
+  constexpr SectionRunner operator()(const Location &location, char const *name) const noexcept {
+    return SectionRunner{location, name};
   }
 
-  constexpr section_runner operator()(char const *name) const noexcept {
-    return section_runner{{}, name};
+  constexpr SectionRunner operator()(char const *name) const noexcept {
+    return SectionRunner{{}, name};
   }
 
 } constexpr section;
 
+struct no_throws {
+  constexpr explicit no_throws(const AssertLine &line) noexcept : line_{line} {}
+
+  template <class Fn>
+  auto operator PT_OPERATOR(const Fn &fn) noexcept(false) {
+    try {
+      fn();
+      return;
+    } catch (const private_detail::test_exception &) {
+      throw;
+    } catch (...) {
+      throw test_failed{"Unexpected exception was thrown", line_};
+    }
+
+    assert(false);
+  }
+
+ private:
+  AssertLine line_{};
+};
+
+template <class Exception>
+class throws {
+ public:
+  constexpr throws() noexcept = default;
+
+  constexpr explicit throws(const AssertLine &line) noexcept : line_{line} {}
+
+  template <class Fn>
+  auto operator PT_OPERATOR(const Fn &fn) noexcept(false) {
+    try {
+      fn();
+      throw test_failed{"No exception was thrown", line_};
+    } catch (const Exception &) {
+      return;
+    } catch (...) {
+      throw test_failed{"Wrong exception was thrown", line_};
+    }
+
+    assert(false);
+  }
+
+ private:
+  AssertLine line_{};
+};
+
+struct AssertionRunner {
+  template <class Fn>
+  auto operator PT_OPERATOR(const Fn &fn) const noexcept(false) {
+    if (!fn()) {
+      throw test_failed{"ASSERT FAILED", line_};
+    }
+  }
+
+  AssertLine line_{};
+};
+
+struct {
+  constexpr AssertionRunner operator()(const AssertLine &line) const noexcept { return {line}; }
+
+  constexpr AssertionRunner operator()() const noexcept { return {}; }
+
+} constexpr assertion;
+
 }  // namespace pt
-
-#define PT_ASSERTION_LINE_W_EXPRESSION(expression) \
-  { __FILE__, __LINE__, expression }
-
-#define PT_ASSERTION_LINE \
-  { __FILE__, __LINE__ }
 
 #define PT_SUITE(name_space)                \
   namespace {                               \
@@ -391,12 +419,24 @@ struct {
                                                                                       \
   void name::run() noexcept(false)
 
-#define PT_ASSERT(expression) \
-  ::pt::assert_true((expression), PT_ASSERTION_LINE_W_EXPRESSION(#expression))
+#define PT_ASSERTION_LINE_W_EXPRESSION(expression) \
+  ::pt::AssertLine { {{__FILE__}, {__LINE__}}, #expression }
 
-#define PT_THROWS(expression, exception)                               \
-  ::pt::throws<exception>(PT_ASSERTION_LINE_W_EXPRESSION(#expression), \
-                          [&]() { (void)(expression); })
+#define PT_ASSERTION_LINE \
+  ::pt::AssertLine { {{__FILE__}, {__LINE__}}, nullptr }
+
+#define PT_ASSUME(expression) assert(expression)
+
+#define PT_ASSERT(expression) \
+  ::pt::assertion(PT_ASSERTION_LINE_W_EXPRESSION(expression)) = [&]() { return (expression); }
+
+#define PT_THROWS(expression, exception)                                         \
+  ::pt::throws<exception>{PT_ASSERTION_LINE_W_EXPRESSION(#expression)} = [&]() { \
+    (void)(expression);                                                          \
+  };
+
+#define PT_NOTHROWS(expression) \
+  ::pt::no_throws{PT_ASSERTION_LINE_W_EXPRESSION(#expression)} = [&]() { (void)(expression); }
 
 #define PT_LOCATION          \
   ::pt::Location {           \
