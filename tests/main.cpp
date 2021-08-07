@@ -1,3 +1,5 @@
+#include <dlfcn.h>
+
 #include <chrono>
 #include <condition_variable>
 #include <iostream>
@@ -7,7 +9,6 @@
 #include <regex>
 #include <string>
 
-#include "pposix/dlfcn.hpp"
 #include "pt.hpp"
 
 namespace my_namespace {
@@ -94,7 +95,7 @@ class LibraryTest final : public TestCase {
   }
 
   inline pt::RunResult run() const noexcept {
-    return pt::RunResult{syms_->pt_test_entry_run(test_).val};
+    return pt::RunResult(syms_->pt_test_entry_run(test_).val);
   }
 
  private:
@@ -119,14 +120,11 @@ void for_each_internal_test(Fn fn) {
   }
 }
 
-std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(const char *path) {
-  if (auto library_handle = pposix::capi::dlopen(path)) {
-    if (auto symbol_handle =
-            pposix::capi::dlsym((*library_handle).raw(), PT_SYMBOL_TABLE_NAME_STR)) {
+std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(const char *path) noexcept {
+  if (const auto lib_handle{::dlopen(path, RTLD_GLOBAL | RTLD_LAZY)}) {
+    if (const auto symbol_handle = ::dlsym(lib_handle, PT_SYMBOL_TABLE_NAME_STR)) {
       // Transfer ownership of the underlying symbol handle to the symbols pointer
-      auto const *symbols = static_cast<pt::capi::PtSymbolTable const *>(
-          static_cast<pposix::capi::raw_sym_t>(std::move(symbol_handle).value().raw()));
-
+      auto const *symbols = static_cast<pt::capi::PtSymbolTable const *>(symbol_handle);
       const auto &secret{symbols->id.secret.val};
 
       if (secret[0u] != 'p' || secret[1u] != 't' || secret[2u] != 'l' || secret[3u] != 's') {
@@ -134,22 +132,15 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(const char *pat
         return {};
 
       } else {
-        auto deleter{[res = std::move(library_handle).value()](
-                         const pt::capi::PtSymbolTable *) mutable noexcept {
-          if (const auto err{res.close()}) {
-            assert(!err);
-          }
-        }};
-        return std::shared_ptr<const pt::capi::PtSymbolTable>{symbols, std::move(deleter)};
+        return std::shared_ptr<const pt::capi::PtSymbolTable>{
+            symbols, [lib_handle](const pt::capi::PtSymbolTable *) mutable noexcept {
+              ::dlclose(lib_handle);
+            }};
       }
-    } else {
-      std::cerr << "No test symbol table found" << std::endl;
-      return {};
     }
-  } else {
-    std::cerr << "No library tests found" << std::endl;
-    return {};
   }
+
+  return {};
 }
 
 [[noreturn]] void run_one(const std::string &name) {

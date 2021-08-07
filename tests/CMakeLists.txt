@@ -1,3 +1,8 @@
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+
 set(PPOSIX_TEST_COMPILE_OPTIONS -Wall -Wextra -Wpedantic -Werror -fno-rtti)
 
 add_library(
@@ -39,8 +44,6 @@ target_link_libraries(
         pt
 
         libpt
-        pposix
-
         pthread
 )
 
@@ -62,27 +65,26 @@ target_compile_options(
 add_dependencies(
         pt
 
-        test_pposix
+        test_compiles
 )
 
 add_library(
-        test_pposix
+        test_compiles
 
         MODULE
 
-        test_pposix.cpp
         test_compiles.cpp
 )
 
 target_link_libraries(
-        test_pposix
+        test_compiles
 
         libpt
 )
 
 
 target_compile_options(
-        test_pposix
+        test_compiles
 
         PRIVATE
         ${PPOSIX_TEST_COMPILE_OPTIONS}
