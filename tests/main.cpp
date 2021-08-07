@@ -174,7 +174,10 @@ std::shared_ptr<const pt::capi::PtSymbolTable> load_symbol_table(char const *con
 
       } else {
         return std::shared_ptr<const pt::capi::PtSymbolTable>{
-            symbols, [lib = std::move(lib)](const pt::capi::PtSymbolTable *) mutable noexcept {}};
+            symbols,
+            [lib_descriptor = lib.release()](const pt::capi::PtSymbolTable *) mutable noexcept {
+              close_lib(lib_descriptor);
+            }};
       }
     } else {
     }
