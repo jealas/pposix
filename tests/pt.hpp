@@ -46,17 +46,6 @@ PtTestEntry pt_normal_tests() PT_CAPI_NOEXCEPT;
 PtTestEntriesStop pt_test_entries_stop(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestEntry pt_test_entries_next(PtTestEntry) PT_CAPI_NOEXCEPT;
 
-typedef int pt_test_type_t;
-
-enum pt_test_type PT_CAPI_UNDERLYING_ENUM(pt_test_type_t){
-    pt_normal_type,
-    pt_spawn_type,
-};
-
-struct PtTestType {
-  pt_test_type_t val;
-};
-
 struct PtTestNamespace {
   char const *val;
 };
@@ -83,7 +72,6 @@ struct PtTestRunResult {
   pt_run_result_t val;
 };
 
-PtTestType pt_test_entry_type(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestNamespace pt_test_entry_namespace(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestName pt_test_entry_name(PtTestEntry) PT_CAPI_NOEXCEPT;
 PtTestFile pt_test_entry_file(PtTestEntry) PT_CAPI_NOEXCEPT;
@@ -116,7 +104,6 @@ struct PtSymbolTable {
   PtTestEntriesStop (*pt_test_entries_stop)(PtTestEntry) PT_CAPI_NOEXCEPT;
   PtTestEntry (*pt_test_entries_next)(PtTestEntry) PT_CAPI_NOEXCEPT;
 
-  PtTestType (*pt_test_entry_type)(PtTestEntry) PT_CAPI_NOEXCEPT;
   PtTestNamespace (*pt_test_entry_namespace)(PtTestEntry) PT_CAPI_NOEXCEPT;
   PtTestName (*pt_test_entry_name)(PtTestEntry) PT_CAPI_NOEXCEPT;
   PtTestFile (*pt_test_entry_file)(PtTestEntry) PT_CAPI_NOEXCEPT;
@@ -127,7 +114,7 @@ struct PtSymbolTable {
 #define PT_SYMBOL_TABLE_NAME pt_symbol_table_65e13a5d_64ab_4214_8fd9_40478724a480
 #define PT_SYMBOL_TABLE_NAME_STR "pt_symbol_table_65e13a5d_64ab_4214_8fd9_40478724a480"
 
-#define PT_SYMBOL_TABLE_SIZE 9
+#define PT_SYMBOL_TABLE_SIZE 8
 
 #ifdef __cplusplus
 static_assert(sizeof(PtSymbolTable) ==
@@ -211,23 +198,17 @@ struct Id {
   std::string full_name() const { return std::string{name_space.val} + "::" + name.val; }
 };
 
-enum class TestType : capi::pt_test_type_t {
-  Normal = capi::pt_test_type::pt_normal_type,
-  Spawn = capi::pt_test_type::pt_spawn_type,
-};
-
 using test_fn = void() noexcept(false);
 
 class InternalTest {
  public:
-  InternalTest(test_fn &fn, const TestType t, const Id &id, const Location &loc) noexcept
-      : fn_{fn}, type_{t}, id_{id}, location_{loc} {}
+  InternalTest(test_fn &fn, const Id &id, const Location &loc) noexcept
+      : fn_{fn}, id_{id}, location_{loc} {}
 
   inline void run() const noexcept(false) { return fn_(); }
 
   inline Id id() const noexcept { return id_; }
   inline Location loc() const noexcept { return location_; }
-  inline TestType type() const noexcept { return type_; }
 
   // TODO: Make these private functions only for friends
   inline InternalTest const *next() const noexcept { return next_; }
@@ -235,7 +216,6 @@ class InternalTest {
 
  private:
   test_fn &fn_;
-  TestType type_{};
   Id id_{};
   Location location_{};
 
@@ -255,18 +235,18 @@ namespace private_detail {
 
 RunResult run_internal(const InternalTest &test) noexcept;
 
-void register_internal_test(TestType type, InternalTest &entry) noexcept;
+void register_internal_test(InternalTest &entry) noexcept;
 
 InternalTest const *internal_tests() noexcept;
 
 }  // namespace private_detail
 
-template <class, TestType Type>
+template <class>
 class Registration : public InternalTest {
  public:
   Registration(test_fn &fn, const Id &id, const Location &location) noexcept
-      : InternalTest{fn, Type, id, location} {
-    ::pt::private_detail::register_internal_test(Type, *this);
+      : InternalTest{fn, id, location} {
+    ::pt::private_detail::register_internal_test(*this);
   }
 };
 
@@ -402,18 +382,14 @@ struct {
   }                                         \
   namespace
 
-#define PT_GENERIC_TEST(name, type)                                                   \
-  struct name : ::pt::Registration<name, type> {                                      \
-    using ::pt::Registration<name, type>::Registration;                               \
+#define PT_TEST(name)                                                                 \
+  struct name : ::pt::Registration<name> {                                            \
+    using ::pt::Registration<name>::Registration;                                     \
     static void run() noexcept(false);                                                \
   } const static name##_registration{                                                 \
       name::run, {{pt_test_suite.namespace_str}, {#name}}, {{__FILE__}, {__LINE__}}}; \
                                                                                       \
   void name::run() noexcept(false)
-
-#define PT_TEST(name) PT_GENERIC_TEST(name, ::pt::TestType::Normal)
-
-#define PT_SPAWN(name) PT_GENERIC_TEST(name, ::pt::TestType::Spawn)
 
 #define PT_ASSERT(expression) \
   ::pt::assert_true((expression), PT_ASSERTION_LINE_W_EXPRESSION(#expression))

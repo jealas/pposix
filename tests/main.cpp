@@ -93,10 +93,6 @@ class LibraryTest final : public TestCase {
     return pt::Location{syms_->pt_test_entry_file(test_), syms_->pt_test_entry_line(test_)};
   }
 
-  inline pt::TestType type() const noexcept {
-    return pt::TestType(syms_->pt_test_entry_type(test_).val);
-  }
-
   inline pt::RunResult run() const noexcept {
     return pt::RunResult{syms_->pt_test_entry_run(test_).val};
   }

@@ -11,7 +11,7 @@ PT_SUITE(hmm) {
 
   }  // namespace outer_namespace
 
-  PT_SPAWN(test_spawn_test) {}
+  PT_TEST(test_spawn_test) {}
 
   PT_TEST(subtests) {
     PT_SUBTEST(var, {1, 2, 3}) { PT_ASSERT(var < 4); };

@@ -13,7 +13,7 @@ class GlobalRegistrar {
  public:
   inline InternalTest const *normal_tests() const noexcept { return normal_tests_; }
 
-  inline void register_internal_test(TestType type, InternalTest &entry) noexcept {
+  inline void register_internal_test(InternalTest &entry) noexcept {
     assert(entry.next() == nullptr);
 
     // Only and last modification to the registration entry
@@ -26,8 +26,8 @@ class GlobalRegistrar {
 
 } static registrar{};
 
-void register_internal_test(TestType type, InternalTest &entry) noexcept {
-  registrar.register_internal_test(type, entry);
+void register_internal_test(InternalTest &entry) noexcept {
+  registrar.register_internal_test(entry);
 }
 
 }  // namespace private_detail
@@ -42,10 +42,6 @@ PtTestEntry pt_normal_tests() noexcept {
   return PtTestEntry{static_cast<void const *>(private_detail::registrar.normal_tests())};
 }
 
-PtTestEntry pt_unknown_tests() noexcept {
-  return PtTestEntry{static_cast<void const *>(private_detail::registrar.unknown_tests())};
-}
-
 PtTestEntriesStop pt_test_entries_stop(const PtTestEntry entry) noexcept {
   return {entry.handle == nullptr};
 }
@@ -57,11 +53,6 @@ PtTestEntry pt_test_entries_next(const PtTestEntry entry) noexcept {
     const auto test{static_cast<InternalTest const *>(entry.handle)};
     return PtTestEntry{static_cast<void const *>(test->next())};
   }
-}
-
-PtTestType pt_test_entry_type(const PtTestEntry entry) noexcept {
-  const auto test{static_cast<InternalTest const *>(entry.handle)};
-  return PtTestType{pt_test_type(static_cast<pt_test_type_t>(test->type()))};
 }
 
 PtTestNamespace pt_test_entry_namespace(const PtTestEntry entry) noexcept {
@@ -102,7 +93,6 @@ PtSymbolTable PT_SYMBOL_TABLE_NAME{
     pt_normal_tests,
     pt_test_entries_stop,
     pt_test_entries_next,
-    pt_test_entry_type,
     pt_test_entry_namespace,
     pt_test_entry_name,
     pt_test_entry_file,
