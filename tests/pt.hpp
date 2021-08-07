@@ -330,8 +330,8 @@ constexpr SectionRunner section(const Location &location, char const *name) noex
 
 constexpr SectionRunner section(char const *name) noexcept { return SectionRunner{{}, name}; }
 
-struct no_throws {
-  constexpr explicit no_throws(const AssertLine &line) noexcept : line_{line} {}
+struct nothrows {
+  constexpr explicit nothrows(const AssertLine &line) noexcept : line_{line} {}
 
   template <class Fn>
   auto operator PT_OPERATOR(const Fn &fn) noexcept(false) {
@@ -421,13 +421,13 @@ constexpr AssertionRunner assertion() noexcept { return {}; }
 #define PT_ASSERT(expression) \
   ::pt::assertion(PT_ASSERTION_LINE_W_EXPRESSION(expression)) = [&]() { return (expression); }
 
-#define PT_THROWS(expression, exception)                                         \
+#define PT_THROWS(exception, expression)                                         \
   ::pt::throws<exception>(PT_ASSERTION_LINE_W_EXPRESSION(#expression)) = [&]() { \
     (void)(expression);                                                          \
   };
 
 #define PT_NOTHROWS(expression) \
-  ::pt::no_throws(PT_ASSERTION_LINE_W_EXPRESSION(#expression)) = [&]() { (void)(expression); }
+  ::pt::nothrows(PT_ASSERTION_LINE_W_EXPRESSION(#expression)) = [&]() { (void)(expression); }
 
 #define PT_LOCATION          \
   ::pt::Location {           \

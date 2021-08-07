@@ -54,9 +54,9 @@ PT_SUITE(PT_THROWS) {
   PT_TEST(assert_inside_no_throw) { PT_NOTHROWS(PT_ASSERT(false)); }
 
   PT_TEST(throws) {
-    PT_THROWS([]() { throw std::exception{}; }(), std::exception);
-    PT_THROWS([]() { throw ""; }(), const char *);
-    PT_THROWS([]() { throw 1; }(), int);
+    PT_THROWS(std::exception, []() { throw std::exception{}; }());
+    PT_THROWS(const char *, []() { throw ""; }());
+    PT_THROWS(int, []() { throw 1; }());
 
     struct {
     } anonymous_struct{};
