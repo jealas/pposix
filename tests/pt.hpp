@@ -324,16 +324,11 @@ struct SectionRunner {
   }
 };
 
-struct {
-  constexpr SectionRunner operator()(const Location &location, char const *name) const noexcept {
-    return SectionRunner{location, name};
-  }
+constexpr SectionRunner section(const Location &location, char const *name) noexcept {
+  return SectionRunner{location, name};
+}
 
-  constexpr SectionRunner operator()(char const *name) const noexcept {
-    return SectionRunner{{}, name};
-  }
-
-} constexpr section;
+constexpr SectionRunner section(char const *name) noexcept { return SectionRunner{{}, name}; }
 
 struct no_throws {
   constexpr explicit no_throws(const AssertLine &line) noexcept : line_{line} {}
@@ -346,7 +341,7 @@ struct no_throws {
     } catch (const private_detail::test_exception &) {
       throw;
     } catch (...) {
-      throw test_failed{"Unexpected exception was thrown", line_};
+      throw test_failed{"NOTHROWS FAILED", line_};
     }
 
     assert(false);
@@ -367,11 +362,11 @@ class throws {
   auto operator PT_OPERATOR(const Fn &fn) noexcept(false) {
     try {
       fn();
-      throw test_failed{"No exception was thrown", line_};
+      throw test_failed{"THROWS FAILED", line_};
     } catch (const Exception &) {
       return;
     } catch (...) {
-      throw test_failed{"Wrong exception was thrown", line_};
+      throw test_failed{"WRONG EXCEPTION THROWN", line_};
     }
 
     assert(false);
@@ -392,12 +387,8 @@ struct AssertionRunner {
   AssertLine line_{};
 };
 
-struct {
-  constexpr AssertionRunner operator()(const AssertLine &line) const noexcept { return {line}; }
-
-  constexpr AssertionRunner operator()() const noexcept { return {}; }
-
-} constexpr assertion;
+constexpr AssertionRunner assertion(const AssertLine &line) noexcept { return {line}; }
+constexpr AssertionRunner assertion() noexcept { return {}; }
 
 }  // namespace pt
 
